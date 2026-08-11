@@ -1,0 +1,6 @@
+{
+  "name": "Udhar Khata",
+  "description": "Digital Udhar, Advance, Orders, Payments, Chat, Voice, Reports and Customer Ledger for Kirana & Local Shops.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

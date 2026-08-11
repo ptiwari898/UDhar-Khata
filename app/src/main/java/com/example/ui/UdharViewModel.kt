@@ -1,0 +1,219 @@
+package com.example.ui
+
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
+import com.example.data.AppDatabase
+import com.example.data.Customer
+import com.example.data.CustomerOrder
+import com.example.data.LedgerTransaction
+import com.example.data.ShopProfile
+import com.example.data.UdharRepository
+import com.example.service.ParsedTransaction
+import com.example.service.VoiceParserService
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
+
+class UdharViewModel(application: Application) : AndroidViewModel(application) {
+
+    private val db = AppDatabase.getInstance(application)
+    val repository = UdharRepository(
+        db.shopDao(),
+        db.customerDao(),
+        db.ledgerDao(),
+        db.orderDao(),
+        db.chatDao()
+    )
+
+    val shopProfile = repository.shopProfile.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = null
+    )
+
+    val shopSummary = repository.shopSummary.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = null
+    )
+
+    val allCustomers = repository.allCustomers.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = emptyList()
+    )
+
+    val allTransactions = repository.allTransactions.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = emptyList()
+    )
+
+    val allOrders = repository.allOrders.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = emptyList()
+    )
+
+    // UI States
+    private val _selectedTab = MutableStateFlow("Home")
+    val selectedTab: StateFlow<String> = _selectedTab.asStateFlow()
+
+    private val _selectedCustomerId = MutableStateFlow<Int?>(null)
+    val selectedCustomerId: StateFlow<Int?> = _selectedCustomerId.asStateFlow()
+
+    private val _customerSearchQuery = MutableStateFlow("")
+    val customerSearchQuery: StateFlow<String> = _customerSearchQuery.asStateFlow()
+
+    private val _customerSortBy = MutableStateFlow("HighToLow") // HighToLow, LowToHigh, Name
+    val customerSortBy: StateFlow<String> = _customerSortBy.asStateFlow()
+
+    private val _transactionFilter = MutableStateFlow("ALL") // ALL, UDHAAR, PAYMENT, ADVANCE, REFUND
+    val transactionFilter: StateFlow<String> = _transactionFilter.asStateFlow()
+
+    // Dialog & Modal Controls
+    val isAddUdharOpen = MutableStateFlow(false)
+    val isReceivePaymentOpen = MutableStateFlow(false)
+    val isAddAdvanceOpen = MutableStateFlow(false)
+    val isVoiceEntryOpen = MutableStateFlow(false)
+    val isVoiceConfirmationOpen = MutableStateFlow(false)
+    val isAddCustomerOpen = MutableStateFlow(false)
+    val isAddOrderOpen = MutableStateFlow(false)
+    val isWhatsAppReminderOpen = MutableStateFlow(false)
+
+    // Voice Processing State
+    val parsedVoiceTransaction = MutableStateFlow<ParsedTransaction?>(null)
+    val isVoiceListening = MutableStateFlow(false)
+
+    fun selectTab(tab: String) {
+        _selectedTab.value = tab
+    }
+
+    fun selectCustomer(customerId: Int?) {
+        _selectedCustomerId.value = customerId
+    }
+
+    fun setSearchQuery(query: String) {
+        _customerSearchQuery.value = query
+    }
+
+    fun setSortBy(sortBy: String) {
+        _customerSortBy.value = sortBy
+    }
+
+    fun setTransactionFilter(filter: String) {
+        _transactionFilter.value = filter
+    }
+
+    // Actions
+    fun saveUdhar(customerId: Int, amount: Double, note: String, dateMillis: Long) {
+        viewModelScope.launch {
+            repository.addTransaction(
+                LedgerTransaction(
+                    customerId = customerId,
+                    type = "UDHAAR",
+                    amount = amount,
+                    note = note,
+                    dateMillis = dateMillis
+                )
+            )
+            isAddUdharOpen.value = false
+        }
+    }
+
+    fun savePayment(customerId: Int, amount: Double, method: String, reference: String) {
+        viewModelScope.launch {
+            repository.addTransaction(
+                LedgerTransaction(
+                    customerId = customerId,
+                    type = "PAYMENT",
+                    amount = amount,
+                    paymentMethod = method,
+                    reference = reference,
+                    note = "Payment Received"
+                )
+            )
+            isReceivePaymentOpen.value = false
+        }
+    }
+
+    fun saveAdvance(customerId: Int, amount: Double, method: String, note: String) {
+        viewModelScope.launch {
+            repository.addTransaction(
+                LedgerTransaction(
+                    customerId = customerId,
+                    type = "ADVANCE",
+                    amount = amount,
+                    paymentMethod = method,
+                    note = if (note.isBlank()) "Advance Balance Received" else note
+                )
+            )
+            isAddAdvanceOpen.value = false
+        }
+    }
+
+    fun saveCustomer(name: String, phone: String, location: String, risk: String) {
+        viewModelScope.launch {
+            repository.addCustomer(
+                Customer(
+                    name = name,
+                    phone = phone,
+                    location = location,
+                    riskLevel = risk
+                )
+            )
+            isAddCustomerOpen.value = false
+        }
+    }
+
+    fun saveOrder(customerId: Int, itemsSummary: String, total: Double, advance: Double) {
+        viewModelScope.launch {
+            repository.addOrder(
+                CustomerOrder(
+                    customerId = customerId,
+                    itemsSummary = itemsSummary,
+                    totalAmount = total,
+                    advancePaid = advance,
+                    status = "CONFIRMED"
+                )
+            )
+            isAddOrderOpen.value = false
+        }
+    }
+
+    fun processVoiceText(spokenText: String) {
+        viewModelScope.launch {
+            isVoiceListening.value = true
+            val parsed = VoiceParserService.parseVoiceCommand(spokenText, allCustomers.value)
+            parsedVoiceTransaction.value = parsed
+            isVoiceListening.value = false
+            isVoiceEntryOpen.value = false
+            isVoiceConfirmationOpen.value = true
+        }
+    }
+
+    fun confirmVoiceTransaction(parsed: ParsedTransaction) {
+        viewModelScope.launch {
+            val customerId = parsed.matchedCustomerId ?: run {
+                // If customer not matched, create new or use first customer
+                allCustomers.value.firstOrNull()?.id ?: repository.addCustomer(
+                    Customer(name = parsed.customerName, phone = "98765 00000", location = "Bhopal, MP")
+                ).toInt()
+            }
+
+            repository.addTransaction(
+                LedgerTransaction(
+                    customerId = customerId,
+                    type = parsed.transactionType,
+                    amount = parsed.amount,
+                    note = parsed.note
+                )
+            )
+            isVoiceConfirmationOpen.value = false
+        }
+    }
+}
