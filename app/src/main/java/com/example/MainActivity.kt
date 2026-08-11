@@ -38,6 +38,7 @@ import com.example.ui.components.ReceivePaymentDialog
 import com.example.ui.components.VoiceConfirmationModal
 import com.example.ui.components.VoiceEntryModal
 import com.example.ui.components.WhatsAppReminderDialog
+import com.example.ui.screens.AuthScreen
 import com.example.ui.screens.CustomerChatScreen
 import com.example.ui.screens.CustomerDetailScreen
 import com.example.ui.screens.CustomerListScreen
@@ -65,6 +66,13 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun UdharKhataApp(viewModel: UdharViewModel) {
+    val currentUser by viewModel.currentUser.collectAsState()
+
+    if (currentUser == null) {
+        AuthScreen(viewModel = viewModel)
+        return
+    }
+
     val selectedTab by viewModel.selectedTab.collectAsState()
     val selectedCustomerId by viewModel.selectedCustomerId.collectAsState()
     val shopSummary by viewModel.shopSummary.collectAsState()

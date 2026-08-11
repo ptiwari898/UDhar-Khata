@@ -1,5 +1,6 @@
 package com.example.ui
 
+import android.app.Activity
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
@@ -9,7 +10,9 @@ import com.example.data.CustomerOrder
 import com.example.data.LedgerTransaction
 import com.example.data.ShopProfile
 import com.example.data.UdharRepository
+import com.example.service.AuthRepository
 import com.example.service.ParsedTransaction
+import com.example.service.UserAuthProfile
 import com.example.service.VoiceParserService
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -19,6 +22,12 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 class UdharViewModel(application: Application) : AndroidViewModel(application) {
+
+    val authRepository = AuthRepository(application)
+    val currentUser: StateFlow<UserAuthProfile?> = authRepository.currentUser
+
+    val isAuthLoading = MutableStateFlow(false)
+    val authErrorMessage = MutableStateFlow<String?>(null)
 
     private val db = AppDatabase.getInstance(application)
     val repository = UdharRepository(
@@ -215,5 +224,66 @@ class UdharViewModel(application: Application) : AndroidViewModel(application) {
             )
             isVoiceConfirmationOpen.value = false
         }
+    }
+
+    // Auth Actions
+    fun loginWithEmail(email: String, password: String) {
+        if (email.isBlank() || password.isBlank()) {
+            authErrorMessage.value = "Please enter both email and password."
+            return
+        }
+        viewModelScope.launch {
+            isAuthLoading.value = true
+            authErrorMessage.value = null
+            val result = authRepository.loginWithEmail(email, password)
+            isAuthLoading.value = false
+            if (result.isFailure) {
+                authErrorMessage.value = result.exceptionOrNull()?.message ?: "Login failed. Please check credentials."
+            }
+        }
+    }
+
+    fun registerWithEmail(name: String, email: String, password: String) {
+        if (name.isBlank() || email.isBlank() || password.isBlank()) {
+            authErrorMessage.value = "Please fill in all registration fields."
+            return
+        }
+        if (password.length < 6) {
+            authErrorMessage.value = "Password must be at least 6 characters long."
+            return
+        }
+        viewModelScope.launch {
+            isAuthLoading.value = true
+            authErrorMessage.value = null
+            val result = authRepository.registerWithEmail(name, email, password)
+            isAuthLoading.value = false
+            if (result.isFailure) {
+                authErrorMessage.value = result.exceptionOrNull()?.message ?: "Registration failed."
+            }
+        }
+    }
+
+    fun signInWithGoogle(activity: Activity) {
+        viewModelScope.launch {
+            isAuthLoading.value = true
+            authErrorMessage.value = null
+            val result = authRepository.signInWithGoogle(activity)
+            isAuthLoading.value = false
+            if (result.isFailure) {
+                authErrorMessage.value = result.exceptionOrNull()?.message ?: "Google Sign-In failed."
+            }
+        }
+    }
+
+    fun loginDemoUser(name: String, email: String, isGoogle: Boolean) {
+        authRepository.loginDemoUser(name, email, isGoogle)
+    }
+
+    fun logout() {
+        authRepository.clearUserLocal()
+    }
+
+    fun clearAuthError() {
+        authErrorMessage.value = null
     }
 }

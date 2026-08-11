@@ -17,9 +17,11 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ArrowUpward
+import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Mic
@@ -29,14 +31,18 @@ import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.ReceiptLong
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -50,12 +56,16 @@ import com.example.data.ShopProfile
 import com.example.ui.UdharViewModel
 import com.example.ui.components.OutstandingPieChartCard
 import com.example.ui.components.QuickActionButton
+import com.example.ui.theme.BackgroundSlate
+import com.example.ui.theme.CardSurface
 import com.example.ui.theme.GreenAdvance
 import com.example.ui.theme.GreenBg
 import com.example.ui.theme.PrimaryBlue
 import com.example.ui.theme.PrimaryBlueBg
 import com.example.ui.theme.RedBg
 import com.example.ui.theme.RedUdhar
+import com.example.ui.theme.TextPrimary
+import com.example.ui.theme.TextSecondary
 
 @Composable
 fun DashboardScreen(
@@ -65,11 +75,12 @@ fun DashboardScreen(
     modifier: Modifier = Modifier
 ) {
     val scrollState = rememberScrollState()
+    val currentUser by viewModel.currentUser.collectAsState()
 
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(Color(0xFFF8FAFC))
+            .background(BackgroundSlate)
             .verticalScroll(scrollState)
             .padding(16.dp)
     ) {
@@ -80,27 +91,29 @@ fun DashboardScreen(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Default.Menu, contentDescription = "Menu", tint = Color(0xFF0F172A))
+                Icon(Icons.Default.Menu, contentDescription = "Menu", tint = TextPrimary)
                 Spacer(modifier = Modifier.width(12.dp))
                 Column {
                     Text(
-                        text = "My Profile",
+                        text = "Merchant Dashboard",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFF0F172A)
+                        color = TextPrimary
                     )
                     Text(
                         text = profile?.shopName ?: "Shivam Kirana Store",
                         style = MaterialTheme.typography.bodySmall,
-                        color = Color(0xFF64748B)
+                        color = TextSecondary
                     )
                 }
             }
-            IconButton(
-                onClick = { viewModel.isWhatsAppReminderOpen.value = true },
-                modifier = Modifier.testTag("notification_bell")
-            ) {
-                Icon(Icons.Default.Notifications, contentDescription = "Notifications", tint = Color(0xFF0F172A))
+            Row {
+                IconButton(
+                    onClick = { viewModel.logout() },
+                    modifier = Modifier.testTag("logout_btn")
+                ) {
+                    Icon(Icons.AutoMirrored.Filled.ExitToApp, contentDescription = "Logout", tint = RedUdhar)
+                }
             }
         }
 
@@ -110,75 +123,86 @@ fun DashboardScreen(
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White),
+            colors = CardDefaults.cardColors(containerColor = CardSurface),
             elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
         ) {
-            Row(
-                modifier = Modifier.padding(16.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(60.dp)
-                        .clip(CircleShape)
-                        .background(Color(0xFFFEF3C7)),
-                    contentAlignment = Alignment.Center
+            Column(modifier = Modifier.padding(16.dp)) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text("🏪", fontSize = 28.sp)
-                }
-
-                Spacer(modifier = Modifier.width(14.dp))
-
-                Column(modifier = Modifier.weight(1f)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier
+                            .size(60.dp)
+                            .clip(CircleShape)
+                            .background(PrimaryBlueBg),
+                        contentAlignment = Alignment.Center
+                    ) {
                         Text(
-                            text = profile?.ownerName ?: "Pawan Tiwari",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFF0F172A)
+                            text = if (currentUser?.isGoogleUser == true) "🌐" else "🏪",
+                            fontSize = 28.sp
                         )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Surface(
-                            color = PrimaryBlueBg,
-                            shape = RoundedCornerShape(8.dp)
-                        ) {
+                    }
+
+                    Spacer(modifier = Modifier.width(14.dp))
+
+                    Column(modifier = Modifier.weight(1f)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
-                                text = "Owner",
-                                color = PrimaryBlue,
-                                fontSize = 10.sp,
+                                text = currentUser?.name ?: profile?.ownerName ?: "Pawan Tiwari",
+                                style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
-                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                color = TextPrimary
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Surface(
+                                color = if (currentUser?.isGoogleUser == true) Color(0xFF1E3A8A) else PrimaryBlueBg,
+                                shape = RoundedCornerShape(8.dp)
+                            ) {
+                                Text(
+                                    text = if (currentUser?.isGoogleUser == true) "Google Merchant" else "Firebase Auth",
+                                    color = PrimaryBlue,
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(4.dp))
+
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Default.Email, contentDescription = null, tint = TextSecondary, modifier = Modifier.size(12.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = currentUser?.email ?: "merchant@udharkhata.com",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = TextSecondary
+                            )
+                        }
+
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Default.LocationOn, contentDescription = null, tint = TextSecondary, modifier = Modifier.size(12.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = profile?.location ?: "Bhopal, Madhya Pradesh",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = TextSecondary
                             )
                         }
                     }
+                }
 
-                    Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.Phone, contentDescription = null, tint = Color(0xFF64748B), modifier = Modifier.size(12.dp))
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            text = profile?.phone ?: "+91 98765 43210",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = Color(0xFF64748B)
-                        )
-                    }
-
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.LocationOn, contentDescription = null, tint = Color(0xFF64748B), modifier = Modifier.size(12.dp))
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            text = profile?.location ?: "Bhopal, Madhya Pradesh",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = Color(0xFF64748B)
-                        )
-                    }
-
-                    Text(
-                        text = "Member Since: ${profile?.memberSince ?: "12 Mar 2024"}",
-                        fontSize = 10.sp,
-                        color = Color(0xFF94A3B8)
-                    )
+                OutlinedButton(
+                    onClick = { viewModel.logout() },
+                    modifier = Modifier.fillMaxWidth().testTag("profile_logout_action"),
+                    shape = RoundedCornerShape(10.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = RedUdhar)
+                ) {
+                    Icon(Icons.AutoMirrored.Filled.ExitToApp, contentDescription = null, tint = RedUdhar, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Sign Out Account", color = RedUdhar, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
                 }
             }
         }
