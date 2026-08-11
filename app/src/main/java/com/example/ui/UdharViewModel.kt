@@ -181,6 +181,24 @@ class UdharViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun updateShopProfile(shopName: String, ownerName: String, phone: String, address: String, upiId: String, gstin: String = "") {
+        viewModelScope.launch {
+            repository.updateShopProfile(
+                ShopProfile(
+                    id = 1,
+                    shopName = shopName,
+                    ownerName = ownerName,
+                    phone = phone,
+                    location = address,
+                    memberSince = "2023",
+                    address = address,
+                    upiId = upiId,
+                    gstin = gstin
+                )
+            )
+        }
+    }
+
     fun saveCustomer(name: String, phone: String, location: String, risk: String) {
         viewModelScope.launch {
             repository.addCustomer(

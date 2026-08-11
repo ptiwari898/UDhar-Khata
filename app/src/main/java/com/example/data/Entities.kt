@@ -11,8 +11,11 @@ data class ShopProfile(
     val shopName: String,
     val ownerName: String,
     val phone: String,
-    val location: String,
-    val memberSince: String
+    val location: String = "Bhopal, MP",
+    val memberSince: String = "2023",
+    val address: String = "Shop No. 12, Main Market, Bhopal, MP",
+    val upiId: String = "shivamkirana@upi",
+    val gstin: String = "23AAAAA0000A1Z5"
 )
 
 @Entity(tableName = "customers")

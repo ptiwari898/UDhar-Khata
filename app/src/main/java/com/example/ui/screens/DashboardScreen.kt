@@ -72,6 +72,7 @@ fun DashboardScreen(
     summary: OverallShopSummary?,
     profile: ShopProfile?,
     viewModel: UdharViewModel,
+    onOpenDrawer: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val scrollState = rememberScrollState()
@@ -91,8 +92,13 @@ fun DashboardScreen(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Default.Menu, contentDescription = "Menu", tint = TextPrimary)
-                Spacer(modifier = Modifier.width(12.dp))
+                IconButton(
+                    onClick = onOpenDrawer,
+                    modifier = Modifier.testTag("hamburger_menu_btn")
+                ) {
+                    Icon(Icons.Default.Menu, contentDescription = "Menu Drawer", tint = TextPrimary)
+                }
+                Spacer(modifier = Modifier.width(4.dp))
                 Column {
                     Text(
                         text = "Merchant Dashboard",
@@ -107,7 +113,13 @@ fun DashboardScreen(
                     )
                 }
             }
-            Row {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                IconButton(
+                    onClick = { viewModel.selectTab("Profile") },
+                    modifier = Modifier.testTag("header_profile_btn")
+                ) {
+                    Icon(Icons.Default.Person, contentDescription = "Merchant Profile", tint = PrimaryBlue)
+                }
                 IconButton(
                     onClick = { viewModel.logout() },
                     modifier = Modifier.testTag("logout_btn")
