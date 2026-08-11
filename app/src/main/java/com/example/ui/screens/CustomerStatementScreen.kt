@@ -36,12 +36,17 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.Customer
 import com.example.data.LedgerTransaction
+import com.example.ui.theme.BackgroundSlate
+import com.example.ui.theme.CardSurface
 import com.example.ui.theme.GreenAdvance
 import com.example.ui.theme.GreenBg
 import com.example.ui.theme.OrangeMedium
 import com.example.ui.theme.PrimaryBlue
 import com.example.ui.theme.RedBg
 import com.example.ui.theme.RedUdhar
+import com.example.ui.theme.TextMuted
+import com.example.ui.theme.TextPrimary
+import com.example.ui.theme.TextSecondary
 
 @Composable
 fun CustomerStatementScreen(
@@ -61,7 +66,7 @@ fun CustomerStatementScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(Color(0xFFF8FAFC))
+            .background(BackgroundSlate)
             .padding(16.dp)
     ) {
         // Top Bar
@@ -72,14 +77,14 @@ fun CustomerStatementScreen(
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 IconButton(onClick = onBackClick, modifier = Modifier.testTag("statement_back")) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = TextPrimary)
                 }
                 Spacer(modifier = Modifier.width(4.dp))
                 Text(
                     text = customer.name,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFF0F172A)
+                    color = TextPrimary
                 )
             }
 
@@ -99,7 +104,7 @@ fun CustomerStatementScreen(
         // Date Range Selector Card
         Card(
             shape = RoundedCornerShape(12.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White),
+            colors = CardDefaults.cardColors(containerColor = CardSurface),
             modifier = Modifier.fillMaxWidth()
         ) {
             Row(
@@ -108,7 +113,7 @@ fun CustomerStatementScreen(
             ) {
                 Icon(Icons.Default.CalendarToday, contentDescription = null, tint = PrimaryBlue, modifier = Modifier.width(18.dp))
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("01 Jun 2026 - 11 Aug 2026", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = Color(0xFF0F172A))
+                Text("01 Jun 2026 - 11 Aug 2026", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = TextPrimary)
             }
         }
 
@@ -121,10 +126,10 @@ fun CustomerStatementScreen(
         ) {
             Card(
                 modifier = Modifier.weight(1f),
-                colors = CardDefaults.cardColors(containerColor = Color.White)
+                colors = CardDefaults.cardColors(containerColor = CardSurface)
             ) {
                 Column(modifier = Modifier.padding(14.dp)) {
-                    Text("Total Loaned", fontSize = 11.sp, color = Color(0xFF64748B))
+                    Text("Total Loaned", fontSize = 11.sp, color = TextSecondary)
                     Spacer(modifier = Modifier.height(4.dp))
                     Text("₹ ${totalLoaned.toInt()}", fontSize = 18.sp, fontWeight = FontWeight.ExtraBold, color = PrimaryBlue)
                 }
@@ -132,10 +137,10 @@ fun CustomerStatementScreen(
 
             Card(
                 modifier = Modifier.weight(1f),
-                colors = CardDefaults.cardColors(containerColor = Color.White)
+                colors = CardDefaults.cardColors(containerColor = CardSurface)
             ) {
                 Column(modifier = Modifier.padding(14.dp)) {
-                    Text("Total Repaid", fontSize = 11.sp, color = Color(0xFF64748B))
+                    Text("Total Repaid", fontSize = 11.sp, color = TextSecondary)
                     Spacer(modifier = Modifier.height(4.dp))
                     Text("₹ ${totalRepaid.toInt()}", fontSize = 18.sp, fontWeight = FontWeight.ExtraBold, color = GreenAdvance)
                 }
@@ -175,14 +180,14 @@ fun CustomerStatementScreen(
 
         // Info banner
         Surface(
-            color = Color(0xFFF1F5F9),
+            color = CardSurface,
             shape = RoundedCornerShape(8.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
             Text(
                 text = "Statement shows all transactions in selected period.",
                 fontSize = 12.sp,
-                color = Color(0xFF475569),
+                color = TextSecondary,
                 modifier = Modifier.padding(12.dp)
             )
         }

@@ -52,11 +52,16 @@ import com.example.ui.UdharViewModel
 import com.example.ui.components.CustomerAvatar
 import com.example.ui.components.QuickActionButton
 import com.example.ui.components.TrendLineChartCard
+import com.example.ui.theme.BackgroundSlate
+import com.example.ui.theme.CardSurface
 import com.example.ui.theme.GreenAdvance
 import com.example.ui.theme.GreenBg
 import com.example.ui.theme.PrimaryBlue
+import com.example.ui.theme.PrimaryBlueBg
 import com.example.ui.theme.RedBg
 import com.example.ui.theme.RedUdhar
+import com.example.ui.theme.TextPrimary
+import com.example.ui.theme.TextSecondary
 
 @Composable
 fun CustomerDetailScreen(
@@ -82,7 +87,7 @@ fun CustomerDetailScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(Color(0xFFF8FAFC))
+            .background(BackgroundSlate)
     ) {
         // Top Bar
         Row(
@@ -96,7 +101,7 @@ fun CustomerDetailScreen(
                 onClick = onBackClick,
                 modifier = Modifier.testTag("back_button")
             ) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = TextPrimary)
             }
 
             Row {
@@ -107,7 +112,7 @@ fun CustomerDetailScreen(
                     Icon(Icons.Default.Chat, contentDescription = "Chat", tint = PrimaryBlue)
                 }
                 IconButton(onClick = { }) {
-                    Icon(Icons.Default.MoreVert, contentDescription = "More")
+                    Icon(Icons.Default.MoreVert, contentDescription = "More", tint = TextPrimary)
                 }
             }
         }
@@ -115,14 +120,21 @@ fun CustomerDetailScreen(
         // Sub Tabs
         TabRow(
             selectedTabIndex = selectedSubTab,
-            containerColor = Color.White,
+            containerColor = CardSurface,
             contentColor = PrimaryBlue
         ) {
             listOf("Overview", "Transactions", "Orders", "Notes").forEachIndexed { index, title ->
                 Tab(
                     selected = selectedSubTab == index,
                     onClick = { selectedSubTab = index },
-                    text = { Text(title, fontWeight = FontWeight.Bold, fontSize = 12.sp) },
+                    text = {
+                        Text(
+                            title,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 12.sp,
+                            color = if (selectedSubTab == index) PrimaryBlue else TextSecondary
+                        )
+                    },
                     modifier = Modifier.testTag("tab_$title")
                 )
             }
@@ -144,7 +156,7 @@ fun CustomerDetailScreen(
                     ) {
                         CustomerAvatar(
                             name = customer.name,
-                            backgroundColor = Color(0xFFDBEAFE),
+                            backgroundColor = PrimaryBlueBg,
                             textColor = PrimaryBlue,
                             modifier = Modifier.size(64.dp)
                         )
@@ -153,14 +165,14 @@ fun CustomerDetailScreen(
                             text = customer.name,
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
-                            color = Color(0xFF0F172A)
+                            color = TextPrimary
                         )
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Default.Phone, contentDescription = null, tint = Color(0xFF64748B), modifier = Modifier.size(12.dp))
+                            Icon(Icons.Default.Phone, contentDescription = null, tint = TextSecondary, modifier = Modifier.size(12.dp))
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text(customer.phone, fontSize = 12.sp, color = Color(0xFF64748B))
+                            Text(customer.phone, fontSize = 12.sp, color = TextSecondary)
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text(customer.location, fontSize = 12.sp, color = Color(0xFF64748B))
+                            Text(customer.location, fontSize = 12.sp, color = TextSecondary)
                         }
                         Spacer(modifier = Modifier.height(6.dp))
                         Surface(
@@ -187,7 +199,7 @@ fun CustomerDetailScreen(
                         Card(
                             modifier = Modifier.weight(1f),
                             shape = RoundedCornerShape(12.dp),
-                            colors = CardDefaults.cardColors(containerColor = RedBg.copy(alpha = 0.4f))
+                            colors = CardDefaults.cardColors(containerColor = RedBg.copy(alpha = 0.5f))
                         ) {
                             Column(
                                 modifier = Modifier.padding(14.dp),
@@ -207,7 +219,7 @@ fun CustomerDetailScreen(
                         Card(
                             modifier = Modifier.weight(1f),
                             shape = RoundedCornerShape(12.dp),
-                            colors = CardDefaults.cardColors(containerColor = GreenBg.copy(alpha = 0.4f))
+                            colors = CardDefaults.cardColors(containerColor = GreenBg.copy(alpha = 0.5f))
                         ) {
                             Column(
                                 modifier = Modifier.padding(14.dp),
@@ -235,33 +247,33 @@ fun CustomerDetailScreen(
                         Card(
                             modifier = Modifier.weight(1f),
                             shape = RoundedCornerShape(12.dp),
-                            colors = CardDefaults.cardColors(containerColor = Color.White)
+                            colors = CardDefaults.cardColors(containerColor = CardSurface)
                         ) {
                             Column(modifier = Modifier.padding(10.dp)) {
-                                Text("Total Loaned", fontSize = 10.sp, color = Color(0xFF64748B))
-                                Text("₹ ${totalUdhar.toInt()}", fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                                Text("Total Loaned", fontSize = 10.sp, color = TextSecondary)
+                                Text("₹ ${totalUdhar.toInt()}", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = TextPrimary)
                             }
                         }
 
                         Card(
                             modifier = Modifier.weight(1f),
                             shape = RoundedCornerShape(12.dp),
-                            colors = CardDefaults.cardColors(containerColor = Color.White)
+                            colors = CardDefaults.cardColors(containerColor = CardSurface)
                         ) {
                             Column(modifier = Modifier.padding(10.dp)) {
-                                Text("Total Repaid", fontSize = 10.sp, color = Color(0xFF64748B))
-                                Text("₹ ${totalRepaid.toInt()}", fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                                Text("Total Repaid", fontSize = 10.sp, color = TextSecondary)
+                                Text("₹ ${totalRepaid.toInt()}", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = TextPrimary)
                             }
                         }
 
                         Card(
                             modifier = Modifier.weight(1f),
                             shape = RoundedCornerShape(12.dp),
-                            colors = CardDefaults.cardColors(containerColor = Color.White)
+                            colors = CardDefaults.cardColors(containerColor = CardSurface)
                         ) {
                             Column(modifier = Modifier.padding(10.dp)) {
-                                Text("Last Transaction", fontSize = 10.sp, color = Color(0xFF64748B))
-                                Text("08 Aug 2026", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                Text("Last Transaction", fontSize = 10.sp, color = TextSecondary)
+                                Text("08 Aug 2026", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = TextPrimary)
                             }
                         }
                     }
@@ -277,10 +289,10 @@ fun CustomerDetailScreen(
                     Card(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(16.dp),
-                        colors = CardDefaults.cardColors(containerColor = Color.White)
+                        colors = CardDefaults.cardColors(containerColor = CardSurface)
                     ) {
                         Column(modifier = Modifier.padding(14.dp)) {
-                            Text("Quick Actions", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                            Text("Quick Actions", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = TextPrimary)
                             Spacer(modifier = Modifier.height(12.dp))
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
@@ -311,14 +323,14 @@ fun CustomerDetailScreen(
                                     icon = Icons.Default.Notifications,
                                     label = "Send Reminder",
                                     tag = "cust_send_reminder",
-                                    color = Color(0xFFEA580C),
+                                    color = Color(0xFFFFB74D),
                                     onClick = { viewModel.isWhatsAppReminderOpen.value = true }
                                 )
                                 QuickActionButton(
                                     icon = Icons.Default.Description,
                                     label = "View Statement",
                                     tag = "cust_view_statement",
-                                    color = Color(0xFF8B5CF6),
+                                    color = Color(0xFFB69DF8),
                                     onClick = onStatementClick
                                 )
                             }
@@ -353,16 +365,16 @@ fun CustomerDetailScreen(
                         .fillMaxSize()
                         .padding(16.dp)
                 ) {
-                    Text("Customer Notes", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    Text("Customer Notes", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = TextPrimary)
                     Spacer(modifier = Modifier.height(8.dp))
                     Card(
                         modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(containerColor = Color.White)
+                        colors = CardDefaults.cardColors(containerColor = CardSurface)
                     ) {
                         Text(
                             text = customer.notes.ifEmpty { "Regular grocery buyer. Prefers payment via Cash or UPI." },
                             modifier = Modifier.padding(16.dp),
-                            color = Color(0xFF334155)
+                            color = TextPrimary
                         )
                     }
                 }

@@ -26,9 +26,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.OverallShopSummary
 import com.example.ui.UdharViewModel
+import com.example.ui.theme.BackgroundSlate
+import com.example.ui.theme.CardSurface
 import com.example.ui.theme.GreenAdvance
 import com.example.ui.theme.PrimaryBlue
 import com.example.ui.theme.RedUdhar
+import com.example.ui.theme.TextPrimary
+import com.example.ui.theme.TextSecondary
 
 @Composable
 fun ReportsScreen(
@@ -41,11 +45,11 @@ fun ReportsScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(Color(0xFFF8FAFC))
+            .background(BackgroundSlate)
             .verticalScroll(scrollState)
             .padding(16.dp)
     ) {
-        Text("Business Reports & Analytics", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = Color(0xFF0F172A))
+        Text("Business Reports & Analytics", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = TextPrimary)
         Spacer(modifier = Modifier.height(16.dp))
 
         // Financial Overview Card
@@ -55,16 +59,16 @@ fun ReportsScreen(
             modifier = Modifier.fillMaxWidth()
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
-                Text("Monthly Business Financials", color = Color.White.copy(alpha = 0.8f), fontSize = 12.sp)
+                Text("Monthly Business Financials", color = Color(0xFF1C1B1F).copy(alpha = 0.8f), fontSize = 12.sp)
                 Spacer(modifier = Modifier.height(6.dp))
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                     Column {
-                        Text("Total Udhar", color = Color.White, fontSize = 11.sp)
-                        Text("₹ 22,500", color = Color.White, fontWeight = FontWeight.ExtraBold, fontSize = 18.sp)
+                        Text("Total Udhar", color = Color(0xFF1C1B1F), fontSize = 11.sp)
+                        Text("₹ 22,500", color = Color(0xFF1C1B1F), fontWeight = FontWeight.ExtraBold, fontSize = 18.sp)
                     }
                     Column {
-                        Text("Total Collection", color = Color.White, fontSize = 11.sp)
-                        Text("₹ 18,200", color = Color.White, fontWeight = FontWeight.ExtraBold, fontSize = 18.sp)
+                        Text("Total Collection", color = Color(0xFF1C1B1F), fontSize = 11.sp)
+                        Text("₹ 18,200", color = Color(0xFF1C1B1F), fontWeight = FontWeight.ExtraBold, fontSize = 18.sp)
                     }
                 }
             }
@@ -75,16 +79,16 @@ fun ReportsScreen(
         // Outstanding Aging Analysis
         Card(
             shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White),
+            colors = CardDefaults.cardColors(containerColor = CardSurface),
             modifier = Modifier.fillMaxWidth()
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
-                Text("Outstanding Aging Analysis", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                Text("Outstanding Aging Analysis", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = TextPrimary)
                 Spacer(modifier = Modifier.height(12.dp))
 
                 AgingItem("0 – 7 Days", "₹ 4,500", GreenAdvance)
-                AgingItem("8 – 30 Days", "₹ 8,200", Color(0xFFD97706))
-                AgingItem("31 – 60 Days", "₹ 3,700", Color(0xFFEA580C))
+                AgingItem("8 – 30 Days", "₹ 8,200", Color(0xFFFFB74D))
+                AgingItem("31 – 60 Days", "₹ 3,700", Color(0xFFFF8A65))
                 AgingItem("60+ Days (High Risk)", "₹ 6,500", RedUdhar)
             }
         }
@@ -94,11 +98,11 @@ fun ReportsScreen(
         // Customer Ranking
         Card(
             shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White),
+            colors = CardDefaults.cardColors(containerColor = CardSurface),
             modifier = Modifier.fillMaxWidth()
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
-                Text("Top Customer Ranking", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                Text("Top Customer Ranking", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = TextPrimary)
                 Spacer(modifier = Modifier.height(12.dp))
 
                 summary?.customerBreakdown?.take(5)?.forEachIndexed { idx, cust ->
@@ -109,7 +113,7 @@ fun ReportsScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("${idx + 1}. ${cust.customer.name}", fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                        Text("${idx + 1}. ${cust.customer.name}", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = TextPrimary)
                         Text("₹ ${cust.currentOutstanding.toInt()}", fontWeight = FontWeight.Bold, color = RedUdhar, fontSize = 13.sp)
                     }
                 }
@@ -127,7 +131,7 @@ private fun AgingItem(period: String, amount: String, color: Color) {
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(period, fontSize = 13.sp, color = Color(0xFF334155))
+        Text(period, fontSize = 13.sp, color = TextSecondary)
         Text(amount, fontWeight = FontWeight.Bold, fontSize = 14.sp, color = color)
     }
 }

@@ -44,12 +44,17 @@ import androidx.compose.ui.unit.sp
 import com.example.data.Customer
 import com.example.data.LedgerTransaction
 import com.example.ui.UdharViewModel
+import com.example.ui.theme.BackgroundSlate
+import com.example.ui.theme.CardSurface
 import com.example.ui.theme.GreenAdvance
 import com.example.ui.theme.GreenBg
 import com.example.ui.theme.PrimaryBlue
 import com.example.ui.theme.PrimaryBlueBg
 import com.example.ui.theme.RedBg
 import com.example.ui.theme.RedUdhar
+import com.example.ui.theme.TextMuted
+import com.example.ui.theme.TextPrimary
+import com.example.ui.theme.TextSecondary
 
 @Composable
 fun TransactionHistoryScreen(
@@ -77,7 +82,7 @@ fun TransactionHistoryScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(Color(0xFFF8FAFC))
+            .background(BackgroundSlate)
     ) {
         // Header
         Row(
@@ -91,10 +96,10 @@ fun TransactionHistoryScreen(
                 text = customer.name,
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
-                color = Color(0xFF0F172A)
+                color = TextPrimary
             )
             IconButton(onClick = { }) {
-                Icon(Icons.Default.FilterList, contentDescription = "Filter", tint = Color(0xFF0F172A))
+                Icon(Icons.Default.FilterList, contentDescription = "Filter", tint = TextPrimary)
             }
         }
 
@@ -109,12 +114,12 @@ fun TransactionHistoryScreen(
                 val isSelected = activeFilter.equals(filterName, ignoreCase = true)
                 Surface(
                     shape = RoundedCornerShape(16.dp),
-                    color = if (isSelected) PrimaryBlue else Color.White,
+                    color = if (isSelected) PrimaryBlue else CardSurface,
                     modifier = Modifier.clickable { viewModel.setTransactionFilter(filterName) }
                 ) {
                     Text(
                         text = filterName,
-                        color = if (isSelected) Color.White else Color(0xFF475569),
+                        color = if (isSelected) Color(0xFF1C1B1F) else TextSecondary,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp)
@@ -142,7 +147,7 @@ fun TransactionHistoryScreen(
 
                 Card(
                     shape = RoundedCornerShape(12.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    colors = CardDefaults.cardColors(containerColor = CardSurface),
                     elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
                     modifier = Modifier
                         .fillMaxWidth()
@@ -169,12 +174,12 @@ fun TransactionHistoryScreen(
                                 text = textPrefix,
                                 fontWeight = FontWeight.Bold,
                                 style = MaterialTheme.typography.bodyMedium,
-                                color = Color(0xFF0F172A)
+                                color = TextPrimary
                             )
                             Text(
                                 text = txn.note.ifEmpty { txn.paymentMethod },
                                 fontSize = 11.sp,
-                                color = Color(0xFF64748B)
+                                color = TextSecondary
                             )
                         }
 
@@ -193,7 +198,7 @@ fun TransactionHistoryScreen(
 
         // Bottom Sticky Summary
         Surface(
-            color = Color(0xFFFEF2F2),
+            color = RedBg,
             modifier = Modifier.fillMaxWidth()
         ) {
             Row(
@@ -203,15 +208,15 @@ fun TransactionHistoryScreen(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Column {
-                    Text("Total Loaned", fontSize = 10.sp, color = Color(0xFF64748B))
-                    Text("₹ ${totalLoaned.toInt()}", fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                    Text("Total Loaned", fontSize = 10.sp, color = TextSecondary)
+                    Text("₹ ${totalLoaned.toInt()}", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = TextPrimary)
                 }
                 Column {
-                    Text("Total Repaid", fontSize = 10.sp, color = Color(0xFF64748B))
+                    Text("Total Repaid", fontSize = 10.sp, color = TextSecondary)
                     Text("₹ ${totalRepaid.toInt()}", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = GreenAdvance)
                 }
                 Column {
-                    Text("Current Outstanding", fontSize = 10.sp, color = Color(0xFF64748B))
+                    Text("Current Outstanding", fontSize = 10.sp, color = TextSecondary)
                     Text("₹ ${currentOutstanding.toInt()}", fontWeight = FontWeight.ExtraBold, fontSize = 14.sp, color = RedUdhar)
                 }
             }

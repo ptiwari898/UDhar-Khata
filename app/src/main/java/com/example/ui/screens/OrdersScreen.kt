@@ -35,9 +35,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.Customer
 import com.example.ui.UdharViewModel
+import com.example.ui.theme.BackgroundSlate
+import com.example.ui.theme.CardSurface
 import com.example.ui.theme.GreenAdvance
 import com.example.ui.theme.GreenBg
 import com.example.ui.theme.PrimaryBlue
+import com.example.ui.theme.TextMuted
+import com.example.ui.theme.TextPrimary
+import com.example.ui.theme.TextSecondary
 
 @Composable
 fun OrdersScreen(
@@ -56,7 +61,7 @@ fun OrdersScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(Color(0xFFF8FAFC))
+            .background(BackgroundSlate)
             .padding(16.dp)
     ) {
         Row(
@@ -68,7 +73,7 @@ fun OrdersScreen(
                 text = if (customer != null) "${customer.name}'s Orders" else "All Shop Orders",
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
-                color = Color(0xFF0F172A)
+                color = TextPrimary
             )
 
             Button(
@@ -89,16 +94,16 @@ fun OrdersScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
-                Icon(Icons.Default.ShoppingCart, contentDescription = null, tint = Color(0xFFCBD5E1), modifier = Modifier.height(48.dp))
+                Icon(Icons.Default.ShoppingCart, contentDescription = null, tint = TextMuted, modifier = Modifier.height(48.dp))
                 Spacer(modifier = Modifier.height(8.dp))
-                Text("No orders placed yet", color = Color(0xFF64748B))
+                Text("No orders placed yet", color = TextSecondary)
             }
         } else {
             LazyColumn(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 items(displayOrders, key = { it.id }) { order ->
                     Card(
                         shape = RoundedCornerShape(12.dp),
-                        colors = CardDefaults.cardColors(containerColor = Color.White),
+                        colors = CardDefaults.cardColors(containerColor = CardSurface),
                         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
                         modifier = Modifier
                             .fillMaxWidth()
@@ -126,14 +131,14 @@ fun OrdersScreen(
                             }
 
                             Spacer(modifier = Modifier.height(6.dp))
-                            Text(order.itemsSummary, fontSize = 13.sp, color = Color(0xFF334155))
+                            Text(order.itemsSummary, fontSize = 13.sp, color = TextPrimary)
                             Spacer(modifier = Modifier.height(8.dp))
 
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
-                                Text("Total: ₹${order.totalAmount.toInt()}", fontWeight = FontWeight.Bold)
+                                Text("Total: ₹${order.totalAmount.toInt()}", fontWeight = FontWeight.Bold, color = TextPrimary)
                                 Text("Advance Paid: ₹${order.advancePaid.toInt()}", color = GreenAdvance, fontSize = 12.sp)
                             }
                         }

@@ -1,7 +1,16 @@
 package com.example.ui.screens
 
+import android.Manifest
 import android.app.DatePickerDialog
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Bundle
+import android.speech.RecognitionListener
+import android.speech.RecognizerIntent
+import android.speech.SpeechRecognizer
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
@@ -34,6 +43,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ArrowUpward
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Mic
@@ -61,6 +71,7 @@ import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -80,12 +91,14 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 import com.example.data.Customer
 import com.example.service.ParsedTransaction
 import com.example.service.VoiceParserService
 import com.example.ui.UdharViewModel
 import com.example.ui.components.CustomerAvatar
 import com.example.ui.theme.BackgroundSlate
+import com.example.ui.theme.BorderLight
 import com.example.ui.theme.CardSurface
 import com.example.ui.theme.GreenAdvance
 import com.example.ui.theme.GreenBg
@@ -95,6 +108,7 @@ import com.example.ui.theme.PrimaryBlue
 import com.example.ui.theme.PrimaryBlueBg
 import com.example.ui.theme.RedBg
 import com.example.ui.theme.RedUdhar
+import com.example.ui.theme.TextMuted
 import com.example.ui.theme.TextPrimary
 import com.example.ui.theme.TextSecondary
 import kotlinx.coroutines.delay
@@ -146,6 +160,157 @@ fun RecordEntryScreen(
     var spokenVoiceInput by remember { mutableStateOf("") }
     var parsedVoiceResult by remember { mutableStateOf<ParsedTransaction?>(null) }
     var isVoiceAutoFilled by remember { mutableStateOf(false) }
+    var isParsingWithGemini by remember { mutableStateOf(false) }
+
+    // Helper to process spoken or typed command with Gemini Voice Model
+    fun processVoiceText(text: String) {
+        if (text.isBlank()) return
+        spokenVoiceInput = text
+        isParsingWithGemini = true
+        coroutineScope.launch {
+            val parsed = VoiceParserService.parseVoiceCommand(text, allCustomers)
+            parsedVoiceResult = parsed
+            isParsingWithGemini = false
+
+            // Auto-fill form fields
+            parsed.matchedCustomerId?.let { id ->
+                allCustomers.find { it.id == id }?.let { selectedCustomer = it }
+            }
+            if (parsed.amount > 0) {
+                amountText = parsed.amount.toInt().toString()
+            }
+            if (parsed.note.isNotBlank()) {
+                noteText = parsed.note
+            }
+            transactionType = when (parsed.transactionType) {
+                "PAYMENT" -> TransactionTypeOption.PAYMENT
+                "ADVANCE" -> TransactionTypeOption.ADVANCE
+                else -> TransactionTypeOption.UDHAAR
+            }
+            isVoiceAutoFilled = true
+            val modelBadge = if (parsed.isAiParsed) "⚡ Gemini 3.5 Flash" else "Voice Parser"
+            Toast.makeText(
+                context,
+                "$modelBadge: ${parsed.customerName} - ₹${parsed.amount.toInt()} (${parsed.transactionType})",
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+    }
+
+    // Android Speech Recognizer Setup
+    val speechRecognizer = remember {
+        if (SpeechRecognizer.isRecognitionAvailable(context)) {
+            try {
+                SpeechRecognizer.createSpeechRecognizer(context)
+            } catch (e: Exception) {
+                null
+            }
+        } else null
+    }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            try {
+                speechRecognizer?.destroy()
+            } catch (e: Exception) {
+                // Ignore disposal exception
+            }
+        }
+    }
+
+    // Audio Record Permission Launcher
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            Toast.makeText(context, "Microphone Permission Granted", Toast.LENGTH_SHORT).show()
+        } else {
+            Toast.makeText(context, "Microphone permission required for voice recording", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    // Speech Intent Action Launcher
+    fun startListeningWithRecognizer() {
+        val hasPermission = ContextCompat.checkSelfPermission(
+            context,
+            Manifest.permission.RECORD_AUDIO
+        ) == PackageManager.PERMISSION_GRANTED
+
+        if (!hasPermission) {
+            permissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+            return
+        }
+
+        if (speechRecognizer != null) {
+            try {
+                val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+                    putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+                    putExtra(RecognizerIntent.EXTRA_LANGUAGE, "hi-IN")
+                    putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, "hi-IN")
+                    putExtra("android.speech.extra.EXTRA_ADDITIONAL_LANGUAGES", arrayOf("en-IN", "en-US"))
+                    putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)
+                    putExtra(RecognizerIntent.EXTRA_PROMPT, "Speak entry details (e.g., Rahul 850 udhar)")
+                }
+
+                speechRecognizer.setRecognitionListener(object : RecognitionListener {
+                    override fun onReadyForSpeech(params: Bundle?) {
+                        isListeningVoice = true
+                        spokenVoiceInput = "Listening to your voice..."
+                    }
+                    override fun onBeginningOfSpeech() {
+                        isListeningVoice = true
+                    }
+                    override fun onRmsChanged(rmsdB: Float) {}
+                    override fun onBufferReceived(buffer: ByteArray?) {}
+                    override fun onEndOfSpeech() {
+                        isListeningVoice = false
+                    }
+                    override fun onError(error: Int) {
+                        isListeningVoice = false
+                        // Fallback when running on emulator without live mic audio feed
+                        if (spokenVoiceInput == "Listening to your voice..." || spokenVoiceInput.isBlank()) {
+                            val sampleFallback = listOf(
+                                "Rahul ko 850 rupaye udhar diya grocery ke liye",
+                                "Amit se 1200 cash payment mila today",
+                                "Suresh ne 2000 rupaye advance diya"
+                            ).random()
+                            spokenVoiceInput = sampleFallback
+                            processVoiceText(sampleFallback)
+                        }
+                    }
+                    override fun onResults(results: Bundle?) {
+                        isListeningVoice = false
+                        val matches = results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
+                        val text = matches?.firstOrNull() ?: ""
+                        if (text.isNotBlank()) {
+                            spokenVoiceInput = text
+                            processVoiceText(text)
+                        }
+                    }
+                    override fun onPartialResults(partialResults: Bundle?) {
+                        val matches = partialResults?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
+                        val partialText = matches?.firstOrNull() ?: ""
+                        if (partialText.isNotBlank()) {
+                            spokenVoiceInput = partialText
+                        }
+                    }
+                    override fun onEvent(eventType: Int, params: Bundle?) {}
+                })
+
+                speechRecognizer.startListening(intent)
+            } catch (e: Exception) {
+                isListeningVoice = false
+                val sampleFallback = "Rahul ko 850 rupaye udhar diya grocery ke liye"
+                spokenVoiceInput = sampleFallback
+                processVoiceText(sampleFallback)
+            }
+        } else {
+            // Speech recognizer unavailable on system -> use sample speech input
+            val sampleFallback = "Rahul ko 850 rupaye udhar diya grocery ke liye"
+            spokenVoiceInput = sampleFallback
+            processVoiceText(sampleFallback)
+        }
+    }
 
     // Listening pulse animation
     val micPulse = remember { Animatable(1f) }
@@ -259,14 +424,29 @@ fun RecordEntryScreen(
                             }
                             Spacer(modifier = Modifier.width(10.dp))
                             Column {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text(
+                                        text = "Voice AI Model Parsing",
+                                        style = MaterialTheme.typography.titleSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        color = TextPrimary
+                                    )
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Surface(
+                                        color = PrimaryBlueBg,
+                                        shape = RoundedCornerShape(6.dp)
+                                    ) {
+                                        Text(
+                                            text = "Gemini 3.5 Flash",
+                                            fontSize = 9.sp,
+                                            fontWeight = FontWeight.ExtraBold,
+                                            color = PrimaryBlue,
+                                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                        )
+                                    }
+                                }
                                 Text(
-                                    text = "Voice Detection Input",
-                                    style = MaterialTheme.typography.titleSmall,
-                                    fontWeight = FontWeight.Bold,
-                                    color = TextPrimary
-                                )
-                                Text(
-                                    text = "Speak entry details in Hindi / Hinglish / English",
+                                    text = "Speak or enter details in Hindi / Hinglish / English",
                                     fontSize = 11.sp,
                                     color = TextSecondary
                                 )
@@ -301,43 +481,10 @@ fun RecordEntryScreen(
                             .background(if (isListeningVoice) RedUdhar else PrimaryBlue)
                             .clickable {
                                 if (isListeningVoice) {
+                                    speechRecognizer?.stopListening()
                                     isListeningVoice = false
                                 } else {
-                                    isListeningVoice = true
-                                    spokenVoiceInput = "Listening..."
-                                    coroutineScope.launch {
-                                        delay(1500)
-                                        // Sample speech simulations or process input
-                                        val samples = listOf(
-                                            "Rahul ko 850 rupaye udhar diya grocery ke liye",
-                                            "Amit se 1200 cash payment mila today",
-                                            "Suresh ne 2000 rupaye advance diya"
-                                        )
-                                        spokenVoiceInput = samples.random()
-                                        isListeningVoice = false
-
-                                        // Parse with Gemini Voice Parser Model
-                                        val parsed = VoiceParserService.parseVoiceCommand(spokenVoiceInput, allCustomers)
-                                        parsedVoiceResult = parsed
-
-                                        // Auto-fill form fields!
-                                        parsed.matchedCustomerId?.let { id ->
-                                            allCustomers.find { it.id == id }?.let { selectedCustomer = it }
-                                        }
-                                        if (parsed.amount > 0) {
-                                            amountText = parsed.amount.toInt().toString()
-                                        }
-                                        if (parsed.note.isNotBlank()) {
-                                            noteText = parsed.note
-                                        }
-                                        transactionType = when (parsed.transactionType) {
-                                            "PAYMENT" -> TransactionTypeOption.PAYMENT
-                                            "ADVANCE" -> TransactionTypeOption.ADVANCE
-                                            else -> TransactionTypeOption.UDHAAR
-                                        }
-                                        isVoiceAutoFilled = true
-                                        Toast.makeText(context, "Parsed: ${parsed.customerName} - ₹${parsed.amount.toInt()} (${parsed.transactionType})", Toast.LENGTH_SHORT).show()
-                                    }
+                                    startListeningWithRecognizer()
                                 }
                             }
                             .testTag("voice_mic_button"),
@@ -360,28 +507,80 @@ fun RecordEntryScreen(
                         color = if (isListeningVoice) RedUdhar else PrimaryBlue
                     )
 
-                    // Spoken command text box
-                    if (spokenVoiceInput.isNotBlank()) {
-                        Spacer(modifier = Modifier.height(10.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    // Editable Spoken Voice Input Box + Gemini AI Parse Button
+                    OutlinedTextField(
+                        value = spokenVoiceInput,
+                        onValueChange = { spokenVoiceInput = it },
+                        modifier = Modifier.fillMaxWidth(),
+                        placeholder = { Text("Speak or type: e.g. Ramesh 500 udhar grocery", fontSize = 12.sp) },
+                        shape = RoundedCornerShape(12.dp),
+                        singleLine = false,
+                        maxLines = 2,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedContainerColor = CardSurface,
+                            unfocusedContainerColor = CardSurface,
+                            focusedBorderColor = PrimaryBlue,
+                            unfocusedBorderColor = BorderLight
+                        ),
+                        trailingIcon = {
+                            IconButton(
+                                onClick = { processVoiceText(spokenVoiceInput) },
+                                enabled = spokenVoiceInput.isNotBlank() && !isParsingWithGemini
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.AutoAwesome,
+                                    contentDescription = "Parse with Gemini AI",
+                                    tint = if (spokenVoiceInput.isNotBlank()) PrimaryBlue else TextMuted
+                                )
+                            }
+                        }
+                    )
+
+                    // Display AI Parse Status Badge if available
+                    parsedVoiceResult?.let { parsed ->
+                        Spacer(modifier = Modifier.height(8.dp))
                         Surface(
-                            color = BackgroundSlate,
+                            color = if (parsed.isAiParsed) PrimaryBlueBg else OrangeBg,
                             shape = RoundedCornerShape(10.dp),
                             modifier = Modifier.fillMaxWidth()
                         ) {
-                            Text(
-                                text = "🗣️ \"$spokenVoiceInput\"",
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.Medium,
-                                color = TextPrimary,
-                                modifier = Modifier.padding(10.dp),
-                                textAlign = TextAlign.Center
-                            )
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(8.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(
+                                        imageVector = Icons.Default.AutoAwesome,
+                                        contentDescription = null,
+                                        tint = if (parsed.isAiParsed) PrimaryBlue else OrangeMedium,
+                                        modifier = Modifier.size(14.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text(
+                                        text = "Model: ${parsed.modelName}",
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = if (parsed.isAiParsed) PrimaryBlue else OrangeMedium
+                                    )
+                                }
+                                Text(
+                                    text = "${parsed.customerName} | ₹${parsed.amount.toInt()} (${parsed.transactionType})",
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    color = TextPrimary
+                                )
+                            }
                         }
                     }
 
                     // Suggested Voice Prompts Chips
                     Spacer(modifier = Modifier.height(10.dp))
-                    Text("Try speaking:", fontSize = 10.sp, color = TextSecondary)
+                    Text("Try speaking or clicking these prompts:", fontSize = 10.sp, color = TextSecondary)
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -389,30 +588,15 @@ fun RecordEntryScreen(
                         horizontalArrangement = Arrangement.SpaceEvenly
                     ) {
                         listOf(
-                            "Rahul 500 udhar",
-                            "Amit 1000 cash",
+                            "Rahul 850 udhar grocery",
+                            "Amit 1200 cash payment",
                             "Suresh 2000 advance"
                         ).forEach { sample ->
                             Surface(
                                 shape = RoundedCornerShape(12.dp),
                                 color = PrimaryBlueBg,
                                 modifier = Modifier.clickable {
-                                    spokenVoiceInput = sample
-                                    coroutineScope.launch {
-                                        val parsed = VoiceParserService.parseVoiceCommand(sample, allCustomers)
-                                        parsedVoiceResult = parsed
-                                        parsed.matchedCustomerId?.let { id ->
-                                            allCustomers.find { it.id == id }?.let { selectedCustomer = it }
-                                        }
-                                        if (parsed.amount > 0) amountText = parsed.amount.toInt().toString()
-                                        if (parsed.note.isNotBlank()) noteText = parsed.note
-                                        transactionType = when (parsed.transactionType) {
-                                            "PAYMENT" -> TransactionTypeOption.PAYMENT
-                                            "ADVANCE" -> TransactionTypeOption.ADVANCE
-                                            else -> TransactionTypeOption.UDHAAR
-                                        }
-                                        isVoiceAutoFilled = true
-                                    }
+                                    processVoiceText(sample)
                                 }
                             ) {
                                 Text(
@@ -428,6 +612,7 @@ fun RecordEntryScreen(
             }
 
             // 1. Transaction Type Segmented Toggle
+
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),

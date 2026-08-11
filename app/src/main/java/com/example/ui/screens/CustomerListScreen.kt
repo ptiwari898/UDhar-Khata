@@ -54,6 +54,16 @@ import com.example.data.OverallShopSummary
 import com.example.ui.UdharViewModel
 import com.example.ui.components.CustomerAvatar
 import com.example.ui.components.RiskBadge
+import com.example.ui.theme.BackgroundSlate
+import com.example.ui.theme.BorderLight
+import com.example.ui.theme.CardSurface
+import com.example.ui.theme.GreenUdharRepaid
+import com.example.ui.theme.PrimaryBlue
+import com.example.ui.theme.PrimaryBlueBg
+import com.example.ui.theme.RedUdhar
+import com.example.ui.theme.TextMuted
+import com.example.ui.theme.TextPrimary
+import com.example.ui.theme.TextSecondary
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -83,8 +93,8 @@ fun CustomerListScreen(
         floatingActionButton = {
             FloatingActionButton(
                 onClick = { viewModel.isAddCustomerOpen.value = true },
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = Color.White,
+                containerColor = PrimaryBlue,
+                contentColor = Color(0xFF1C1B1F),
                 modifier = Modifier.testTag("add_customer_fab")
             ) {
                 Icon(Icons.Default.Add, contentDescription = "Add Customer")
@@ -95,7 +105,7 @@ fun CustomerListScreen(
             modifier = modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .background(Color(0xFFF8FAFC))
+                .background(BackgroundSlate)
         ) {
             // Header Bar
             Row(
@@ -109,10 +119,10 @@ fun CustomerListScreen(
                     text = "Loaned Individuals",
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFF0F172A)
+                    color = TextPrimary
                 )
                 IconButton(onClick = { }) {
-                    Icon(Icons.Default.FilterList, contentDescription = "Filter", tint = Color(0xFF0F172A))
+                    Icon(Icons.Default.FilterList, contentDescription = "Filter", tint = TextPrimary)
                 }
             }
 
@@ -120,14 +130,16 @@ fun CustomerListScreen(
             OutlinedTextField(
                 value = searchQuery,
                 onValueChange = { viewModel.setSearchQuery(it) },
-                placeholder = { Text("Search customer...", fontSize = 13.sp) },
-                leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = Color(0xFF94A3B8)) },
+                placeholder = { Text("Search customer...", fontSize = 13.sp, color = TextMuted) },
+                leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = TextMuted) },
                 shape = RoundedCornerShape(12.dp),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedContainerColor = Color.White,
-                    unfocusedContainerColor = Color.White,
-                    focusedBorderColor = MaterialTheme.colorScheme.primary,
-                    unfocusedBorderColor = Color(0xFFE2E8F0)
+                    focusedContainerColor = CardSurface,
+                    unfocusedContainerColor = CardSurface,
+                    focusedBorderColor = PrimaryBlue,
+                    unfocusedBorderColor = BorderLight,
+                    focusedTextColor = TextPrimary,
+                    unfocusedTextColor = TextPrimary
                 ),
                 modifier = Modifier
                     .fillMaxWidth()
@@ -144,7 +156,7 @@ fun CustomerListScreen(
                     .padding(horizontal = 16.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text("Sort by: ", fontSize = 12.sp, color = Color(0xFF64748B))
+                Text("Sort by: ", fontSize = 12.sp, color = TextSecondary)
 
                 ExposedDropdownMenuBox(
                     expanded = sortExpanded,
@@ -157,14 +169,14 @@ fun CustomerListScreen(
                     }
                     Surface(
                         shape = RoundedCornerShape(8.dp),
-                        color = Color.White,
+                        color = CardSurface,
                         modifier = Modifier.menuAnchor()
                     ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                         ) {
-                            Text(sortLabel, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color(0xFF0F172A))
+                            Text(sortLabel, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = TextPrimary)
                             ExposedDropdownMenuDefaults.TrailingIcon(expanded = sortExpanded)
                         }
                     }
@@ -174,21 +186,21 @@ fun CustomerListScreen(
                         onDismissRequest = { sortExpanded = false }
                     ) {
                         DropdownMenuItem(
-                            text = { Text("Outstanding (High to Low)", fontSize = 12.sp) },
+                            text = { Text("Outstanding (High to Low)", fontSize = 12.sp, color = TextPrimary) },
                             onClick = {
                                 viewModel.setSortBy("HighToLow")
                                 sortExpanded = false
                             }
                         )
                         DropdownMenuItem(
-                            text = { Text("Outstanding (Low to High)", fontSize = 12.sp) },
+                            text = { Text("Outstanding (Low to High)", fontSize = 12.sp, color = TextPrimary) },
                             onClick = {
                                 viewModel.setSortBy("LowToHigh")
                                 sortExpanded = false
                             }
                         )
                         DropdownMenuItem(
-                            text = { Text("Name (A-Z)", fontSize = 12.sp) },
+                            text = { Text("Name (A-Z)", fontSize = 12.sp, color = TextPrimary) },
                             onClick = {
                                 viewModel.setSortBy("Name")
                                 sortExpanded = false
@@ -214,7 +226,7 @@ fun CustomerListScreen(
                             .clickable { onCustomerClick(item.customer.id) }
                             .testTag("customer_item_${item.customer.id}"),
                         shape = RoundedCornerShape(12.dp),
-                        colors = CardDefaults.cardColors(containerColor = Color.White),
+                        colors = CardDefaults.cardColors(containerColor = CardSurface),
                         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
                     ) {
                         Row(
@@ -231,7 +243,7 @@ fun CustomerListScreen(
                                         text = item.customer.name,
                                         style = MaterialTheme.typography.titleSmall,
                                         fontWeight = FontWeight.Bold,
-                                        color = Color(0xFF0F172A)
+                                        color = TextPrimary
                                     )
                                     Spacer(modifier = Modifier.width(8.dp))
                                     RiskBadge(riskLevel = item.customer.riskLevel)
@@ -240,12 +252,12 @@ fun CustomerListScreen(
                                 Spacer(modifier = Modifier.height(2.dp))
 
                                 Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Icon(Icons.Default.Phone, contentDescription = null, tint = Color(0xFF64748B), modifier = Modifier.size(11.dp))
+                                    Icon(Icons.Default.Phone, contentDescription = null, tint = TextSecondary, modifier = Modifier.size(11.dp))
                                     Spacer(modifier = Modifier.width(4.dp))
                                     Text(
                                         text = item.customer.phone,
                                         fontSize = 11.sp,
-                                        color = Color(0xFF64748B)
+                                        color = TextSecondary
                                     )
                                 }
                             }
@@ -254,19 +266,19 @@ fun CustomerListScreen(
                                 Text(
                                     text = "₹ ${item.currentOutstanding.toInt()}",
                                     fontWeight = FontWeight.Bold,
-                                    color = if (item.currentOutstanding > 0) Color(0xFFDC2626) else Color(0xFF16A34A),
+                                    color = if (item.currentOutstanding > 0) RedUdhar else GreenUdharRepaid,
                                     fontSize = 14.sp
                                 )
                                 Text(
                                     text = "${String.format("%.1f", item.percentageShare)}%",
                                     fontSize = 10.sp,
-                                    color = Color(0xFF94A3B8)
+                                    color = TextMuted
                                 )
                             }
 
                             Spacer(modifier = Modifier.width(6.dp))
 
-                            Icon(Icons.Default.ChevronRight, contentDescription = null, tint = Color(0xFFCBD5E1))
+                            Icon(Icons.Default.ChevronRight, contentDescription = null, tint = TextMuted)
                         }
                     }
                 }
@@ -274,7 +286,7 @@ fun CustomerListScreen(
 
             // Bottom Summary Bar
             Surface(
-                color = Color(0xFFEEF2FF),
+                color = PrimaryBlueBg,
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Row(
@@ -285,22 +297,22 @@ fun CustomerListScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Column {
-                        Text("Total Outstanding", fontSize = 11.sp, color = Color(0xFF64748B))
+                        Text("Total Outstanding", fontSize = 11.sp, color = TextSecondary)
                         Text(
                             "₹ ${summary?.currentOutstandingUdhar?.toInt() ?: 15000}",
                             fontWeight = FontWeight.ExtraBold,
                             fontSize = 16.sp,
-                            color = MaterialTheme.colorScheme.primary
+                            color = RedUdhar
                         )
                     }
 
                     Column(horizontalAlignment = Alignment.End) {
-                        Text("Active Customers", fontSize = 11.sp, color = Color(0xFF64748B))
+                        Text("Active Customers", fontSize = 11.sp, color = TextSecondary)
                         Text(
                             "${summary?.activeCustomersCount ?: 127}",
                             fontWeight = FontWeight.ExtraBold,
                             fontSize = 16.sp,
-                            color = Color(0xFF0F172A)
+                            color = TextPrimary
                         )
                     }
                 }
