@@ -8,6 +8,7 @@ import androidx.activity.viewModels
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.Assessment
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
@@ -45,6 +46,7 @@ import com.example.ui.screens.CustomerListScreen
 import com.example.ui.screens.CustomerStatementScreen
 import com.example.ui.screens.DashboardScreen
 import com.example.ui.screens.OrdersScreen
+import com.example.ui.screens.RecordEntryScreen
 import com.example.ui.screens.ReportsScreen
 import com.example.ui.theme.PrimaryBlue
 import com.example.ui.theme.UdharKhataTheme
@@ -109,10 +111,10 @@ fun UdharKhataApp(viewModel: UdharViewModel) {
                 ) {
                     val navItems = listOf(
                         Triple("Home", Icons.Default.Home, "nav_home"),
+                        Triple("Record Entry", Icons.Default.AddCircle, "nav_entry"),
                         Triple("Customers", Icons.Default.People, "nav_customers"),
                         Triple("Orders", Icons.Default.ShoppingCart, "nav_orders"),
-                        Triple("Reports", Icons.Default.Assessment, "nav_reports"),
-                        Triple("Profile", Icons.Default.Person, "nav_profile")
+                        Triple("Reports", Icons.Default.Assessment, "nav_reports")
                     )
 
                     navItems.forEach { (title, icon, tag) ->
@@ -175,6 +177,15 @@ fun UdharKhataApp(viewModel: UdharViewModel) {
             // 4. Main Tab Navigation Screens
             else -> {
                 when (selectedTab) {
+                    "Record Entry" -> {
+                        RecordEntryScreen(
+                            viewModel = viewModel,
+                            initialCustomerId = selectedCustomerId,
+                            onBackClick = { viewModel.selectTab("Home") },
+                            modifier = Modifier.padding(innerPadding)
+                        )
+                    }
+
                     "Customers" -> {
                         CustomerListScreen(
                             summary = shopSummary,

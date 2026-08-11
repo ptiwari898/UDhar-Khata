@@ -307,21 +307,21 @@ fun DashboardScreen(
                         label = "Add Udhar",
                         tag = "quick_add_udhar",
                         color = RedUdhar,
-                        onClick = { viewModel.isAddUdharOpen.value = true }
+                        onClick = { viewModel.selectTab("Record Entry") }
                     )
                     QuickActionButton(
                         icon = Icons.Default.ArrowDownward,
                         label = "Receive Payment",
                         tag = "quick_receive_payment",
                         color = GreenAdvance,
-                        onClick = { viewModel.isReceivePaymentOpen.value = true }
+                        onClick = { viewModel.selectTab("Record Entry") }
                     )
                     QuickActionButton(
                         icon = Icons.Default.Add,
                         label = "Add Advance",
                         tag = "quick_add_advance",
                         color = PrimaryBlue,
-                        onClick = { viewModel.isAddAdvanceOpen.value = true }
+                        onClick = { viewModel.selectTab("Record Entry") }
                     )
                     QuickActionButton(
                         icon = Icons.Default.ShoppingCart,
@@ -335,7 +335,7 @@ fun DashboardScreen(
                         label = "Voice Entry",
                         tag = "quick_voice_entry",
                         color = Color(0xFFD97706),
-                        onClick = { viewModel.isVoiceEntryOpen.value = true }
+                        onClick = { viewModel.selectTab("Record Entry") }
                     )
                 }
             }

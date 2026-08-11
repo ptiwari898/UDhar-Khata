@@ -1,5 +1,6 @@
 package com.example.data
 
+import com.example.service.FirestoreLedgerService
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 
@@ -32,7 +33,8 @@ class UdharRepository(
     private val customerDao: CustomerDao,
     private val ledgerDao: LedgerDao,
     private val orderDao: OrderDao,
-    private val chatDao: ChatDao
+    private val chatDao: ChatDao,
+    private val firestoreLedgerService: FirestoreLedgerService = FirestoreLedgerService()
 ) {
     val shopProfile: Flow<ShopProfile?> = shopDao.getShopProfile()
     val allCustomers: Flow<List<Customer>> = customerDao.getAllCustomers()
@@ -108,8 +110,21 @@ class UdharRepository(
         return customerDao.insertCustomer(customer)
     }
 
-    suspend fun addTransaction(transaction: LedgerTransaction): Long {
-        return ledgerDao.insertTransaction(transaction)
+    suspend fun addTransaction(transaction: LedgerTransaction, userId: String? = null): Long {
+        val insertedId = ledgerDao.insertTransaction(transaction)
+        if (!userId.isNullOrEmpty()) {
+            val updatedTx = if (transaction.id <= 0) transaction.copy(id = insertedId.toInt()) else transaction
+            firestoreLedgerService.saveTransaction(userId, updatedTx)
+        }
+        return insertedId
+    }
+
+    suspend fun syncFirestoreEntries(userId: String) {
+        if (userId.isBlank()) return
+        val remoteEntries = firestoreLedgerService.fetchTransactions(userId)
+        remoteEntries.forEach { entry ->
+            ledgerDao.insertTransaction(entry)
+        }
     }
 
     suspend fun addOrder(order: CustomerOrder): Long {

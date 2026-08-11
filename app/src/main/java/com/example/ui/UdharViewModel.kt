@@ -62,6 +62,16 @@ class UdharViewModel(application: Application) : AndroidViewModel(application) {
         initialValue = emptyList()
     )
 
+    init {
+        viewModelScope.launch {
+            currentUser.collect { user ->
+                user?.uid?.let { uid ->
+                    repository.syncFirestoreEntries(uid)
+                }
+            }
+        }
+    }
+
     val allOrders = repository.allOrders.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
@@ -121,6 +131,7 @@ class UdharViewModel(application: Application) : AndroidViewModel(application) {
     // Actions
     fun saveUdhar(customerId: Int, amount: Double, note: String, dateMillis: Long) {
         viewModelScope.launch {
+            val uid = currentUser.value?.uid
             repository.addTransaction(
                 LedgerTransaction(
                     customerId = customerId,
@@ -128,7 +139,8 @@ class UdharViewModel(application: Application) : AndroidViewModel(application) {
                     amount = amount,
                     note = note,
                     dateMillis = dateMillis
-                )
+                ),
+                userId = uid
             )
             isAddUdharOpen.value = false
         }
@@ -136,6 +148,7 @@ class UdharViewModel(application: Application) : AndroidViewModel(application) {
 
     fun savePayment(customerId: Int, amount: Double, method: String, reference: String) {
         viewModelScope.launch {
+            val uid = currentUser.value?.uid
             repository.addTransaction(
                 LedgerTransaction(
                     customerId = customerId,
@@ -144,7 +157,8 @@ class UdharViewModel(application: Application) : AndroidViewModel(application) {
                     paymentMethod = method,
                     reference = reference,
                     note = "Payment Received"
-                )
+                ),
+                userId = uid
             )
             isReceivePaymentOpen.value = false
         }
@@ -152,6 +166,7 @@ class UdharViewModel(application: Application) : AndroidViewModel(application) {
 
     fun saveAdvance(customerId: Int, amount: Double, method: String, note: String) {
         viewModelScope.launch {
+            val uid = currentUser.value?.uid
             repository.addTransaction(
                 LedgerTransaction(
                     customerId = customerId,
@@ -159,7 +174,8 @@ class UdharViewModel(application: Application) : AndroidViewModel(application) {
                     amount = amount,
                     paymentMethod = method,
                     note = if (note.isBlank()) "Advance Balance Received" else note
-                )
+                ),
+                userId = uid
             )
             isAddAdvanceOpen.value = false
         }
