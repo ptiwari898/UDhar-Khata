@@ -5,6 +5,7 @@ import android.content.SharedPreferences
 import android.util.Log
 import androidx.credentials.CredentialManager
 import androidx.credentials.GetCredentialRequest
+import com.example.BuildConfig
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.firebase.auth.FirebaseAuth
@@ -179,15 +180,17 @@ class AuthRepository(private val context: Context) {
     }
 
     // Google Sign-In with CredentialManager & Firebase Auth
-    suspend fun signInWithGoogle(contextActivity: android.app.Activity): Result<UserAuthProfile> = withContext(Dispatchers.IO) {
-        try {
+    suspend fun signInWithGoogle(contextActivity: android.app.Activity): Result<UserAuthProfile> {
+        return try {
             val rawNonce = UUID.randomUUID().toString()
             val md = MessageDigest.getInstance("SHA-256")
             val digest = md.digest(rawNonce.toByteArray())
             val hashedNonce = digest.fold("") { str, it -> str + "%02x".format(it) }
 
-            // Standard Web Client ID placeholder or configured web client ID
-            val webClientId = "1052674314115-dummywebclientid.apps.googleusercontent.com"
+            val webClientId = BuildConfig.GOOGLE_WEB_CLIENT_ID.trim()
+            if (webClientId.isBlank() || webClientId == "YOUR_WEB_CLIENT_ID.apps.googleusercontent.com") {
+                return Result.failure(Exception("Google Sign-In is not configured. Add GOOGLE_WEB_CLIENT_ID to .env."))
+            }
 
             val googleIdOption = GetGoogleIdOption.Builder()
                 .setFilterByAuthorizedAccounts(false)
@@ -237,16 +240,7 @@ class AuthRepository(private val context: Context) {
             }
         } catch (e: Exception) {
             Log.e("AuthRepository", "Google Sign-In failed/cancelled: ${e.message}")
-            // Fallback Demo Google Sign-In when running in emulator without Google Play Services OAuth prompt configured
-            val demoUser = UserAuthProfile(
-                uid = "google_demo_${UUID.randomUUID().toString().take(8)}",
-                name = "Google Verified Merchant",
-                email = "merchant.google@gmail.com",
-                isGoogleUser = true,
-                photoUrl = "https://lh3.googleusercontent.com/a/default-user"
-            )
-            saveUserLocal(demoUser)
-            Result.success(demoUser)
+            Result.failure(e)
         }
     }
 

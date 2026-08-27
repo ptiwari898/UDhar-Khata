@@ -110,6 +110,10 @@ class UdharRepository(
         return customerDao.insertCustomer(customer)
     }
 
+    suspend fun deleteCustomer(customer: Customer) {
+        customerDao.deleteCustomer(customer)
+    }
+
     suspend fun addTransaction(transaction: LedgerTransaction, userId: String? = null): Long {
         val insertedId = ledgerDao.insertTransaction(transaction)
         if (!userId.isNullOrEmpty()) {

@@ -1,7 +1,13 @@
 package com.example.ui.screens
 
+import android.content.Intent
+import android.graphics.Bitmap
+import android.net.Uri
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -25,6 +31,7 @@ import androidx.compose.material.icons.filled.Business
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.CloudDone
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Phone
@@ -42,6 +49,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -52,6 +60,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
@@ -70,6 +79,10 @@ import com.example.ui.theme.RedBg
 import com.example.ui.theme.RedUdhar
 import com.example.ui.theme.TextPrimary
 import com.example.ui.theme.TextSecondary
+import com.google.zxing.BarcodeFormat
+import com.google.zxing.MultiFormatWriter
+import com.google.zxing.common.BitMatrix
+import coil.compose.AsyncImage
 
 @Composable
 fun ProfileScreen(
@@ -83,14 +96,25 @@ fun ProfileScreen(
     val allCustomers by viewModel.allCustomers.collectAsState()
     val allOrders by viewModel.allOrders.collectAsState()
 
-    var shopNameText by remember(profile) { mutableStateOf(profile?.shopName ?: "Shivam Kirana Store") }
-    var ownerNameText by remember(profile) { mutableStateOf(profile?.ownerName ?: currentUser?.name ?: "Shivam Sharma") }
-    var phoneText by remember(profile) { mutableStateOf(profile?.phone ?: "9876543210") }
-    var addressText by remember(profile) { mutableStateOf(profile?.address ?: "Shop No. 12, Main Market, Bhopal, MP") }
-    var upiIdText by remember(profile) { mutableStateOf(profile?.upiId ?: "shivamkirana@upi") }
-    var gstinText by remember(profile) { mutableStateOf(profile?.gstin ?: "23AAAAA0000A1Z5") }
+    var shopNameText by remember(profile) { mutableStateOf(profile?.shopName.orEmpty()) }
+    var ownerNameText by remember(profile) { mutableStateOf(profile?.ownerName ?: currentUser?.name.orEmpty()) }
+    var phoneText by remember(profile) { mutableStateOf(profile?.phone.orEmpty()) }
+    var emailText by remember(profile) { mutableStateOf(profile?.email ?: currentUser?.email.orEmpty()) }
+    var addressText by remember(profile) { mutableStateOf(profile?.address.orEmpty()) }
+    var upiIdText by remember(profile) { mutableStateOf(profile?.upiId.orEmpty()) }
+    var gstinText by remember(profile) { mutableStateOf(profile?.gstin.orEmpty()) }
+    var photoUriText by remember(profile) { mutableStateOf(profile?.photoUri.orEmpty()) }
 
-    var isEditing by remember { mutableStateOf(false) }
+    var isEditing by remember(profile) { mutableStateOf(profile == null) }
+    val photoPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        uri?.let {
+            context.contentResolver.takePersistableUriPermission(it, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            photoUriText = it.toString()
+        }
+    }
+    val upiQrCode = remember(upiIdText, shopNameText) {
+        createUpiQrCode(upiIdText, shopNameText)
+    }
 
     Column(
         modifier = modifier
@@ -172,10 +196,15 @@ fun ProfileScreen(
                             .background(PrimaryBlueBg),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(
-                            text = if (currentUser?.isGoogleUser == true) "🌐" else "🏪",
-                            fontSize = 32.sp
-                        )
+                        if (photoUriText.isNotBlank()) {
+                            AsyncImage(
+                                model = photoUriText,
+                                contentDescription = "Shop photo",
+                                modifier = Modifier.fillMaxSize().clip(CircleShape)
+                            )
+                        } else {
+                            Icon(Icons.Default.Business, contentDescription = "Shop photo", tint = PrimaryBlue, modifier = Modifier.size(32.dp))
+                        }
                     }
 
                     Spacer(modifier = Modifier.width(16.dp))
@@ -314,6 +343,18 @@ fun ProfileScreen(
 
                     Spacer(modifier = Modifier.height(10.dp))
 
+                    OutlinedTextField(
+                        value = emailText,
+                        onValueChange = { emailText = it },
+                        readOnly = !isEditing,
+                        label = { Text("Business Email") },
+                        leadingIcon = { Icon(Icons.Default.Email, contentDescription = null, tint = PrimaryBlue) },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth().testTag("profile_email_input")
+                    )
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
                     // Address
                     OutlinedTextField(
                         value = addressText,
@@ -332,6 +373,17 @@ fun ProfileScreen(
                     )
 
                     Spacer(modifier = Modifier.height(10.dp))
+
+                    if (isEditing) {
+                        TextButton(
+                            onClick = { photoPicker.launch(arrayOf("image/*")) },
+                            modifier = Modifier.testTag("select_shop_photo_button")
+                        ) {
+                            Icon(Icons.Default.Business, contentDescription = null)
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(if (photoUriText.isBlank()) "Select Shop Photo" else "Change Shop Photo")
+                        }
+                    }
 
                     // UPI ID
                     OutlinedTextField(
@@ -375,13 +427,20 @@ fun ProfileScreen(
                         Spacer(modifier = Modifier.height(14.dp))
                         Button(
                             onClick = {
+                                if (shopNameText.isBlank() || phoneText.filter(Char::isDigit).length < 10 ||
+                                    !emailText.contains("@") || addressText.isBlank() || photoUriText.isBlank()) {
+                                    Toast.makeText(context, "Add shop name, mobile number, email, address, and shop photo", Toast.LENGTH_LONG).show()
+                                    return@Button
+                                }
                                 viewModel.updateShopProfile(
                                     shopName = shopNameText,
-                                    ownerName = ownerNameText,
+                                    ownerName = ownerNameText.ifBlank { shopNameText },
                                     phone = phoneText,
                                     address = addressText,
                                     upiId = upiIdText,
-                                    gstin = gstinText
+                                    gstin = gstinText,
+                                    email = emailText,
+                                    photoUri = photoUriText
                                 )
                                 isEditing = false
                                 Toast.makeText(context, "✅ Shop profile updated successfully!", Toast.LENGTH_SHORT).show()
@@ -436,22 +495,29 @@ fun ProfileScreen(
                             .padding(4.dp)
                     ) {
                         Box(contentAlignment = Alignment.Center) {
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Icon(
-                                    Icons.Default.QrCode2,
-                                    contentDescription = "UPI QR Code",
-                                    tint = PrimaryBlue,
-                                    modifier = Modifier.size(100.dp)
+                            if (upiQrCode != null) {
+                                Image(
+                                    bitmap = upiQrCode.asImageBitmap(),
+                                    contentDescription = "UPI payment QR code",
+                                    modifier = Modifier.size(152.dp)
                                 )
+                            } else {
                                 Text(
-                                    text = upiIdText,
-                                    fontSize = 10.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = TextPrimary
+                                    text = "Add a valid UPI ID to create your payment QR",
+                                    fontSize = 12.sp,
+                                    color = TextSecondary,
+                                    modifier = Modifier.padding(16.dp)
                                 )
                             }
                         }
                     }
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = upiIdText.ifBlank { "No default UPI ID saved" },
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = TextPrimary
+                    )
                 }
             }
 
@@ -528,4 +594,20 @@ fun ProfileScreen(
             Spacer(modifier = Modifier.height(16.dp))
         }
     }
+}
+
+private fun createUpiQrCode(upiId: String, shopName: String): Bitmap? {
+    val normalizedUpiId = upiId.trim()
+    if (normalizedUpiId.isEmpty() || !normalizedUpiId.contains("@")) return null
+
+    val paymentUri = "upi://pay?pa=${Uri.encode(normalizedUpiId)}&pn=${Uri.encode(shopName.trim())}&cu=INR"
+    val matrix = MultiFormatWriter().encode(paymentUri, BarcodeFormat.QR_CODE, 512, 512)
+    return matrix.toBitmap()
+}
+
+private fun BitMatrix.toBitmap(): Bitmap {
+    val pixels = IntArray(width * height) { index ->
+        if (get(index % width, index / width)) android.graphics.Color.BLACK else android.graphics.Color.WHITE
+    }
+    return Bitmap.createBitmap(pixels, width, height, Bitmap.Config.ARGB_8888)
 }

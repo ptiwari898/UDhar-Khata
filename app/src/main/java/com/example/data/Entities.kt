@@ -15,7 +15,9 @@ data class ShopProfile(
     val memberSince: String = "2023",
     val address: String = "Shop No. 12, Main Market, Bhopal, MP",
     val upiId: String = "shivamkirana@upi",
-    val gstin: String = "23AAAAA0000A1Z5"
+    val gstin: String = "23AAAAA0000A1Z5",
+    val email: String = "",
+    val photoUri: String = ""
 )
 
 @Entity(tableName = "customers")

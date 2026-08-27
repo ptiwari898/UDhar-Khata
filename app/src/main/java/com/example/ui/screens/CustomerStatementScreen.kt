@@ -1,5 +1,8 @@
 package com.example.ui.screens
 
+import android.content.Intent
+import android.net.Uri
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -30,6 +33,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -52,9 +56,12 @@ import com.example.ui.theme.TextSecondary
 fun CustomerStatementScreen(
     customer: Customer,
     transactions: List<LedgerTransaction>,
+    shopName: String,
+    upiId: String,
     onBackClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
     val totalLoaned = transactions.filter { it.type == "UDHAAR" }.sumOf { it.amount }
     val totalRepaid = transactions.filter { it.type == "PAYMENT" }.sumOf { it.amount }
     val totalAdvance = transactions.filter { it.type == "ADVANCE" }.sumOf { it.amount }
@@ -196,7 +203,31 @@ fun CustomerStatementScreen(
 
         // Share Action Button
         Button(
-            onClick = { },
+            onClick = {
+                val phoneDigits = customer.phone.filter(Char::isDigit)
+                if (phoneDigits.isEmpty()) {
+                    Toast.makeText(context, "Customer mobile number is missing", Toast.LENGTH_SHORT).show()
+                    return@Button
+                }
+                val whatsappNumber = if (phoneDigits.length == 10) "91$phoneDigits" else phoneDigits
+                val paymentDetails = upiId.trim().takeIf { it.contains("@") }?.let { savedUpiId ->
+                    val paymentLink = Uri.Builder()
+                        .scheme("upi")
+                        .authority("pay")
+                        .appendQueryParameter("pa", savedUpiId)
+                        .appendQueryParameter("pn", shopName)
+                        .appendQueryParameter("am", currentOutstanding.toString())
+                        .appendQueryParameter("cu", "INR")
+                        .build()
+                    "\n\nPay outstanding via UPI\nUPI ID: $savedUpiId\nPay now: $paymentLink"
+                }.orEmpty()
+                val statementMessage = "Hello ${customer.name},\n\nYour ledger statement:\nTotal Udhar: Rs. ${totalLoaned.toInt()}\nTotal Paid: Rs. ${totalRepaid.toInt()}\nOutstanding: Rs. ${currentOutstanding.toInt()}\nAdvance Balance: Rs. ${advanceBalance.toInt()}$paymentDetails\n\nThank you."
+                val intent = Intent(
+                    Intent.ACTION_VIEW,
+                    Uri.parse("https://wa.me/$whatsappNumber?text=${Uri.encode(statementMessage)}")
+                )
+                context.startActivity(intent)
+            },
             colors = ButtonDefaults.buttonColors(containerColor = GreenAdvance),
             modifier = Modifier
                 .fillMaxWidth()

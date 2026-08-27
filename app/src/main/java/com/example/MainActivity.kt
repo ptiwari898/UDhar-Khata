@@ -2,6 +2,7 @@ package com.example
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
@@ -134,6 +135,17 @@ fun UdharKhataApp(viewModel: UdharViewModel) {
     val parsedVoice by viewModel.parsedVoiceTransaction.collectAsState()
 
     val currentCustomer = allCustomers.find { it.id == selectedCustomerId }
+
+    BackHandler(
+        enabled = isViewingStatement || isViewingChat || selectedCustomerId != null || selectedTab != "Home"
+    ) {
+        when {
+            isViewingStatement -> isViewingStatement = false
+            isViewingChat -> isViewingChat = false
+            selectedCustomerId != null -> viewModel.selectCustomer(null)
+            else -> viewModel.selectTab("Home")
+        }
+    }
 
     ModalNavigationDrawer(
         drawerState = drawerState,
@@ -273,12 +285,22 @@ fun UdharKhataApp(viewModel: UdharViewModel) {
             }
         ) { innerPadding ->
             when {
+                shopProfile == null -> {
+                    ProfileScreen(
+                        profile = null,
+                        viewModel = viewModel,
+                        modifier = Modifier.padding(innerPadding)
+                    )
+                }
+
                 // 1. Customer Statement Screen
                 isViewingStatement && currentCustomer != null -> {
                     val custTxns = allTransactions.filter { it.customerId == currentCustomer.id }
                     CustomerStatementScreen(
                         customer = currentCustomer,
                         transactions = custTxns,
+                        shopName = shopProfile?.shopName ?: "Your shop",
+                        upiId = shopProfile?.upiId.orEmpty(),
                         onBackClick = { isViewingStatement = false },
                         modifier = Modifier.padding(innerPadding)
                     )
@@ -419,6 +441,7 @@ fun UdharKhataApp(viewModel: UdharViewModel) {
 
             if (showAddCustomer) {
                 AddCustomerDialog(
+                    existingCustomers = allCustomers,
                     onDismiss = { viewModel.isAddCustomerOpen.value = false },
                     onSave = { name, phone, loc, risk -> viewModel.saveCustomer(name, phone, loc, risk) }
                 )
@@ -435,6 +458,11 @@ fun UdharKhataApp(viewModel: UdharViewModel) {
             if (showWhatsAppReminder) {
                 WhatsAppReminderDialog(
                     customer = currentCustomer,
+                    shopName = shopProfile?.shopName ?: "Your shop",
+                    outstandingAmount = shopSummary?.customerBreakdown
+                        ?.find { it.customer.id == currentCustomer?.id }
+                        ?.currentOutstanding ?: 0.0,
+                    upiId = shopProfile?.upiId.orEmpty(),
                     onDismiss = { viewModel.isWhatsAppReminderOpen.value = false }
                 )
             }

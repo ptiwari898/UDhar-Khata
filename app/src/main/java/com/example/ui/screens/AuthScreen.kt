@@ -396,8 +396,6 @@ fun AuthScreen(
                         onClick = {
                             if (context is Activity) {
                                 viewModel.signInWithGoogle(context)
-                            } else {
-                                viewModel.loginDemoUser("Google Merchant", "merchant.google@gmail.com", true)
                             }
                         },
                         modifier = Modifier

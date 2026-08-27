@@ -22,11 +22,15 @@ import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.Chat
 import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -34,6 +38,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -74,6 +79,7 @@ fun CustomerDetailScreen(
     modifier: Modifier = Modifier
 ) {
     var selectedSubTab by remember { mutableStateOf(0) } // 0: Overview, 1: Transactions, 2: Orders, 3: Notes
+    var showDeleteConfirmation by remember { mutableStateOf(false) }
     val scrollState = rememberScrollState()
 
     val totalUdhar = transactions.filter { it.type == "UDHAAR" }.sumOf { it.amount }
@@ -111,10 +117,35 @@ fun CustomerDetailScreen(
                 ) {
                     Icon(Icons.Default.Chat, contentDescription = "Chat", tint = PrimaryBlue)
                 }
-                IconButton(onClick = { }) {
-                    Icon(Icons.Default.MoreVert, contentDescription = "More", tint = TextPrimary)
+                IconButton(
+                    onClick = { showDeleteConfirmation = true },
+                    modifier = Modifier.testTag("delete_customer_button")
+                ) {
+                    Icon(Icons.Default.Delete, contentDescription = "Delete customer", tint = RedUdhar)
                 }
             }
+        }
+
+        if (showDeleteConfirmation) {
+            AlertDialog(
+                onDismissRequest = { showDeleteConfirmation = false },
+                title = { Text("Delete customer?") },
+                text = { Text("${customer.name} and all related transactions, orders, and messages will be permanently removed.") },
+                confirmButton = {
+                    Button(
+                        onClick = { viewModel.deleteCustomer(customer) },
+                        colors = ButtonDefaults.buttonColors(containerColor = RedUdhar),
+                        modifier = Modifier.testTag("confirm_delete_customer_button")
+                    ) {
+                        Text("Delete")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showDeleteConfirmation = false }) {
+                        Text("Cancel")
+                    }
+                }
+            )
         }
 
         // Sub Tabs

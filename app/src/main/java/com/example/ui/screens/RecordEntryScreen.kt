@@ -55,9 +55,9 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -83,14 +83,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.PopupProperties
 import androidx.core.content.ContextCompat
 import com.example.data.Customer
 import com.example.service.ParsedTransaction
@@ -133,6 +136,7 @@ fun RecordEntryScreen(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
+    val focusManager = LocalFocusManager.current
     val coroutineScope = rememberCoroutineScope()
     val allCustomers by viewModel.allCustomers.collectAsState()
 
@@ -154,6 +158,7 @@ fun RecordEntryScreen(
 
     // Customer Dropdown state
     var dropdownExpanded by remember { mutableStateOf(false) }
+    var customerSearchQuery by remember { mutableStateOf("") }
 
     // Voice Detection Model State
     var isListeningVoice by remember { mutableStateOf(false) }
@@ -741,15 +746,14 @@ fun RecordEntryScreen(
 
                     Spacer(modifier = Modifier.height(12.dp))
 
-                    ExposedDropdownMenuBox(
-                        expanded = dropdownExpanded,
-                        onExpandedChange = { dropdownExpanded = !dropdownExpanded }
-                    ) {
+                    Box {
                         OutlinedTextField(
-                            value = selectedCustomer?.name ?: "Select Customer",
-                            onValueChange = {},
-                            readOnly = true,
-                            label = { Text("Customer Name") },
+                            value = customerSearchQuery,
+                            onValueChange = {
+                                customerSearchQuery = it
+                                dropdownExpanded = true
+                            },
+                            label = { Text("Search by name or mobile number") },
                             leadingIcon = {
                                 if (selectedCustomer != null) {
                                     CustomerAvatar(name = selectedCustomer!!.name, modifier = Modifier.size(28.dp))
@@ -760,8 +764,13 @@ fun RecordEntryScreen(
                             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = dropdownExpanded) },
                             shape = RoundedCornerShape(12.dp),
                             modifier = Modifier
-                                .menuAnchor()
                                 .fillMaxWidth()
+                                .onFocusChanged { focusState ->
+                                    if (focusState.isFocused && !dropdownExpanded) {
+                                        customerSearchQuery = ""
+                                        dropdownExpanded = true
+                                    }
+                                }
                                 .testTag("select_customer_dropdown"),
                             colors = OutlinedTextFieldDefaults.colors(
                                 focusedBorderColor = PrimaryBlue,
@@ -771,11 +780,18 @@ fun RecordEntryScreen(
                             )
                         )
 
-                        ExposedDropdownMenu(
+                        DropdownMenu(
                             expanded = dropdownExpanded,
-                            onDismissRequest = { dropdownExpanded = false }
+                            onDismissRequest = { dropdownExpanded = false },
+                            modifier = Modifier.fillMaxWidth(),
+                            properties = PopupProperties(focusable = false)
                         ) {
-                            allCustomers.forEach { cust ->
+                            val nameQuery = customerSearchQuery.trim()
+                            val phoneQuery = customerSearchQuery.filter(Char::isDigit)
+                            allCustomers.filter { customer ->
+                                customer.name.contains(nameQuery, ignoreCase = true) ||
+                                        (phoneQuery.isNotEmpty() && customer.phone.filter(Char::isDigit).contains(phoneQuery))
+                            }.forEach { cust ->
                                 DropdownMenuItem(
                                     text = {
                                         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -789,7 +805,9 @@ fun RecordEntryScreen(
                                     },
                                     onClick = {
                                         selectedCustomer = cust
+                                        customerSearchQuery = cust.name
                                         dropdownExpanded = false
+                                        focusManager.clearFocus()
                                     }
                                 )
                             }
@@ -1115,6 +1133,7 @@ fun RecordEntryScreen(
                     }
 
                     if (sendWhatsAppNotification) {
+                        viewModel.selectCustomer(customer.id)
                         viewModel.isWhatsAppReminderOpen.value = true
                     }
 

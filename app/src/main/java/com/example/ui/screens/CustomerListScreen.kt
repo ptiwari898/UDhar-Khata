@@ -22,13 +22,14 @@ import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -89,18 +90,7 @@ fun CustomerListScreen(
         }
     } ?: emptyList()
 
-    Scaffold(
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = { viewModel.isAddCustomerOpen.value = true },
-                containerColor = PrimaryBlue,
-                contentColor = Color(0xFF1C1B1F),
-                modifier = Modifier.testTag("add_customer_fab")
-            ) {
-                Icon(Icons.Default.Add, contentDescription = "Add Customer")
-            }
-        }
-    ) { innerPadding ->
+    Scaffold { innerPadding ->
         Column(
             modifier = modifier
                 .fillMaxSize()
@@ -119,8 +109,19 @@ fun CustomerListScreen(
                     text = "Loaned Individuals",
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
-                    color = TextPrimary
+                    color = TextPrimary,
+                    modifier = Modifier.weight(1f)
                 )
+                Button(
+                    onClick = { viewModel.isAddCustomerOpen.value = true },
+                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue),
+                    modifier = Modifier.testTag("add_customer_button")
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("Add")
+                }
+                Spacer(modifier = Modifier.width(4.dp))
                 IconButton(onClick = { }) {
                     Icon(Icons.Default.FilterList, contentDescription = "Filter", tint = TextPrimary)
                 }

@@ -181,7 +181,7 @@ class UdharViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun updateShopProfile(shopName: String, ownerName: String, phone: String, address: String, upiId: String, gstin: String = "") {
+    fun updateShopProfile(shopName: String, ownerName: String, phone: String, address: String, upiId: String, gstin: String = "", email: String = "", photoUri: String = "") {
         viewModelScope.launch {
             repository.updateShopProfile(
                 ShopProfile(
@@ -193,7 +193,9 @@ class UdharViewModel(application: Application) : AndroidViewModel(application) {
                     memberSince = "2023",
                     address = address,
                     upiId = upiId,
-                    gstin = gstin
+                    gstin = gstin,
+                    email = email,
+                    photoUri = photoUri
                 )
             )
         }
@@ -210,6 +212,13 @@ class UdharViewModel(application: Application) : AndroidViewModel(application) {
                 )
             )
             isAddCustomerOpen.value = false
+        }
+    }
+
+    fun deleteCustomer(customer: Customer) {
+        selectCustomer(null)
+        viewModelScope.launch {
+            repository.deleteCustomer(customer)
         }
     }
 

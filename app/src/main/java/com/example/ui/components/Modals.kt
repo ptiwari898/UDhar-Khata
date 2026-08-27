@@ -1,5 +1,8 @@
 package com.example.ui.components
 
+import android.content.Intent
+import android.net.Uri
+import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -28,6 +31,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -36,9 +40,11 @@ import androidx.compose.ui.unit.sp
 import com.example.data.Customer
 import com.example.ui.theme.GreenAdvance
 import com.example.ui.theme.PrimaryBlue
+import java.util.Locale
 
 @Composable
 fun AddCustomerDialog(
+    existingCustomers: List<Customer>,
     onDismiss: () -> Unit,
     onSave: (name: String, phone: String, location: String, risk: String) -> Unit
 ) {
@@ -46,6 +52,7 @@ fun AddCustomerDialog(
     var phone by remember { mutableStateOf("") }
     var location by remember { mutableStateOf("Bhopal, MP") }
     var risk by remember { mutableStateOf("Low") }
+    var validationError by remember { mutableStateOf<String?>(null) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -54,18 +61,28 @@ fun AddCustomerDialog(
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 OutlinedTextField(
                     value = name,
-                    onValueChange = { name = it },
+                    onValueChange = {
+                        name = it
+                        validationError = null
+                    },
                     label = { Text("Customer Name") },
                     modifier = Modifier.fillMaxWidth().testTag("add_cust_name_input")
                 )
 
                 OutlinedTextField(
                     value = phone,
-                    onValueChange = { phone = it },
+                    onValueChange = {
+                        phone = it
+                        validationError = null
+                    },
                     label = { Text("Mobile Number") },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
                     modifier = Modifier.fillMaxWidth().testTag("add_cust_phone_input")
                 )
+
+                validationError?.let { error ->
+                    Text(error, color = MaterialTheme.colorScheme.error, fontSize = 12.sp)
+                }
 
                 OutlinedTextField(
                     value = location,
@@ -78,7 +95,18 @@ fun AddCustomerDialog(
         confirmButton = {
             Button(
                 onClick = {
-                    if (name.isNotBlank()) {
+                    val normalizedPhone = phone.filter(Char::isDigit)
+                    val duplicatePhone = normalizedPhone.isNotEmpty() && existingCustomers.any {
+                        it.phone.filter(Char::isDigit) == normalizedPhone
+                    }
+
+                    validationError = when {
+                        name.isBlank() -> "Enter a customer name"
+                        duplicatePhone -> "This mobile number is already assigned to a customer"
+                        else -> null
+                    }
+
+                    if (validationError == null) {
                         onSave(name, phone, location, risk)
                     }
                 },
@@ -190,10 +218,26 @@ fun AddOrderDialog(
 @Composable
 fun WhatsAppReminderDialog(
     customer: Customer?,
+    shopName: String,
+    outstandingAmount: Double,
+    upiId: String,
     onDismiss: () -> Unit
 ) {
-    val custName = customer?.name ?: "Rahul Sharma"
-    val reminderMsg = "Hello $custName,\n\nYour current outstanding balance at Shivam Kirana Store is ₹5,800.\n\nPlease clear the pending amount when convenient via UPI or Cash.\n\nThank you!"
+    val context = LocalContext.current
+    val custName = customer?.name ?: "Customer"
+    val formattedOutstanding = String.format(Locale.getDefault(), "%.0f", outstandingAmount)
+    val upiDetails = upiId.trim().takeIf { it.contains("@") }?.let { savedUpiId ->
+        val paymentLink = Uri.Builder()
+            .scheme("upi")
+            .authority("pay")
+            .appendQueryParameter("pa", savedUpiId)
+            .appendQueryParameter("pn", shopName)
+            .appendQueryParameter("am", formattedOutstanding)
+            .appendQueryParameter("cu", "INR")
+            .build()
+        "\nUPI ID: $savedUpiId\nPay now: $paymentLink"
+    }.orEmpty()
+    val reminderMsg = "Hello $custName,\n\nYour current outstanding balance at $shopName is Rs. $formattedOutstanding.$upiDetails\n\nPlease clear the pending amount when convenient via UPI or Cash.\n\nThank you!"
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -212,7 +256,20 @@ fun WhatsAppReminderDialog(
         },
         confirmButton = {
             Button(
-                onClick = onDismiss,
+                onClick = {
+                    val phoneDigits = customer?.phone?.filter(Char::isDigit).orEmpty()
+                    if (phoneDigits.isEmpty()) {
+                        Toast.makeText(context, "Customer mobile number is missing", Toast.LENGTH_SHORT).show()
+                        return@Button
+                    }
+                    val whatsappNumber = if (phoneDigits.length == 10) "91$phoneDigits" else phoneDigits
+                    val intent = Intent(
+                        Intent.ACTION_VIEW,
+                        Uri.parse("https://wa.me/$whatsappNumber?text=${Uri.encode(reminderMsg)}")
+                    )
+                    context.startActivity(intent)
+                    onDismiss()
+                },
                 colors = ButtonDefaults.buttonColors(containerColor = GreenAdvance),
                 modifier = Modifier.testTag("send_whatsapp_now")
             ) {
