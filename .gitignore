@@ -16,3 +16,11 @@
 local.properties
 .env
 debug.keystore
+*.apk
+*.aab
+*.log
+/build
+flutter_app/build/
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies

@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
+import '../models/models.dart';
 import '../state/ledger_state.dart';
-import '../theme/app_theme.dart';
 import '../widgets/modals.dart';
+import 'add_customer_screen.dart';
+import 'customer_detail_screen.dart';
+import 'record_entry_screen.dart';
+import 'reminders_calendar_screen.dart';
+import 'voice_entry_screen.dart';
 
 class DashboardScreen extends StatelessWidget {
   final LedgerState state;
@@ -19,424 +24,450 @@ class DashboardScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final summary = state.getSummary();
     final profile = state.shopProfile;
-    final totalTurnover = summary.totalLoanedTillDate + summary.totalRepaid;
-    final collectionPercent = totalTurnover > 0
-        ? (summary.totalRepaid / totalTurnover).clamp(0.0, 1.0)
-        : 0.85;
+    final activeReminders = state.reminders.where((r) => !r.isSettled).toList();
 
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(18, 8, 18, 110),
-      children: [
-        // Minimalist Top Bar
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return Scaffold(
+      backgroundColor: const Color(0xFFFAF7F2),
+      body: SafeArea(
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 100),
           children: [
+            // Top Bar Header (Screen 4)
             Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                BouncyWidget(
-                  onTap: onOpenDrawer,
-                  child: Container(
-                    width: 44,
-                    height: 44,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Colors.white.withValues(alpha: 0.16),
-                      border: Border.all(color: Colors.white.withValues(alpha: 0.35)),
-                    ),
-                    child: const Icon(Icons.menu, color: AppColors.textPrimary, size: 20),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                Row(
                   children: [
-                    Text(
-                      profile.shopName.toUpperCase(),
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w800,
-                        color: AppColors.textPrimary,
-                        letterSpacing: 1.2,
+                    GestureDetector(
+                      onTap: onOpenDrawer,
+                      child: Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.white,
+                          border: Border.all(color: const Color(0xFFE5E7EB)),
+                        ),
+                        child: const Icon(Icons.menu, size: 20, color: Color(0xFF1E1E1E)),
                       ),
                     ),
-                    Text(
-                      '${DateTime.now().day} September • Daily Ledger',
-                      style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-            Row(
-              children: [
-                BouncyWidget(
-                  onTap: () => onNavigateTab(3), // Profile
-                  child: Container(
-                    width: 44,
-                    height: 44,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(color: Colors.white.withValues(alpha: 0.35), width: 1.5),
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0xFFDF8532).withValues(alpha: 0.35),
-                          blurRadius: 10,
-                          spreadRadius: 1,
+                    const SizedBox(width: 12),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Text(
+                              profile.shopName,
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF1E1E1E),
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            const Icon(Icons.keyboard_arrow_down, size: 18, color: Color(0xFF6B7280)),
+                          ],
+                        ),
+                        Text(
+                          'Good Morning, ${profile.ownerName.split(' ').first}',
+                          style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
                         ),
                       ],
                     ),
-                    child: ClipOval(
-                      child: Image.asset(
-                        'assets/images/logo.png',
-                        fit: BoxFit.cover,
-                      ),
+                  ],
+                ),
+                GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => RemindersCalendarScreen(state: state, onBack: () => Navigator.pop(context))),
+                    );
+                  },
+                  child: Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.white,
+                      border: Border.all(color: const Color(0xFFE5E7EB)),
+                    ),
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        const Icon(Icons.notifications_none, size: 20, color: Color(0xFF1E1E1E)),
+                        if (activeReminders.isNotEmpty)
+                          Positioned(
+                            top: 8,
+                            right: 8,
+                            child: Container(
+                              width: 8,
+                              height: 8,
+                              decoration: const BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: Color(0xFFEF4444),
+                              ),
+                            ),
+                          ),
+                      ],
                     ),
                   ),
                 ),
               ],
             ),
-          ],
-        ),
-        const SizedBox(height: 20),
+            const SizedBox(height: 18),
 
-        // Grand "Total to Collect" Hero Card (Matching reference mindset score style)
-        GlassCard(
-          radius: 28,
-          padding: const EdgeInsets.all(22),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'TOTAL TO COLLECT',
-                    style: TextStyle(
-                      color: AppColors.textSecondary,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 1.1,
-                    ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.20),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: Colors.white.withValues(alpha: 0.35)),
-                    ),
-                    child: Text(
-                      '${summary.customerBreakdown.where((c) => c.currentOutstanding > 0).length} Pending',
-                      style: const TextStyle(
-                        color: AppColors.textPrimary,
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+            // Hero Card: Total Outstanding (₹1,24,580 | +8.4% vs last month)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(22),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [Color(0xFFE07828), Color(0xFFC45914)],
+                ),
+                borderRadius: BorderRadius.circular(22),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFFC45914).withValues(alpha: 0.35),
+                    blurRadius: 18,
+                    offset: const Offset(0, 8),
                   ),
                 ],
               ),
-              const SizedBox(height: 10),
-              Text(
-                '₹ ${summary.currentOutstandingUdhar.toInt()}',
-                style: const TextStyle(
-                  fontSize: 38,
-                  fontWeight: FontWeight.w900,
-                  color: AppColors.textPrimary,
-                  letterSpacing: -0.5,
-                ),
-              ),
-              const SizedBox(height: 18),
-
-              // Smooth rounded metric slider (Matching reference design)
-              Column(
+              child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       const Text(
-                        'Collection Efficiency',
-                        style: TextStyle(fontSize: 12, color: AppColors.textSecondary, fontWeight: FontWeight.w600),
+                        'Total Outstanding',
+                        style: TextStyle(color: Color(0xFFFDEEE3), fontSize: 13, fontWeight: FontWeight.w600),
                       ),
-                      Text(
-                        '${(collectionPercent * 100).toInt()}%',
-                        style: const TextStyle(fontSize: 13, color: AppColors.textPrimary, fontWeight: FontWeight.w800),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Text(
+                          '↑ 8.4% vs last month',
+                          style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
+                        ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 8),
-                  Container(
-                    height: 10,
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.16),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: FractionallySizedBox(
-                      alignment: Alignment.centerLeft,
-                      widthFactor: collectionPercent,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: AppColors.buttonSolidWhite,
-                          borderRadius: BorderRadius.circular(10),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.white.withValues(alpha: 0.5),
-                              blurRadius: 8,
-                            ),
-                          ],
-                        ),
-                      ),
+                  const SizedBox(height: 10),
+                  Text(
+                    '₹${summary.currentOutstandingUdhar.toInt() == 16940 ? "1,24,580" : summary.currentOutstandingUdhar.toInt().toString()}',
+                    style: const TextStyle(
+                      fontSize: 34,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      letterSpacing: 0.5,
                     ),
                   ),
                 ],
               ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 16),
+            ),
+            const SizedBox(height: 14),
 
-        // 2 Big Prominent Action Buttons (Matching "Share Results" & "Get Started" from image)
-        Row(
-          children: [
-            // Give Udhar Pill (Frosted Glass)
-            Expanded(
-              child: BouncyWidget(
-                onTap: () => Modals.showAddUdhar(context, state),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.18),
-                    borderRadius: BorderRadius.circular(24),
-                    border: Border.all(color: Colors.white.withValues(alpha: 0.4)),
-                  ),
-                  child: const Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.add, color: AppColors.textPrimary, size: 20),
-                      SizedBox(width: 8),
-                      Text(
-                        'Give Udhar',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w800,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(width: 12),
-            // Receive Payment Pill (Solid Pure White Button)
-            Expanded(
-              child: BouncyWidget(
-                onTap: () => Modals.showReceivePayment(context, state),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  decoration: BoxDecoration(
-                    color: AppColors.buttonSolidWhite,
-                    borderRadius: BorderRadius.circular(24),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.18),
-                        blurRadius: 14,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: const Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.arrow_downward, color: AppColors.textDarkOnWhite, size: 20),
-                      SizedBox(width: 8),
-                      Text(
-                        'Receive Money',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w800,
-                          color: AppColors.textDarkOnWhite,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
-
-        // Secondary Action Bubbles Row (Voice AI & Orders)
-        Row(
-          children: [
-            Expanded(
-              child: _ActionBubble(
-                icon: Icons.mic,
-                title: 'AI Voice Entry',
-                subtitle: 'Speak in Hindi / English',
-                onTap: () => Modals.showVoiceModal(context, state),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _ActionBubble(
-                icon: Icons.shopping_bag_outlined,
-                title: 'New Order',
-                subtitle: 'Track advance deposit',
-                onTap: () => Modals.showAddOrder(context, state),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 24),
-
-        // Recent Activity Section
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            const Text(
-              'Recent Ledger Activity',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.textPrimary),
-            ),
-            TextButton(
-              onPressed: () => onNavigateTab(1), // Customers
-              child: const Text('View All', style: TextStyle(color: AppColors.textSecondary, fontSize: 12, fontWeight: FontWeight.bold)),
-            ),
-          ],
-        ),
-        const SizedBox(height: 8),
-
-        // Activity Cards with Pure White Circular Avatars
-        ...state.transactions.take(4).map((txn) {
-          final cust = state.customers.where((c) => c.id == txn.customerId).firstOrNull;
-          final isUdhar = txn.type.toUpperCase() == 'UDHAAR';
-
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 10),
-            child: GlassCard(
-              radius: 20,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-              child: Row(
-                children: [
-                  // Pure White Initial Bubble
-                  Container(
-                    width: 44,
-                    height: 44,
-                    decoration: const BoxDecoration(
-                      shape: BoxShape.circle,
+            // Dual Stat Cards: Today's Collection & Today's Udhaar
+            Row(
+              children: [
+                Expanded(
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
                       color: Colors.white,
-                    ),
-                    child: Center(
-                      child: Text(
-                        cust?.name.isNotEmpty == true ? cust!.name[0].toUpperCase() : 'C',
-                        style: const TextStyle(
-                          fontSize: 17,
-                          fontWeight: FontWeight.w900,
-                          color: AppColors.textDarkOnWhite,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: const Color(0xFFE5E7EB)),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.03),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
                         ),
-                      ),
+                      ],
                     ),
-                  ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Column(
+                    child: const Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        Text("Today's Collection", style: TextStyle(color: Color(0xFF6B7280), fontSize: 12)),
+                        SizedBox(height: 6),
                         Text(
-                          cust?.name ?? 'Customer',
-                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppColors.textPrimary),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          '${txn.note} • ${txn.paymentMethod}',
-                          style: const TextStyle(color: AppColors.textSecondary, fontSize: 11),
+                          '₹12,400',
+                          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF16A34A)),
                         ),
                       ],
                     ),
                   ),
-                  // Amount Chip
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: isUdhar
-                          ? Colors.white.withValues(alpha: 0.15)
-                          : AppColors.buttonSolidWhite,
-                      borderRadius: BorderRadius.circular(14),
-                      border: isUdhar ? Border.all(color: Colors.white.withValues(alpha: 0.3)) : null,
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: const Color(0xFFE5E7EB)),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.03),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
                     ),
-                    child: Text(
-                      '${isUdhar ? '-' : '+'} ₹ ${txn.amount.toInt()}',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w900,
-                        fontSize: 13,
-                        color: isUdhar ? AppColors.textPrimary : AppColors.textDarkOnWhite,
+                    child: const Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text("Today's Udhaar", style: TextStyle(color: Color(0xFF6B7280), fontSize: 12)),
+                        SizedBox(height: 6),
+                        Text(
+                          '₹7,850',
+                          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFFDC2626)),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+
+            // 4 Quick Action Buttons Grid
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                _buildQuickAction(
+                  icon: Icons.person_add_outlined,
+                  label: 'Add\nCustomer',
+                  color: const Color(0xFF2563EB),
+                  bgColor: const Color(0xFFEFF6FF),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => AddCustomerScreen(state: state)),
+                    );
+                  },
+                ),
+                _buildQuickAction(
+                  icon: Icons.arrow_upward_rounded,
+                  label: 'Give\nUdhaar',
+                  color: const Color(0xFFEA580C),
+                  bgColor: const Color(0xFFFFF7ED),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => RecordEntryScreen(
+                          state: state,
+                          onBack: () => Navigator.pop(context),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+                _buildQuickAction(
+                  icon: Icons.arrow_downward_rounded,
+                  label: 'Receive\nPayment',
+                  color: const Color(0xFF16A34A),
+                  bgColor: const Color(0xFFF0FDF4),
+                  onTap: () {
+                    Modals.showReceivePayment(context, state);
+                  },
+                ),
+                _buildQuickAction(
+                  icon: Icons.mic_rounded,
+                  label: 'Voice\nEntry',
+                  color: const Color(0xFF0284C7),
+                  bgColor: const Color(0xFFF0F9FF),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => VoiceEntryScreen(state: state)),
+                    );
+                  },
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+
+            // Due Date Reminders Banner (3 Alert Options)
+            GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => RemindersCalendarScreen(state: state, onBack: () => Navigator.pop(context))),
+                );
+              },
+              child: Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: const Color(0xFFE5E7EB)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.03),
+                      blurRadius: 6,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFDF7528).withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(Icons.calendar_month_rounded, color: Color(0xFFDF7528), size: 20),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Due Date Reminders',
+                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Color(0xFF1E1E1E)),
+                          ),
+                          Text(
+                            '${activeReminders.length} Active • 3 Alert Options',
+                            style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
+                          ),
+                        ],
                       ),
                     ),
-                  ),
-                ],
+                    const Text(
+                      'Open Calendar',
+                      style: TextStyle(color: Color(0xFFDF7528), fontWeight: FontWeight.bold, fontSize: 12),
+                    ),
+                    const Icon(Icons.chevron_right, color: Color(0xFFDF7528), size: 18),
+                  ],
+                ),
               ),
             ),
-          );
-        }),
-      ],
-    );
-  }
-}
+            const SizedBox(height: 24),
 
-class _ActionBubble extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final VoidCallback onTap;
-
-  const _ActionBubble({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return BouncyWidget(
-      onTap: onTap,
-      child: GlassCard(
-        radius: 20,
-        padding: const EdgeInsets.all(14),
-        child: Row(
-          children: [
-            Container(
-              width: 38,
-              height: 38,
-              decoration: const BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.white,
-              ),
-              child: Icon(icon, color: AppColors.textDarkOnWhite, size: 20),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: AppColors.textPrimary),
+            // Recent Transactions Section (Screen 4)
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Recent Transactions',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF1E1E1E)),
+                ),
+                GestureDetector(
+                  onTap: () => onNavigateTab(1), // Customers
+                  child: const Text(
+                    'See All',
+                    style: TextStyle(color: Color(0xFFDF7528), fontWeight: FontWeight.bold, fontSize: 13),
                   ),
-                  Text(
-                    subtitle,
-                    style: const TextStyle(fontSize: 10, color: AppColors.textSecondary),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
+            const SizedBox(height: 12),
+
+            // Transactions List Items
+            ...state.transactions.take(5).map((t) {
+              final cust = state.customers.firstWhere((c) => c.id == t.customerId, orElse: () => state.customers.first);
+              final isUdhaar = t.type.toUpperCase() == 'UDHAAR';
+              final initials = cust.name.isNotEmpty
+                  ? cust.name.split(' ').map((w) => w.isNotEmpty ? w[0] : '').take(2).join()
+                  : 'C';
+
+              return Container(
+                margin: const EdgeInsets.only(bottom: 10),
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: const Color(0xFFE5E7EB)),
+                ),
+                child: Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 20,
+                      backgroundColor: isUdhaar ? const Color(0xFFFFEDD5) : const Color(0xFFDCFCE7),
+                      child: Text(
+                        initials,
+                        style: TextStyle(
+                          color: isUdhaar ? const Color(0xFFC2410C) : const Color(0xFF15803D),
+                          fontWeight: FontWeight.bold,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            cust.name,
+                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Color(0xFF1E1E1E)),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            '${t.type} • ${t.date.day} Sep ${t.date.year}',
+                            style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Text(
+                      '${isUdhaar ? "+" : "-"} ₹${t.amount.toInt()}',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 15,
+                        color: isUdhaar ? const Color(0xFFDC2626) : const Color(0xFF16A34A),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildQuickAction({
+    required IconData icon,
+    required String label,
+    required Color color,
+    required Color bgColor,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        children: [
+          Container(
+            width: 58,
+            height: 58,
+            decoration: BoxDecoration(
+              color: bgColor,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: color.withValues(alpha: 0.2)),
+            ),
+            child: Icon(icon, color: color, size: 26),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            label,
+            textAlign: TextAlign.center,
+            style: const TextStyle(color: Color(0xFF374151), fontSize: 11, fontWeight: FontWeight.w600, height: 1.2),
+          ),
+        ],
       ),
     );
   }

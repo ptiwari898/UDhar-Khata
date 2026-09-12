@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/models.dart';
 import '../state/ledger_state.dart';
-import '../theme/app_theme.dart';
 
 class RecordEntryScreen extends StatefulWidget {
   final LedgerState state;
@@ -20,9 +19,10 @@ class RecordEntryScreen extends StatefulWidget {
 class _RecordEntryScreenState extends State<RecordEntryScreen> {
   String _selectedType = 'UDHAAR'; // UDHAAR, PAYMENT, ADVANCE
   Customer? _selectedCustomer;
-  final _amountCtrl = TextEditingController();
-  final _noteCtrl = TextEditingController();
-  String _paymentMethod = 'Cash';
+  final _amountCtrl = TextEditingController(text: '500');
+  final _noteCtrl = TextEditingController(text: 'Tel diya');
+  String _paymentMode = 'Cash';
+  DateTime _selectedDate = DateTime.now();
 
   @override
   void initState() {
@@ -30,214 +30,288 @@ class _RecordEntryScreenState extends State<RecordEntryScreen> {
     _selectedCustomer = widget.state.customers.firstOrNull;
   }
 
-  void _addQuickAmount(int val) {
-    final current = double.tryParse(_amountCtrl.text) ?? 0;
-    _amountCtrl.text = (current + val).toInt().toString();
+  @override
+  void dispose() {
+    _amountCtrl.dispose();
+    _noteCtrl.dispose();
+    super.dispose();
+  }
+
+  void _saveTransaction() {
+    if (_selectedCustomer == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select a customer')),
+      );
+      return;
+    }
+
+    final amount = double.tryParse(_amountCtrl.text.trim()) ?? 0;
+    if (amount <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter a valid amount greater than 0')),
+      );
+      return;
+    }
+
+    widget.state.addTransaction(
+      customerId: _selectedCustomer!.id,
+      amount: amount,
+      type: _selectedType,
+      note: _noteCtrl.text.trim(),
+      paymentMethod: _paymentMode,
+    );
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Saved ₹${amount.toInt()} $_selectedType for ${_selectedCustomer!.name}!'),
+        backgroundColor: const Color(0xFF16A34A),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+    widget.onBack();
   }
 
   @override
   Widget build(BuildContext context) {
     final state = widget.state;
-    final isUdhar = _selectedType == 'UDHAAR';
-    final isPayment = _selectedType == 'PAYMENT';
-    final activeColor = isUdhar
-        ? AppColors.redUdhar
-        : (isPayment ? AppColors.greenAdvance : AppColors.primaryBlue);
 
     return Scaffold(
-      backgroundColor: Colors.transparent,
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 12, 16, 100),
-        children: [
-          Row(
-            children: [
-              IconButton(
-                icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
-                onPressed: widget.onBack,
+      backgroundColor: const Color(0xFFFAF7F2),
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Color(0xFF1E1E1E)),
+          onPressed: widget.onBack,
+        ),
+        title: const Text(
+          'Add Transaction',
+          style: TextStyle(color: Color(0xFF1E1E1E), fontWeight: FontWeight.bold, fontSize: 18),
+        ),
+        centerTitle: false,
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Customer Selector Chip / Dropdown
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              decoration: BoxDecoration(
+                color: const Color(0xFFEFF6FF),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: const Color(0xFFBFDBFE)),
               ),
-              const SizedBox(width: 4),
-              const Text(
-                'Record Entry',
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-
-          // Type Toggle Row
-          Row(
-            children: [
-              _TypeBtn(
-                title: 'Give Udhar',
-                isSelected: isUdhar,
-                color: AppColors.redUdhar,
-                onTap: () => setState(() => _selectedType = 'UDHAAR'),
-              ),
-              const SizedBox(width: 8),
-              _TypeBtn(
-                title: 'Receive Payment',
-                isSelected: isPayment,
-                color: AppColors.greenAdvance,
-                onTap: () => setState(() => _selectedType = 'PAYMENT'),
-              ),
-              const SizedBox(width: 8),
-              _TypeBtn(
-                title: 'Advance',
-                isSelected: _selectedType == 'ADVANCE',
-                color: AppColors.primaryBlue,
-                onTap: () => setState(() => _selectedType = 'ADVANCE'),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-
-          // Customer Selector & Amount Entry
-          GlassCard(
-            radius: 20,
-            padding: const EdgeInsets.all(18),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                DropdownButtonFormField<Customer>(
-                  initialValue: _selectedCustomer,
-                  dropdownColor: AppColors.cardSurface,
-                  decoration: const InputDecoration(
-                    labelText: 'Select Customer',
-                    labelStyle: TextStyle(color: AppColors.textSecondary),
-                    prefixIcon: Icon(Icons.person, color: AppColors.primaryBlue),
-                  ),
-                  items: state.customers.map((c) => DropdownMenuItem(value: c, child: Text(c.name))).toList(),
-                  onChanged: (val) => setState(() => _selectedCustomer = val),
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: _amountCtrl,
-                  keyboardType: TextInputType.number,
-                  style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: activeColor),
-                  decoration: InputDecoration(
-                    labelText: 'Amount (₹)',
-                    labelStyle: const TextStyle(color: AppColors.textSecondary),
-                    prefixText: '₹ ',
-                    prefixStyle: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: activeColor),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                // Quick Amount Chips
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [100, 500, 1000, 2000].map((amt) {
-                    return BouncyWidget(
-                      onTap: () => _addQuickAmount(amt),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.08),
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: Colors.white12),
-                        ),
-                        child: Text('+₹$amt', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+              child: Row(
+                children: [
+                  const Icon(Icons.person, color: Color(0xFF2563EB), size: 20),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: DropdownButtonHideUnderline(
+                      child: DropdownButton<Customer>(
+                        value: _selectedCustomer,
+                        isDense: true,
+                        dropdownColor: Colors.white,
+                        borderRadius: BorderRadius.circular(14),
+                        style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF1E1E1E), fontSize: 14),
+                        items: state.customers.map((c) {
+                          return DropdownMenuItem(
+                            value: c,
+                            child: Text(c.name, style: const TextStyle(color: Color(0xFF1E1E1E))),
+                          );
+                        }).toList(),
+                        onChanged: (c) => setState(() => _selectedCustomer = c),
                       ),
-                    );
-                  }).toList(),
-                ),
-                const SizedBox(height: 16),
-                const Text('Payment Method', style: TextStyle(color: AppColors.textSecondary, fontSize: 12)),
-                const SizedBox(height: 8),
-                Row(
-                  children: ['Cash', 'UPI', 'Bank Transfer'].map((m) {
-                    final isSel = _paymentMethod == m;
-                    return Padding(
-                      padding: const EdgeInsets.only(right: 8),
-                      child: ChoiceChip(
-                        label: Text(m),
-                        selected: isSel,
-                        selectedColor: activeColor,
-                        backgroundColor: AppColors.cardSurface,
-                        onSelected: (_) => setState(() => _paymentMethod = m),
-                      ),
-                    );
-                  }).toList(),
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: _noteCtrl,
-                  decoration: const InputDecoration(
-                    labelText: 'Note / Items Description',
-                    labelStyle: TextStyle(color: AppColors.textSecondary),
-                    hintText: 'e.g. Grocery items, 5kg Atta',
-                    hintStyle: TextStyle(color: AppColors.textMuted, fontSize: 12),
-                  ),
-                ),
-                const SizedBox(height: 24),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: activeColor,
-                      foregroundColor: const Color(0xFF062622),
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                     ),
-                    onPressed: () {
-                      final amt = double.tryParse(_amountCtrl.text.trim()) ?? 0;
-                      if (_selectedCustomer != null && amt > 0) {
-                        state.addTransaction(
-                          customerId: _selectedCustomer!.id,
-                          type: _selectedType,
-                          amount: amt,
-                          note: _noteCtrl.text.trim().isNotEmpty ? _noteCtrl.text.trim() : 'Manual Entry',
-                          paymentMethod: _paymentMethod,
-                        );
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Saved ₹${amt.toInt()} $_selectedType entry!')),
-                        );
-                        widget.onBack();
-                      }
-                    },
-                    child: Text('Save $_selectedType', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                   ),
-                ),
+                  GestureDetector(
+                    onTap: () {
+                      setState(() => _selectedCustomer = state.customers.firstOrNull);
+                    },
+                    child: const Icon(Icons.close, size: 18, color: Color(0xFF6B7280)),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            // Transaction Type Selector Pills: Udhaar, Payment, Advance
+            const Text(
+              'Transaction Type',
+              style: TextStyle(color: Color(0xFF4B5563), fontWeight: FontWeight.bold, fontSize: 13),
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                _buildTypePill('UDHAAR', 'Udhaar'),
+                const SizedBox(width: 8),
+                _buildTypePill('PAYMENT', 'Payment'),
+                const SizedBox(width: 8),
+                _buildTypePill('ADVANCE', 'Advance'),
               ],
             ),
-          ),
-        ],
+            const SizedBox(height: 20),
+
+            // Amount Input
+            const Text(
+              'Amount *',
+              style: TextStyle(color: Color(0xFF4B5563), fontWeight: FontWeight.bold, fontSize: 13),
+            ),
+            const SizedBox(height: 6),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0xFFE5E7EB)),
+              ),
+              child: Row(
+                children: [
+                  const Text('₹', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF6B7280))),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: TextField(
+                      controller: _amountCtrl,
+                      keyboardType: TextInputType.number,
+                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF1E1E1E)),
+                      decoration: const InputDecoration(border: InputBorder.none, hintText: '0'),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            // Payment Mode Dropdown
+            const Text(
+              'Payment Mode',
+              style: TextStyle(color: Color(0xFF4B5563), fontWeight: FontWeight.bold, fontSize: 13),
+            ),
+            const SizedBox(height: 6),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0xFFE5E7EB)),
+              ),
+              child: DropdownButtonHideUnderline(
+                child: DropdownButton<String>(
+                  value: _paymentMode,
+                  isExpanded: true,
+                  dropdownColor: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  items: ['Cash', 'UPI', 'Bank Transfer', 'Other'].map((m) {
+                    return DropdownMenuItem(value: m, child: Text(m, style: const TextStyle(color: Color(0xFF1E1E1E))));
+                  }).toList(),
+                  onChanged: (v) {
+                    if (v != null) setState(() => _paymentMode = v);
+                  },
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            // Date Picker
+            const Text(
+              'Date',
+              style: TextStyle(color: Color(0xFF4B5563), fontWeight: FontWeight.bold, fontSize: 13),
+            ),
+            const SizedBox(height: 6),
+            GestureDetector(
+              onTap: () async {
+                final d = await showDatePicker(
+                  context: context,
+                  initialDate: _selectedDate,
+                  firstDate: DateTime(2020),
+                  lastDate: DateTime(2030),
+                );
+                if (d != null) setState(() => _selectedDate = d);
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFFE5E7EB)),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      '${_selectedDate.day} Sep ${_selectedDate.year}',
+                      style: const TextStyle(color: Color(0xFF1E1E1E), fontSize: 14, fontWeight: FontWeight.w500),
+                    ),
+                    const Icon(Icons.calendar_today, size: 18, color: Color(0xFF6B7280)),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            // Note Input
+            const Text(
+              'Note',
+              style: TextStyle(color: Color(0xFF4B5563), fontWeight: FontWeight.bold, fontSize: 13),
+            ),
+            const SizedBox(height: 6),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0xFFE5E7EB)),
+              ),
+              child: TextField(
+                controller: _noteCtrl,
+                style: const TextStyle(color: Color(0xFF1E1E1E), fontSize: 14),
+                decoration: const InputDecoration(border: InputBorder.none, hintText: 'Add a note...'),
+              ),
+            ),
+            const SizedBox(height: 32),
+
+            // Save Transaction Button
+            SizedBox(
+              width: double.infinity,
+              height: 52,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFDF7528),
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  elevation: 2,
+                ),
+                onPressed: _saveTransaction,
+                child: const Text('Save Transaction', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+              ),
+            ),
+            const SizedBox(height: 40),
+          ],
+        ),
       ),
     );
   }
-}
 
-class _TypeBtn extends StatelessWidget {
-  final String title;
-  final bool isSelected;
-  final Color color;
-  final VoidCallback onTap;
-
-  const _TypeBtn({
-    required this.title,
-    required this.isSelected,
-    required this.color,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
+  Widget _buildTypePill(String type, String label) {
+    final isSelected = _selectedType == type;
     return Expanded(
-      child: BouncyWidget(
-        onTap: onTap,
+      child: GestureDetector(
+        onTap: () => setState(() => _selectedType = type),
         child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 12),
+          padding: const EdgeInsets.symmetric(vertical: 10),
           decoration: BoxDecoration(
-            color: isSelected ? color.withValues(alpha: 0.22) : Colors.white.withValues(alpha: 0.05),
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: isSelected ? color : Colors.white12, width: isSelected ? 1.5 : 1),
+            color: isSelected ? const Color(0xFFDF7528) : Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: isSelected ? const Color(0xFFDF7528) : const Color(0xFFE5E7EB)),
           ),
           child: Text(
-            title,
+            label,
             textAlign: TextAlign.center,
             style: TextStyle(
-              fontSize: 12,
+              color: isSelected ? Colors.white : const Color(0xFF4B5563),
               fontWeight: FontWeight.bold,
-              color: isSelected ? color : AppColors.textSecondary,
+              fontSize: 13,
             ),
           ),
         ),

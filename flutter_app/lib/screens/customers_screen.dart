@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import '../models/models.dart';
 import '../state/ledger_state.dart';
-import '../theme/app_theme.dart';
-import '../widgets/modals.dart';
+import 'add_customer_screen.dart';
 import 'customer_detail_screen.dart';
 
 class CustomersScreen extends StatefulWidget {
@@ -14,14 +14,14 @@ class CustomersScreen extends StatefulWidget {
 
 class _CustomersScreenState extends State<CustomersScreen> {
   String _search = '';
-  String _sortBy = 'HighToLow'; // HighToLow, LowToHigh, Name
+  String _selectedFilter = 'All'; // All, Pending, Overdue, Active
 
   @override
   Widget build(BuildContext context) {
     final state = widget.state;
     var customerSummaries = state.customers.map(state.getCustomerSummary).toList();
 
-    // Filter
+    // Filter by Search
     if (_search.isNotEmpty) {
       customerSummaries = customerSummaries.where((s) {
         return s.customer.name.toLowerCase().contains(_search.toLowerCase()) ||
@@ -29,155 +29,238 @@ class _CustomersScreenState extends State<CustomersScreen> {
       }).toList();
     }
 
-    // Sort
-    if (_sortBy == 'HighToLow') {
-      customerSummaries.sort((a, b) => b.currentOutstanding.compareTo(a.currentOutstanding));
-    } else if (_sortBy == 'LowToHigh') {
-      customerSummaries.sort((a, b) => a.currentOutstanding.compareTo(b.currentOutstanding));
-    } else {
-      customerSummaries.sort((a, b) => a.customer.name.compareTo(b.customer.name));
+    // Filter by Chip
+    if (_selectedFilter == 'Pending') {
+      customerSummaries = customerSummaries.where((s) => s.currentOutstanding > 0).toList();
+    } else if (_selectedFilter == 'Overdue') {
+      customerSummaries = customerSummaries.where((s) => s.currentOutstanding > 3500).toList();
+    } else if (_selectedFilter == 'Active') {
+      customerSummaries = customerSummaries.where((s) => s.currentOutstanding > 0 && s.currentOutstanding <= 3500).toList();
     }
 
     return Scaffold(
-      backgroundColor: Colors.transparent,
+      backgroundColor: const Color(0xFFFAF7F2),
       floatingActionButton: FloatingActionButton.extended(
-        backgroundColor: AppColors.primaryBlue,
-        foregroundColor: const Color(0xFF062622),
-        icon: const Icon(Icons.person_add),
-        label: const Text('Add Customer', style: TextStyle(fontWeight: FontWeight.bold)),
-        onPressed: () => Modals.showAddCustomer(context, state),
+        backgroundColor: const Color(0xFFDF7528),
+        foregroundColor: Colors.white,
+        elevation: 3,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        icon: const Icon(Icons.add, size: 20),
+        label: const Text('Add Customer', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => AddCustomerScreen(state: state)),
+          );
+        },
       ),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 12, 16, 100),
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('Customers Directory', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
-                  Text('${customerSummaries.length} Total Customers', style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
-                ],
-              ),
-              DropdownButton<String>(
-                value: _sortBy,
-                dropdownColor: AppColors.cardSurface,
-                style: const TextStyle(color: AppColors.primaryBlue, fontSize: 12, fontWeight: FontWeight.bold),
-                underline: const SizedBox(),
-                items: const [
-                  DropdownMenuItem(value: 'HighToLow', child: Text('Sort: High Udhar')),
-                  DropdownMenuItem(value: 'LowToHigh', child: Text('Sort: Low Udhar')),
-                  DropdownMenuItem(value: 'Name', child: Text('Sort: Name')),
-                ],
-                onChanged: (v) {
-                  if (v != null) setState(() => _sortBy = v);
-                },
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
+      body: SafeArea(
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(18, 12, 18, 100),
+          children: [
+            // Header Bar (Screen 5)
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Customers',
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Color(0xFF1E1E1E)),
+                ),
+                Container(
+                  width: 38,
+                  height: 38,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white,
+                    border: Border.all(color: const Color(0xFFE5E7EB)),
+                  ),
+                  child: const Icon(Icons.qr_code_scanner, size: 20, color: Color(0xFF1E1E1E)),
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
 
-          // Search Field
-          GlassCard(
-            radius: 16,
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            child: TextField(
-              onChanged: (v) => setState(() => _search = v),
-              style: const TextStyle(color: AppColors.textPrimary),
-              decoration: const InputDecoration(
-                hintText: 'Search customer name or phone...',
-                hintStyle: TextStyle(color: AppColors.textMuted, fontSize: 13),
-                prefixIcon: Icon(Icons.search, color: AppColors.primaryBlue),
-                border: InputBorder.none,
+            // Search Bar
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: const Color(0xFFE5E7EB)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.03),
+                    blurRadius: 6,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.search, color: Color(0xFF9CA3AF), size: 20),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: TextField(
+                      onChanged: (v) => setState(() => _search = v),
+                      style: const TextStyle(color: Color(0xFF1E1E1E), fontSize: 14),
+                      decoration: const InputDecoration(
+                        hintText: 'Search customers...',
+                        hintStyle: TextStyle(color: Color(0xFF9CA3AF), fontSize: 14),
+                        border: InputBorder.none,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
-          ),
-          const SizedBox(height: 16),
+            const SizedBox(height: 14),
 
-          // Customer List
-          ...customerSummaries.map((summary) {
-            final cust = summary.customer;
-            final isDue = summary.currentOutstanding > 0;
-            final isAdvance = summary.currentOutstanding < 0;
-            final balanceColor = isDue
-                ? AppColors.redUdhar
-                : (isAdvance ? AppColors.greenAdvance : AppColors.textSecondary);
+            // Filter Chips: All, Pending, Overdue, Active
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  _buildFilterChip('All'),
+                  const SizedBox(width: 8),
+                  _buildFilterChip('Pending'),
+                  const SizedBox(width: 8),
+                  _buildFilterChip('Overdue'),
+                  const SizedBox(width: 8),
+                  _buildFilterChip('Active'),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
 
-            final riskColor = cust.riskLevel == 'High'
-                ? AppColors.redUdhar
-                : (cust.riskLevel == 'Medium' ? AppColors.orangeMedium : AppColors.greenAdvance);
+            // Customer Cards
+            ...customerSummaries.map((summary) {
+              final c = summary.customer;
+              final outstanding = summary.currentOutstanding;
+              final isOverdue = outstanding > 3500;
+              final isSettled = outstanding == 0;
+              final statusText = isSettled ? 'Settled' : (isOverdue ? 'Overdue' : 'Active');
+              final badgeBg = isSettled
+                  ? const Color(0xFFF3F4F6)
+                  : (isOverdue ? const Color(0xFFFEE2E2) : const Color(0xFFDCFCE7));
+              final badgeTextColor = isSettled
+                  ? const Color(0xFF6B7280)
+                  : (isOverdue ? const Color(0xFFDC2626) : const Color(0xFF16A34A));
 
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 10),
-              child: GlassCard(
-                radius: 18,
-                padding: const EdgeInsets.all(14),
+              final initials = c.name.isNotEmpty
+                  ? c.name.split(' ').map((w) => w.isNotEmpty ? w[0] : '').take(2).join()
+                  : 'C';
+
+              return GestureDetector(
                 onTap: () {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (_) => CustomerDetailScreen(customer: cust, state: state),
+                      builder: (_) => CustomerDetailScreen(state: state, customer: c),
                     ),
                   );
                 },
-                child: Row(
-                  children: [
-                    CircleAvatar(
-                      radius: 22,
-                      backgroundColor: AppColors.primaryBlueBg,
-                      child: Text(
-                        cust.name.isNotEmpty ? cust.name[0].toUpperCase() : 'C',
-                        style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.primaryBlue, fontSize: 16),
+                child: Container(
+                  margin: const EdgeInsets.only(bottom: 10),
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: const Color(0xFFE5E7EB)),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.02),
+                        blurRadius: 6,
+                        offset: const Offset(0, 2),
                       ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Text(cust.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppColors.textPrimary)),
-                              const SizedBox(width: 6),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                decoration: BoxDecoration(
-                                  color: riskColor.withValues(alpha: 0.15),
-                                  borderRadius: BorderRadius.circular(6),
-                                  border: Border.all(color: riskColor.withValues(alpha: 0.4)),
-                                ),
-                                child: Text(
-                                  cust.riskLevel,
-                                  style: TextStyle(color: riskColor, fontSize: 10, fontWeight: FontWeight.bold),
-                                ),
-                              ),
-                            ],
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      // Avatar
+                      CircleAvatar(
+                        radius: 20,
+                        backgroundColor: isOverdue ? const Color(0xFFFFEDD5) : const Color(0xFFE0E7FF),
+                        child: Text(
+                          initials,
+                          style: TextStyle(
+                            color: isOverdue ? const Color(0xFFC2410C) : const Color(0xFF4338CA),
+                            fontWeight: FontWeight.bold,
+                            fontSize: 13,
                           ),
-                          const SizedBox(height: 2),
-                          Text('${cust.phone} • ${cust.location}', style: const TextStyle(color: AppColors.textSecondary, fontSize: 11)),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              c.name,
+                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Color(0xFF1E1E1E)),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              c.phone,
+                              style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text(
+                            '₹${outstanding.toInt()}',
+                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Color(0xFF1E1E1E)),
+                          ),
+                          const SizedBox(height: 4),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: badgeBg,
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              statusText,
+                              style: TextStyle(
+                                color: badgeTextColor,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 11,
+                              ),
+                            ),
+                          ),
                         ],
                       ),
-                    ),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Text(
-                          '₹ ${summary.currentOutstanding.abs().toInt()}',
-                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: balanceColor),
-                        ),
-                        Text(
-                          isDue ? 'Due' : (isAdvance ? 'Advance' : 'Settled'),
-                          style: TextStyle(fontSize: 10, color: balanceColor.withValues(alpha: 0.8), fontWeight: FontWeight.w600),
-                        ),
-                      ],
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-            );
-          }),
-        ],
+              );
+            }),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFilterChip(String label) {
+    final isSelected = _selectedFilter == label;
+    return GestureDetector(
+      onTap: () => setState(() => _selectedFilter = label),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
+        decoration: BoxDecoration(
+          color: isSelected ? const Color(0xFF78350F) : Colors.white,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: isSelected ? const Color(0xFF78350F) : const Color(0xFFE5E7EB)),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: isSelected ? Colors.white : const Color(0xFF4B5563),
+            fontWeight: FontWeight.bold,
+            fontSize: 12,
+          ),
+        ),
       ),
     );
   }

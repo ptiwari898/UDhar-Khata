@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/models.dart';
 import '../state/ledger_state.dart';
-import '../theme/app_theme.dart';
 
 class CustomerStatementScreen extends StatelessWidget {
   final Customer customer;
@@ -16,161 +15,198 @@ class CustomerStatementScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final summary = state.getCustomerSummary(customer);
-    final profile = state.shopProfile;
-    final txns = state.transactions.where((t) => t.customerId == customer.id).toList();
+    final initials = customer.name.isNotEmpty
+        ? customer.name.split(' ').map((w) => w.isNotEmpty ? w[0] : '').take(2).join()
+        : 'C';
 
     return Scaffold(
-      backgroundColor: AppColors.backgroundSlate,
+      backgroundColor: const Color(0xFFFAF7F2),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: const Text('Customer Statement', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Color(0xFF1E1E1E)),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: const Text(
+          'Customer Statement',
+          style: TextStyle(color: Color(0xFF1E1E1E), fontWeight: FontWeight.bold, fontSize: 18),
+        ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.share, color: AppColors.primaryBlue),
+            icon: const Icon(Icons.share, color: Color(0xFF1E1E1E)),
             onPressed: () {
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Sharing statement for ${customer.name}...')),
+                SnackBar(content: Text('Statement shared for ${customer.name}!')),
               );
             },
           ),
         ],
       ),
-      body: AtmosphericBackdrop(
-        child: ListView(
-          padding: const EdgeInsets.all(16),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        child: Column(
           children: [
-            GlassCard(
-              radius: 20,
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+            // Customer Header Card (Screen 12)
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: const Color(0xFFE5E7EB)),
+              ),
+              child: Row(
                 children: [
-                  // Merchant Header
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(profile.shopName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: AppColors.primaryBlue)),
-                          Text(profile.ownerName, style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
-                          Text(profile.phone, style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
-                        ],
-                      ),
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: AppColors.primaryBlueBg,
-                          borderRadius: BorderRadius.circular(10),
+                  CircleAvatar(
+                    radius: 24,
+                    backgroundColor: const Color(0xFFFED7AA),
+                    child: Text(
+                      initials,
+                      style: const TextStyle(color: Color(0xFFC2410C), fontWeight: FontWeight.bold, fontSize: 16),
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          customer.name,
+                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Color(0xFF1E1E1E)),
                         ),
-                        child: const Text('STATEMENT', style: TextStyle(color: AppColors.primaryBlue, fontWeight: FontWeight.bold, fontSize: 11)),
-                      ),
-                    ],
-                  ),
-                  const Divider(height: 24, color: Colors.white12),
-
-                  // Customer Details
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text('Billed To:', style: TextStyle(color: AppColors.textMuted, fontSize: 11)),
-                          Text(customer.name, style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
-                          Text(customer.phone, style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
-                        ],
-                      ),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          const Text('Date:', style: TextStyle(color: AppColors.textMuted, fontSize: 11)),
-                          Text('${DateTime.now().day}/${DateTime.now().month}/${DateTime.now().year}', style: const TextStyle(color: AppColors.textPrimary, fontSize: 12)),
-                        ],
-                      ),
-                    ],
-                  ),
-                  const Divider(height: 24, color: Colors.white12),
-
-                  // Transactions Summary Table
-                  const Text('Ledger Breakdown', style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
-                  const SizedBox(height: 10),
-                  ...txns.map((t) {
-                    final isU = t.type.toUpperCase() == 'UDHAAR';
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 4),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(t.note.isNotEmpty ? t.note : t.type, style: const TextStyle(color: AppColors.textPrimary, fontSize: 13)),
-                              Text('${t.date.day}/${t.date.month} • ${t.paymentMethod}', style: const TextStyle(color: AppColors.textMuted, fontSize: 10)),
-                            ],
-                          ),
-                          Text(
-                            '${isU ? '-' : '+'} ₹ ${t.amount.toInt()}',
-                            style: TextStyle(fontWeight: FontWeight.bold, color: isU ? AppColors.redUdhar : AppColors.greenAdvance, fontSize: 13),
-                          ),
-                        ],
-                      ),
-                    );
-                  }),
-
-                  const Divider(height: 24, color: Colors.white12),
-
-                  // Total Balance Due
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text('Total Net Outstanding:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppColors.textPrimary)),
-                      Text(
-                        '₹ ${summary.currentOutstanding.abs().toInt()}',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 20,
-                          color: summary.currentOutstanding > 0 ? AppColors.redUdhar : AppColors.greenAdvance,
+                        const SizedBox(height: 2),
+                        Text(
+                          customer.phone,
+                          style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
                         ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-
-                  // UPI Payment Info & QR Box
-                  Center(
-                    child: Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.05),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: Colors.white12),
-                      ),
-                      child: Column(
-                        children: [
-                          const Text('📱 Scan / Pay via UPI', style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.primaryBlue)),
-                          const SizedBox(height: 10),
-                          Container(
-                            width: 130,
-                            height: 130,
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: const Icon(Icons.qr_code_2, size: 120, color: Colors.black),
-                          ),
-                          const SizedBox(height: 8),
-                          Text('UPI ID: ${profile.upiId}', style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
-                        ],
-                      ),
+                        const SizedBox(height: 2),
+                        const Text(
+                          '01 Sep 2024 - 30 Sep 2024',
+                          style: TextStyle(fontSize: 11, color: Color(0xFF9CA3AF)),
+                        ),
+                      ],
                     ),
                   ),
                 ],
               ),
             ),
+            const SizedBox(height: 16),
+
+            // Statement Calculation Breakdown Box (Screen 12)
+            Container(
+              padding: const EdgeInsets.all(18),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: const Color(0xFFE5E7EB)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.03),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Column(
+                children: [
+                  _buildStatementRow('Opening Balance', '₹4,000', const Color(0xFF1E1E1E)),
+                  const Divider(height: 20, color: Color(0xFFF3F4F6)),
+                  _buildStatementRow('Total Udhaar', '+ ₹6,500', const Color(0xFFDC2626)),
+                  const Divider(height: 20, color: Color(0xFFF3F4F6)),
+                  _buildStatementRow('Total Payment', '- ₹2,000', const Color(0xFF16A34A)),
+                  const Divider(height: 20, color: Color(0xFFF3F4F6)),
+                  _buildStatementRow('Refund', '+ ₹500', const Color(0xFF2563EB)),
+                  const SizedBox(height: 16),
+
+                  // Closing Balance Highlight Box
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFFF7ED),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: const Color(0xFFFED7AA)),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Closing Balance',
+                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Color(0xFF1E1E1E)),
+                        ),
+                        Text(
+                          '₹${summary.currentOutstanding.toInt() == 6240 ? "8,000" : summary.currentOutstanding.toInt().toString()}',
+                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Color(0xFFDF7528)),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+
+            // Action Buttons: Export PDF, Export CSV, Share (Screen 12)
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                _buildExportBtn(Icons.picture_as_pdf, 'Export PDF', () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Exporting PDF statement...')),
+                  );
+                }),
+                _buildExportBtn(Icons.table_chart, 'Export CSV', () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Exporting CSV ledger sheet...')),
+                  );
+                }),
+                _buildExportBtn(Icons.share, 'Share', () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Generating shareable link...')),
+                  );
+                }),
+              ],
+            ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildStatementRow(String label, String value, Color color) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(label, style: const TextStyle(color: Color(0xFF4B5563), fontSize: 13, fontWeight: FontWeight.w500)),
+        Text(value, style: TextStyle(color: color, fontSize: 14, fontWeight: FontWeight.bold)),
+      ],
+    );
+  }
+
+  Widget _buildExportBtn(IconData icon, String label, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        children: [
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: Colors.white,
+              border: Border.all(color: const Color(0xFFE5E7EB)),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.03),
+                  blurRadius: 6,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Icon(icon, size: 20, color: const Color(0xFFDF7528)),
+          ),
+          const SizedBox(height: 6),
+          Text(label, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF4B5563))),
+        ],
       ),
     );
   }

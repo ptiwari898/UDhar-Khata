@@ -141,5 +141,97 @@ void main() {
       expect(state.shopProfile.ownerName, 'Pawan Tiwari');
       expect(state.shopProfile.upiId, 'pawantiwari@okhdfcbank');
     });
+
+    test('11. Payment Reminders and 3 Alert Options', () {
+      final initialCount = state.reminders.length;
+      expect(initialCount, greaterThanOrEqualTo(4));
+
+      // Test adding a customer Udhar recovery reminder with Alert Option 2 (1 Day Before)
+      state.addReminder(
+        customerId: 1,
+        title: 'Ramesh General Store',
+        amount: 2500.0,
+        dueDate: DateTime.now().add(const Duration(days: 2)),
+        reminderType: 'RECOVER_UDHAR',
+        alertOption: AlertOption.oneDayBefore,
+        note: 'Weekly balance settlement',
+      );
+
+      expect(state.reminders.length, initialCount + 1);
+      final added = state.reminders.last;
+      expect(added.title, 'Ramesh General Store');
+      expect(added.amount, 2500.0);
+      expect(added.reminderType, 'RECOVER_UDHAR');
+      expect(added.alertOption, AlertOption.oneDayBefore);
+      expect(state.getAlertOptionLabel(added.alertOption), contains('1 Day Before'));
+
+      // Test adding a Supplier Bill payment reminder with Alert Option 3 (3 Days Before)
+      state.addReminder(
+        customerId: 0,
+        title: 'Fortune Oil Distributor',
+        amount: 12000.0,
+        dueDate: DateTime.now().add(const Duration(days: 5)),
+        reminderType: 'PAY_SUPPLIER',
+        alertOption: AlertOption.threeDaysBefore,
+        note: 'Oil tins bulk invoice',
+      );
+
+      final addedBill = state.reminders.last;
+      expect(addedBill.title, 'Fortune Oil Distributor');
+      expect(addedBill.reminderType, 'PAY_SUPPLIER');
+      expect(addedBill.alertOption, AlertOption.threeDaysBefore);
+      expect(state.getAlertOptionLabel(addedBill.alertOption), contains('3 Days Before'));
+
+      // Test toggle settled
+      expect(added.isSettled, false);
+      state.toggleReminderSettled(added.id);
+      expect(state.reminders.firstWhere((r) => r.id == added.id).isSettled, true);
+
+      // Test delete reminder
+      state.deleteReminder(added.id);
+      expect(state.reminders.any((r) => r.id == added.id), false);
+    });
+
+    test('12. Mathematical Ledger Engine: Refund & Adjustment Handling', () {
+      final cust = state.customers.first;
+      final baseSummary = state.getCustomerSummary(cust);
+
+      // Add Refund
+      state.addTransaction(
+        customerId: cust.id,
+        type: 'REFUND',
+        amount: 300.0,
+        note: 'Damaged item refunded to customer',
+      );
+
+      final summaryAfterRefund = state.getCustomerSummary(cust);
+      expect(summaryAfterRefund.totalRefund, 300.0);
+      expect(summaryAfterRefund.currentOutstanding, baseSummary.currentOutstanding + 300.0);
+
+      // Add Adjustment
+      state.addTransaction(
+        customerId: cust.id,
+        type: 'ADJUSTMENT',
+        amount: -100.0,
+        note: 'Discount adjustment',
+      );
+
+      final summaryAfterAdj = state.getCustomerSummary(cust);
+      expect(summaryAfterAdj.totalAdjustment, -100.0);
+      expect(summaryAfterAdj.currentOutstanding, summaryAfterRefund.currentOutstanding - 100.0);
+    });
+
+    test('13. Backup Export, Import & Model Serialization', () {
+      final backupJson = state.exportBackupData();
+      expect(backupJson, contains('Udhar Khata'));
+      expect(backupJson, contains('Pawan Tiwari'));
+      expect(backupJson, contains('customers'));
+      expect(backupJson, contains('transactions'));
+
+      final importResult = state.importBackupData(backupJson);
+      expect(importResult, true);
+    });
   });
 }
+
+

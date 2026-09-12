@@ -1,7 +1,91 @@
+import 'dart:convert';
 import 'package:flutter/foundation.dart';
+import '../data/storage_service.dart';
 import '../models/models.dart';
+import '../theme/app_theme.dart';
 
 class LedgerState extends ChangeNotifier {
+  final LocalStorageService _storageService = LocalStorageService();
+  AppThemeMode _themeMode = AppThemeMode.defaultGoldenHour;
+
+  AppThemeMode get themeMode => _themeMode;
+  ThemePalette get activePalette => AppPalettes.getPalette(_themeMode);
+
+  void setThemeMode(AppThemeMode mode) {
+    _themeMode = mode;
+    notifyListeners();
+  }
+
+  void cycleThemeMode() {
+    switch (_themeMode) {
+      case AppThemeMode.defaultGoldenHour:
+        _themeMode = AppThemeMode.darkMode;
+        break;
+      case AppThemeMode.darkMode:
+        _themeMode = AppThemeMode.lightMode;
+        break;
+      case AppThemeMode.lightMode:
+        _themeMode = AppThemeMode.defaultGoldenHour;
+        break;
+    }
+    notifyListeners();
+  }
+
+  LedgerState() {
+    _loadFromDisk();
+  }
+
+  Future<void> _loadFromDisk() async {
+    try {
+      final saved = await _storageService.loadState();
+      if (saved != null) {
+        if (saved['shopProfile'] != null) {
+          _shopProfile = ShopProfile.fromJson(saved['shopProfile'] as Map<String, dynamic>);
+        }
+        if (saved['currentUser'] != null) {
+          _currentUser = UserAuthProfile.fromJson(saved['currentUser'] as Map<String, dynamic>);
+        }
+        if (saved['customers'] is List) {
+          _customers.clear();
+          for (final item in saved['customers'] as List) {
+            _customers.add(Customer.fromJson(item as Map<String, dynamic>));
+          }
+        }
+        if (saved['transactions'] is List) {
+          _transactions.clear();
+          for (final item in saved['transactions'] as List) {
+            _transactions.add(LedgerTransaction.fromJson(item as Map<String, dynamic>));
+          }
+        }
+        if (saved['orders'] is List) {
+          _orders.clear();
+          for (final item in saved['orders'] as List) {
+            _orders.add(CustomerOrder.fromJson(item as Map<String, dynamic>));
+          }
+        }
+        if (saved['reminders'] is List) {
+          _reminders.clear();
+          for (final item in saved['reminders'] as List) {
+            _reminders.add(PaymentReminder.fromJson(item as Map<String, dynamic>));
+          }
+        }
+        notifyListeners();
+      }
+    } catch (_) {}
+  }
+
+  void _persist() {
+    _storageService.saveState(
+      shopProfile: _shopProfile,
+      currentUser: _currentUser,
+      customers: _customers,
+      transactions: _transactions,
+      orders: _orders,
+      chatMessages: _chatMessages,
+      reminders: _reminders,
+    );
+  }
+
   UserAuthProfile? _currentUser = const UserAuthProfile(
     uid: 'demo_user_1',
     name: 'Shivam Kirana Store',
@@ -207,6 +291,53 @@ class LedgerState extends ChangeNotifier {
     ),
   ];
 
+  final List<PaymentReminder> _reminders = [
+    PaymentReminder(
+      id: 401,
+      customerId: 1,
+      title: 'Ramesh General Store',
+      amount: 4200.0,
+      dueDate: DateTime.now().add(const Duration(days: 1)),
+      reminderType: 'RECOVER_UDHAR',
+      alertOption: AlertOption.oneDayBefore,
+      note: 'Weekly grocery credit settlement',
+      createdAt: DateTime.now().subtract(const Duration(days: 3)),
+    ),
+    PaymentReminder(
+      id: 402,
+      customerId: 2,
+      title: 'Sanjay Dairy',
+      amount: 4180.0,
+      dueDate: DateTime.now().add(const Duration(days: 3)),
+      reminderType: 'RECOVER_UDHAR',
+      alertOption: AlertOption.threeDaysBefore,
+      note: 'Milk and dairy supplies payment',
+      createdAt: DateTime.now().subtract(const Duration(days: 2)),
+    ),
+    PaymentReminder(
+      id: 403,
+      customerId: 3,
+      title: 'Maa Traders',
+      amount: 3920.0,
+      dueDate: DateTime.now(),
+      reminderType: 'RECOVER_UDHAR',
+      alertOption: AlertOption.sameDay,
+      note: 'Atta & Pulses payment due today',
+      createdAt: DateTime.now().subtract(const Duration(days: 4)),
+    ),
+    PaymentReminder(
+      id: 404,
+      customerId: 0,
+      title: 'Amul Milk Wholesale Distributor',
+      amount: 8500.0,
+      dueDate: DateTime.now().add(const Duration(days: 4)),
+      reminderType: 'PAY_SUPPLIER',
+      alertOption: AlertOption.threeDaysBefore,
+      note: 'Supplier invoice #INV-9921 for milk crates',
+      createdAt: DateTime.now().subtract(const Duration(days: 1)),
+    ),
+  ];
+
   // Getters
   UserAuthProfile? get currentUser => _currentUser;
   ShopProfile get shopProfile => _shopProfile;
@@ -214,6 +345,81 @@ class LedgerState extends ChangeNotifier {
   List<LedgerTransaction> get transactions => List.unmodifiable(_transactions);
   List<CustomerOrder> get orders => List.unmodifiable(_orders);
   List<ChatMessage> get chatMessages => List.unmodifiable(_chatMessages);
+  List<PaymentReminder> get reminders => List.unmodifiable(_reminders);
+
+  List<PaymentReminder> get upcomingReminders {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    return _reminders.where((r) => !r.isSettled && !r.dueDate.isBefore(today)).toList()
+      ..sort((a, b) => a.dueDate.compareTo(b.dueDate));
+  }
+
+  List<PaymentReminder> get overdueReminders {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    return _reminders.where((r) => !r.isSettled && r.dueDate.isBefore(today)).toList()
+      ..sort((a, b) => a.dueDate.compareTo(b.dueDate));
+  }
+
+  // Reminders Management (3 Alert Options)
+  void addReminder({
+    required int customerId,
+    required String title,
+    required double amount,
+    required DateTime dueDate,
+    String reminderType = 'RECOVER_UDHAR', // 'RECOVER_UDHAR' or 'PAY_SUPPLIER'
+    AlertOption alertOption = AlertOption.sameDay,
+    String note = '',
+  }) {
+    final newReminder = PaymentReminder(
+      id: DateTime.now().millisecondsSinceEpoch % 100000,
+      customerId: customerId,
+      title: title,
+      amount: amount,
+      dueDate: dueDate,
+      reminderType: reminderType,
+      alertOption: alertOption,
+      note: note,
+      createdAt: DateTime.now(),
+    );
+    _reminders.add(newReminder);
+    notifyListeners();
+    _persist();
+  }
+
+  void toggleReminderSettled(int id) {
+    final index = _reminders.indexWhere((r) => r.id == id);
+    if (index != -1) {
+      final current = _reminders[index];
+      _reminders[index] = current.copyWith(isSettled: !current.isSettled);
+      notifyListeners();
+      _persist();
+    }
+  }
+
+  void deleteReminder(int id) {
+    _reminders.removeWhere((r) => r.id == id);
+    notifyListeners();
+    _persist();
+  }
+
+  List<PaymentReminder> getRemindersForDate(DateTime date) {
+    return _reminders.where((r) =>
+        r.dueDate.year == date.year &&
+        r.dueDate.month == date.month &&
+        r.dueDate.day == date.day).toList();
+  }
+
+  String getAlertOptionLabel(AlertOption option) {
+    switch (option) {
+      case AlertOption.sameDay:
+        return '⚡ On Due Date (आज)';
+      case AlertOption.oneDayBefore:
+        return '🔔 1 Day Before (1 दिन पहले)';
+      case AlertOption.threeDaysBefore:
+        return '📅 3 Days Before (3 दिन पहले)';
+    }
+  }
 
   // Authentication
   void loginDemoUser(String name, String email, bool isGoogle) {
@@ -224,25 +430,42 @@ class LedgerState extends ChangeNotifier {
       isGoogleUser: isGoogle,
     );
     notifyListeners();
+    _persist();
   }
 
   void logout() {
     _currentUser = null;
     notifyListeners();
+    _persist();
   }
 
   // Profile update
   void updateProfile(ShopProfile updated) {
     _shopProfile = updated;
     notifyListeners();
+    _persist();
   }
 
   // Customer Management
+  bool isPhoneDuplicate(String phone, {int? excludeCustomerId}) {
+    final clean = phone.replaceAll(RegExp(r'\s+'), '');
+    return _customers.any((c) =>
+        c.id != excludeCustomerId &&
+        c.phone.replaceAll(RegExp(r'\s+'), '') == clean &&
+        clean.isNotEmpty);
+  }
+
+  bool isOverCreditLimit(Customer customer) {
+    final summary = getCustomerSummary(customer);
+    return summary.currentOutstanding > customer.creditLimit && customer.creditLimit > 0;
+  }
+
   Customer addCustomer({
     required String name,
     required String phone,
     required String location,
     String riskLevel = 'Low',
+    double creditLimit = 15000.0,
     String notes = '',
   }) {
     final newCust = Customer(
@@ -251,11 +474,22 @@ class LedgerState extends ChangeNotifier {
       phone: phone,
       location: location,
       riskLevel: riskLevel,
+      creditLimit: creditLimit,
       notes: notes,
     );
     _customers.add(newCust);
     notifyListeners();
+    _persist();
     return newCust;
+  }
+
+  void updateCustomer(Customer updated) {
+    final idx = _customers.indexWhere((c) => c.id == updated.id);
+    if (idx != -1) {
+      _customers[idx] = updated;
+      notifyListeners();
+      _persist();
+    }
   }
 
   void deleteCustomer(int customerId) {
@@ -263,7 +497,9 @@ class LedgerState extends ChangeNotifier {
     _transactions.removeWhere((t) => t.customerId == customerId);
     _orders.removeWhere((o) => o.customerId == customerId);
     _chatMessages.removeWhere((m) => m.customerId == customerId);
+    _reminders.removeWhere((r) => r.customerId == customerId);
     notifyListeners();
+    _persist();
   }
 
   // Transaction Management
@@ -303,6 +539,7 @@ class LedgerState extends ChangeNotifier {
     );
 
     notifyListeners();
+    _persist();
   }
 
   // Order Management
@@ -334,6 +571,7 @@ class LedgerState extends ChangeNotifier {
     }
 
     notifyListeners();
+    _persist();
   }
 
   void updateOrderStatus(int orderId, String status) {
@@ -341,6 +579,7 @@ class LedgerState extends ChangeNotifier {
     if (idx != -1) {
       _orders[idx] = _orders[idx].copyWith(status: status);
       notifyListeners();
+      _persist();
     }
   }
 
@@ -356,14 +595,66 @@ class LedgerState extends ChangeNotifier {
       ),
     );
     notifyListeners();
+    _persist();
   }
 
-  // Calculations
+  // Backup and Restore (Phase 17)
+  String exportBackupData() {
+    return _storageService.exportBackupJson(
+      shopProfile: _shopProfile,
+      customers: _customers,
+      transactions: _transactions,
+      orders: _orders,
+      reminders: _reminders,
+    );
+  }
+
+  bool importBackupData(String jsonString) {
+    try {
+      final data = jsonDecode(jsonString) as Map<String, dynamic>;
+      if (data['shopProfile'] != null) {
+        _shopProfile = ShopProfile.fromJson(data['shopProfile'] as Map<String, dynamic>);
+      }
+      if (data['customers'] is List) {
+        _customers.clear();
+        for (final item in data['customers'] as List) {
+          _customers.add(Customer.fromJson(item as Map<String, dynamic>));
+        }
+      }
+      if (data['transactions'] is List) {
+        _transactions.clear();
+        for (final item in data['transactions'] as List) {
+          _transactions.add(LedgerTransaction.fromJson(item as Map<String, dynamic>));
+        }
+      }
+      if (data['orders'] is List) {
+        _orders.clear();
+        for (final item in data['orders'] as List) {
+          _orders.add(CustomerOrder.fromJson(item as Map<String, dynamic>));
+        }
+      }
+      if (data['reminders'] is List) {
+        _reminders.clear();
+        for (final item in data['reminders'] as List) {
+          _reminders.add(PaymentReminder.fromJson(item as Map<String, dynamic>));
+        }
+      }
+      notifyListeners();
+      _persist();
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  // Complete Mathematical Ledger Engine (Phase 4: Balance = Udhar - Payments - Advances + Refunds +/- Adjustments)
   CustomerSummary getCustomerSummary(Customer customer) {
     final custTxns = _transactions.where((t) => t.customerId == customer.id);
     double totalUdhar = 0;
     double totalPaid = 0;
     double totalAdvance = 0;
+    double totalRefund = 0;
+    double totalAdjustment = 0;
 
     for (final t in custTxns) {
       switch (t.type.toUpperCase()) {
@@ -377,18 +668,23 @@ class LedgerState extends ChangeNotifier {
           totalAdvance += t.amount;
           break;
         case 'REFUND':
-          totalPaid -= t.amount;
+          totalRefund += t.amount;
+          break;
+        case 'ADJUSTMENT':
+          totalAdjustment += t.amount;
           break;
       }
     }
 
-    final outstanding = (totalUdhar) - (totalPaid + totalAdvance);
+    final outstanding = (totalUdhar + totalRefund + totalAdjustment) - (totalPaid + totalAdvance);
 
     return CustomerSummary(
       customer: customer,
       totalUdhar: totalUdhar,
       totalPaid: totalPaid,
       totalAdvance: totalAdvance,
+      totalRefund: totalRefund,
+      totalAdjustment: totalAdjustment,
       currentOutstanding: outstanding,
     );
   }
@@ -418,13 +714,15 @@ class LedgerState extends ChangeNotifier {
     );
   }
 
-  // Natural language voice parser simulation
+  // Natural language voice parser with comprehensive NLP
   Map<String, dynamic> parseVoiceText(String spokenText) {
-    final lower = spokenText.toLowerCase();
+    final clean = spokenText.trim();
+    final lower = clean.toLowerCase();
     Customer? matchedCust;
 
+    // 1. Try finding matching customer in current shop list
     for (final c in _customers) {
-      final tokens = c.name.toLowerCase().split(' ');
+      final tokens = c.name.toLowerCase().split(RegExp(r'\s+'));
       for (final tok in tokens) {
         if (tok.length > 2 && lower.contains(tok)) {
           matchedCust = c;
@@ -434,32 +732,53 @@ class LedgerState extends ChangeNotifier {
       if (matchedCust != null) break;
     }
 
+    // 2. Transaction Type detection
     String type = 'UDHAAR';
-    if (lower.contains('payment') ||
+    if (lower.contains('advance') || lower.contains('deposit') || lower.contains('peshgi')) {
+      type = 'ADVANCE';
+    } else if (lower.contains('payment') ||
         lower.contains('mila') ||
         lower.contains('diye') ||
+        lower.contains('jama') ||
+        lower.contains('received') ||
         lower.contains('cash') ||
-        lower.contains('upi')) {
+        lower.contains('pay') ||
+        lower.contains('chuka')) {
       type = 'PAYMENT';
-    } else if (lower.contains('advance')) {
-      type = 'ADVANCE';
+    } else {
+      type = 'UDHAAR';
     }
 
+    // 3. Amount extraction
     double amount = 500.0;
-    final match = RegExp(r'(\d+)').firstMatch(spokenText);
-    if (match != null) {
-      amount = double.tryParse(match.group(1) ?? '500') ?? 500;
+    // Look for numbers like 1500, 1,500, 500, 2.5k, etc.
+    final numMatch = RegExp(r'(\d+(?:[.,]\d+)?)').firstMatch(lower.replaceAll(',', ''));
+    if (numMatch != null) {
+      amount = double.tryParse(numMatch.group(1) ?? '500') ?? 500.0;
       if (lower.contains('hazaar') || lower.contains('thousand') || RegExp(r'\b\d+k\b').hasMatch(lower)) {
-        amount *= 1000;
+        if (amount < 100) amount *= 1000;
+      } else if (lower.contains('lakh') || lower.contains('lac')) {
+        if (amount < 100) amount *= 100000;
+      }
+    }
+
+    // 4. Fallback customer name if not matched
+    String customerName = matchedCust?.name ?? '';
+    if (customerName.isEmpty) {
+      final words = clean.split(RegExp(r'\s+'));
+      if (words.isNotEmpty && !words.first.toLowerCase().contains(RegExp(r'\d'))) {
+        customerName = words.first;
+      } else {
+        customerName = 'Customer';
       }
     }
 
     return {
-      'customerName': matchedCust?.name ?? (spokenText.split(' ').firstOrNull ?? 'Customer'),
+      'customerName': customerName,
       'customerId': matchedCust?.id,
       'type': type,
       'amount': amount,
-      'note': 'Voice: $spokenText',
+      'note': clean.isNotEmpty ? clean : 'Voice entry',
     };
   }
 }
