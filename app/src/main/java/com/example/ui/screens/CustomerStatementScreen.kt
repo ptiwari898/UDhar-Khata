@@ -13,6 +13,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -51,6 +53,9 @@ import com.example.ui.theme.RedUdhar
 import com.example.ui.theme.TextMuted
 import com.example.ui.theme.TextPrimary
 import com.example.ui.theme.TextSecondary
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 @Composable
 fun CustomerStatementScreen(
@@ -73,7 +78,7 @@ fun CustomerStatementScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(BackgroundSlate)
+            .background(Color.Transparent)
             .padding(16.dp)
     ) {
         // Top Bar
@@ -199,7 +204,30 @@ fun CustomerStatementScreen(
             )
         }
 
-        Spacer(modifier = Modifier.weight(1f))
+        Spacer(modifier = Modifier.height(12.dp))
+
+        // Transaction List
+        if (transactions.isEmpty()) {
+            Text(
+                text = "No transactions found",
+                fontSize = 13.sp,
+                color = TextSecondary,
+                modifier = Modifier.padding(12.dp)
+            )
+        } else {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                items(transactions.sortedByDescending { it.dateMillis }) { txn ->
+                    TransactionItemRow(transaction = txn)
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
 
         // Share Action Button
         Button(
@@ -239,3 +267,62 @@ fun CustomerStatementScreen(
         }
     }
 }
+
+@Composable
+fun TransactionItemRow(transaction: LedgerTransaction) {
+    val dateFormat = SimpleDateFormat("dd MMM yyyy, HH:mm", Locale.getDefault())
+    val formattedDate = dateFormat.format(Date(transaction.dateMillis))
+
+    val (typeLabel, typeColor) = when (transaction.type) {
+        "UDHAAR" -> "Udhar" to RedUdhar
+        "PAYMENT" -> "Payment" to GreenAdvance
+        "ADVANCE" -> "Advance" to OrangeMedium
+        "REFUND" -> "Refund" to PrimaryBlue
+        else -> transaction.type to TextSecondary
+    }
+
+    Card(
+        shape = RoundedCornerShape(10.dp),
+        colors = CardDefaults.cardColors(containerColor = CardSurface),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = typeLabel,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 13.sp,
+                    color = typeColor
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = formattedDate,
+                    fontSize = 11.sp,
+                    color = TextSecondary
+                )
+                if (transaction.note.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = transaction.note,
+                        fontSize = 10.sp,
+                        color = TextMuted
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.width(12.dp))
+            Text(
+                text = "₹ ${transaction.amount.toInt()}",
+                fontWeight = FontWeight.Bold,
+                fontSize = 14.sp,
+                color = typeColor
+            )
+        }
+    }
+}
+

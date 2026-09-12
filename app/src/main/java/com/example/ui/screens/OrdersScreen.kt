@@ -61,7 +61,7 @@ fun OrdersScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(BackgroundSlate)
+            .background(Color.Transparent)
             .padding(16.dp)
     ) {
         Row(

@@ -66,6 +66,22 @@ fun OutstandingPieChartCard(
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            if (summaries.isEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(92.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "No outstanding balance yet",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = TextSecondary
+                    )
+                }
+                return@Column
+            }
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically

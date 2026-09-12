@@ -90,10 +90,14 @@ fun CustomerDetailScreen(
     val currentOutstanding = maxOf(0.0, totalUdhar - totalRepaid)
     val advanceBalance = maxOf(0.0, (totalAdvance - totalRefund) - maxOf(0.0, totalRepaid - totalUdhar))
 
+    // Calculate net amounts after offsetting advance against outstanding
+    val netOutstanding = maxOf(0.0, currentOutstanding - advanceBalance)
+    val netAdvance = maxOf(0.0, advanceBalance - currentOutstanding)
+
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(BackgroundSlate)
+            .background(Color.Transparent)
     ) {
         // Top Bar
         Row(
@@ -206,13 +210,28 @@ fun CustomerDetailScreen(
                             Text(customer.location, fontSize = 12.sp, color = TextSecondary)
                         }
                         Spacer(modifier = Modifier.height(6.dp))
+                        val badgeText = when {
+                            netOutstanding > 0 -> "High Outstanding"
+                            netAdvance > 0 -> "Advance Paid"
+                            else -> "Settled"
+                        }
+                        val badgeColor = when {
+                            netOutstanding > 0 -> RedUdhar
+                            netAdvance > 0 -> GreenAdvance
+                            else -> GreenAdvance
+                        }
+                        val badgeBackground = when {
+                            netOutstanding > 0 -> RedBg
+                            netAdvance > 0 -> GreenBg
+                            else -> GreenBg.copy(alpha = 0.5f)
+                        }
                         Surface(
-                            color = RedBg,
+                            color = badgeBackground,
                             shape = RoundedCornerShape(12.dp)
                         ) {
                             Text(
-                                text = "High Outstanding",
-                                color = RedUdhar,
+                                text = badgeText,
+                                color = badgeColor,
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.Bold,
                                 modifier = Modifier.padding(horizontal = 10.dp, vertical = 2.dp)
@@ -239,7 +258,7 @@ fun CustomerDetailScreen(
                                 Text("Current Outstanding", fontSize = 11.sp, color = RedUdhar)
                                 Spacer(modifier = Modifier.height(4.dp))
                                 Text(
-                                    "₹ ${currentOutstanding.toInt()}",
+                                    "₹ ${netOutstanding.toInt()}",
                                     fontSize = 20.sp,
                                     fontWeight = FontWeight.ExtraBold,
                                     color = RedUdhar
@@ -259,7 +278,7 @@ fun CustomerDetailScreen(
                                 Text("Advance Balance", fontSize = 11.sp, color = GreenAdvance)
                                 Spacer(modifier = Modifier.height(4.dp))
                                 Text(
-                                    "₹ ${advanceBalance.toInt()}",
+                                    "₹ ${netAdvance.toInt()}",
                                     fontSize = 20.sp,
                                     fontWeight = FontWeight.ExtraBold,
                                     color = GreenAdvance

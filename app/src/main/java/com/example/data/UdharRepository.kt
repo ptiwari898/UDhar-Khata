@@ -3,6 +3,73 @@ package com.example.data
 import com.example.service.FirestoreLedgerService
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
+
+fun buildOverallShopSummary(
+    customers: List<Customer>,
+    transactions: List<LedgerTransaction>,
+    orders: List<CustomerOrder>
+): OverallShopSummary {
+    val customerSummaries = customers.map { customer ->
+        val custTxns = transactions.filter { it.customerId == customer.id }
+        val udhar = custTxns.filter { it.type == "UDHAAR" }.sumOf { it.amount }
+        val repaid = custTxns.filter { it.type == "PAYMENT" }.sumOf { it.amount }
+        val advance = custTxns.filter { it.type == "ADVANCE" }.sumOf { it.amount }
+        val refund = custTxns.filter { it.type == "REFUND" }.sumOf { it.amount }
+
+        val netOutstanding = maxOf(0.0, udhar - repaid)
+        // Advance balance includes both explicit ADVANCE transactions AND overpayments
+        val overpayment = maxOf(0.0, repaid - udhar)
+        val netAdvance = (advance - refund) + overpayment
+        val lastDate = custTxns.maxOfOrNull { it.dateMillis } ?: System.currentTimeMillis()
+
+        CustomerFinancialSummary(
+            customer = customer,
+            totalLoaned = udhar,
+            totalRepaid = repaid,
+            totalAdvance = advance - refund,
+            currentOutstanding = netOutstanding,
+            advanceBalance = netAdvance,
+            lastTransactionDateMillis = lastDate
+        )
+    }
+
+    val totalLoaned = customerSummaries.sumOf { it.totalLoaned }
+    val totalRepaid = customerSummaries.sumOf { it.totalRepaid }
+    val totalAdvanceBalance = customerSummaries.sumOf { it.advanceBalance }
+    val grandOutstanding = customerSummaries.sumOf { it.currentOutstanding }
+
+    val customerBreakdownWithShare = customerSummaries.map { custSummary ->
+        val percentage = if (grandOutstanding > 0) (custSummary.currentOutstanding / grandOutstanding) * 100.0 else 0.0
+        custSummary.copy(percentageShare = percentage)
+    }.sortedByDescending { it.currentOutstanding }
+
+    val thisMonthStart = java.util.Calendar.getInstance().apply {
+        set(java.util.Calendar.DAY_OF_MONTH, 1)
+        set(java.util.Calendar.HOUR_OF_DAY, 0)
+        set(java.util.Calendar.MINUTE, 0)
+        set(java.util.Calendar.SECOND, 0)
+        set(java.util.Calendar.MILLISECOND, 0)
+    }.timeInMillis
+
+    val thisMonthTxns = transactions.filter { it.dateMillis >= thisMonthStart }
+    val thisMonthUdharGiven = thisMonthTxns.filter { it.type == "UDHAAR" }.sumOf { it.amount }
+    val thisMonthCollection = thisMonthTxns.filter { it.type == "PAYMENT" }.sumOf { it.amount }
+    val thisMonthAdvanceReceived = thisMonthTxns.filter { it.type == "ADVANCE" }.sumOf { it.amount }
+
+    return OverallShopSummary(
+        currentOutstandingUdhar = grandOutstanding,
+        totalLoanedTillDate = totalLoaned,
+        totalRepaid = totalRepaid,
+        advanceBalance = totalAdvanceBalance,
+        activeCustomersCount = customers.size,
+        customerBreakdown = customerBreakdownWithShare,
+        thisMonthUdharGiven = thisMonthUdharGiven,
+        thisMonthCollection = thisMonthCollection,
+        thisMonthAdvanceReceived = thisMonthAdvanceReceived,
+        thisMonthOrdersCount = orders.size
+    )
+}
 
 data class CustomerFinancialSummary(
     val customer: Customer,
@@ -58,52 +125,7 @@ class UdharRepository(
         ledgerDao.getAllTransactions(),
         orderDao.getAllOrders()
     ) { customers, transactions, orders ->
-        var overallLoaned = 125000.0
-        var overallRepaid = 110000.0
-        var overallAdvance = 18500.0
-
-        val customerSummaries = customers.map { customer ->
-            val custTxns = transactions.filter { it.customerId == customer.id }
-            val udhar = custTxns.filter { it.type == "UDHAAR" }.sumOf { it.amount }
-            val repaid = custTxns.filter { it.type == "PAYMENT" }.sumOf { it.amount }
-            val advance = custTxns.filter { it.type == "ADVANCE" }.sumOf { it.amount }
-            val refund = custTxns.filter { it.type == "REFUND" }.sumOf { it.amount }
-
-            val netOutstanding = maxOf(0.0, udhar - repaid)
-            val netAdvance = maxOf(0.0, (advance - refund) - maxOf(0.0, repaid - udhar))
-            val lastDate = custTxns.maxOfOrNull { it.dateMillis } ?: System.currentTimeMillis()
-
-            CustomerFinancialSummary(
-                customer = customer,
-                totalLoaned = udhar,
-                totalRepaid = repaid,
-                totalAdvance = advance - refund,
-                currentOutstanding = netOutstanding,
-                advanceBalance = netAdvance,
-                lastTransactionDateMillis = lastDate
-            )
-        }
-
-        val totalNetOutstanding = customerSummaries.sumOf { it.currentOutstanding }
-        val grandOutstanding = if (totalNetOutstanding > 0) totalNetOutstanding else 15000.0
-
-        val customerBreakdownWithShare = customerSummaries.map { custSummary ->
-            val percentage = if (grandOutstanding > 0) (custSummary.currentOutstanding / grandOutstanding) * 100.0 else 0.0
-            custSummary.copy(percentageShare = percentage)
-        }.sortedByDescending { it.currentOutstanding }
-
-        OverallShopSummary(
-            currentOutstandingUdhar = grandOutstanding,
-            totalLoanedTillDate = overallLoaned,
-            totalRepaid = overallRepaid,
-            advanceBalance = overallAdvance,
-            activeCustomersCount = maxOf(customers.size, 127),
-            customerBreakdown = customerBreakdownWithShare,
-            thisMonthUdharGiven = 22500.0,
-            thisMonthCollection = 18200.0,
-            thisMonthAdvanceReceived = 9500.0,
-            thisMonthOrdersCount = maxOf(orders.size, 26)
-        )
+        buildOverallShopSummary(customers, transactions, orders)
     }
 
     suspend fun addCustomer(customer: Customer): Long {
@@ -115,6 +137,13 @@ class UdharRepository(
     }
 
     suspend fun addTransaction(transaction: LedgerTransaction, userId: String? = null): Long {
+        if (transaction.customerId <= 0) return 0L
+
+        val customerExists = customerDao.getCustomerById(transaction.customerId).first() != null
+        if (!customerExists) {
+            return 0L
+        }
+
         val insertedId = ledgerDao.insertTransaction(transaction)
         if (!userId.isNullOrEmpty()) {
             val updatedTx = if (transaction.id <= 0) transaction.copy(id = insertedId.toInt()) else transaction

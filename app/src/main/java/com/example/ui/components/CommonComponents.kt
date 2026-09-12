@@ -1,6 +1,13 @@
 package com.example.ui.components
 
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -47,11 +54,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.Customer
@@ -64,9 +74,16 @@ import com.example.ui.theme.PrimaryBlue
 import com.example.ui.theme.PrimaryBlueBg
 import com.example.ui.theme.RedBg
 import com.example.ui.theme.RedUdhar
+import com.example.ui.theme.TextPrimary
+import com.example.ui.theme.TextSecondary
 
 @Composable
-fun CustomerAvatar(name: String, modifier: Modifier = Modifier, backgroundColor: Color = PrimaryBlueBg, textColor: Color = PrimaryBlue) {
+fun CustomerAvatar(
+    name: String,
+    modifier: Modifier = Modifier,
+    backgroundColor: Color = PrimaryBlueBg,
+    textColor: Color = PrimaryBlue
+) {
     val initials = name.split(" ")
         .mapNotNull { it.firstOrNull()?.uppercase() }
         .take(2)
@@ -77,7 +94,21 @@ fun CustomerAvatar(name: String, modifier: Modifier = Modifier, backgroundColor:
         modifier = modifier
             .size(44.dp)
             .clip(CircleShape)
-            .background(backgroundColor),
+            .background(
+                Brush.radialGradient(
+                    colors = listOf(
+                        backgroundColor.copy(alpha = 0.9f),
+                        backgroundColor.copy(alpha = 0.6f)
+                    )
+                )
+            )
+            .border(
+                1.dp,
+                Brush.verticalGradient(
+                    listOf(textColor.copy(alpha = 0.45f), textColor.copy(alpha = 0.12f))
+                ),
+                CircleShape
+            ),
         contentAlignment = Alignment.Center
     ) {
         Text(
@@ -98,15 +129,20 @@ fun RiskBadge(riskLevel: String) {
     }
 
     Surface(
-        color = bgColor,
-        shape = RoundedCornerShape(12.dp)
+        color = bgColor.copy(alpha = 0.82f),
+        shape = RoundedCornerShape(12.dp),
+        modifier = Modifier.border(
+            0.8.dp,
+            textColor.copy(alpha = 0.45f),
+            RoundedCornerShape(12.dp)
+        )
     ) {
         Text(
             text = riskLevel,
             color = textColor,
             fontSize = 11.sp,
             fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+            modifier = Modifier.padding(horizontal = 9.dp, vertical = 3.dp)
         )
     }
 }
@@ -117,35 +153,52 @@ fun QuickActionButton(
     label: String,
     tag: String,
     color: Color = PrimaryBlue,
+    modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier
+        modifier = modifier
             .testTag(tag)
-            .clickable { onClick() }
+            .bouncyClickable(scaleDown = 0.92f, onClick = onClick)
             .padding(4.dp)
     ) {
         Box(
             modifier = Modifier
-                .size(44.dp)
+                .size(48.dp)
                 .clip(CircleShape)
-                .background(color.copy(alpha = 0.12f)),
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(
+                            color.copy(alpha = 0.22f),
+                            color.copy(alpha = 0.08f)
+                        )
+                    )
+                )
+                .border(
+                    1.dp,
+                    Brush.verticalGradient(
+                        listOf(color.copy(alpha = 0.55f), color.copy(alpha = 0.15f))
+                    ),
+                    CircleShape
+                ),
             contentAlignment = Alignment.Center
         ) {
             Icon(
                 imageVector = icon,
                 contentDescription = label,
                 tint = color,
-                modifier = Modifier.size(22.dp)
+                modifier = Modifier.size(24.dp)
             )
         }
-        Spacer(modifier = Modifier.height(4.dp))
+        Spacer(modifier = Modifier.height(6.dp))
         Text(
             text = label,
             fontSize = 11.sp,
             fontWeight = FontWeight.Medium,
-            color = Color(0xFF334155)
+            color = TextPrimary,
+            textAlign = TextAlign.Center,
+            maxLines = 2
         )
     }
 }
@@ -227,6 +280,7 @@ fun AddUdharDialog(
                     selectedCust?.let { cust ->
                         if (amt > 0) {
                             onSave(cust.id, amt, noteText, System.currentTimeMillis())
+                            onDismiss()
                         }
                     }
                 },
@@ -313,7 +367,13 @@ fun ReceivePaymentDialog(
                         Surface(
                             shape = RoundedCornerShape(8.dp),
                             color = if (isSel) GreenAdvance else GreenBg,
-                            modifier = Modifier.clickable { selectedMethod = method }
+                            modifier = Modifier
+                                .bouncyClickable(scaleDown = 0.95f) { selectedMethod = method }
+                                .border(
+                                    0.8.dp,
+                                    if (isSel) GreenAdvance else GreenAdvance.copy(alpha = 0.3f),
+                                    RoundedCornerShape(8.dp)
+                                )
                         ) {
                             Text(
                                 text = method,
@@ -341,6 +401,7 @@ fun ReceivePaymentDialog(
                     selectedCust?.let { cust ->
                         if (amt > 0) {
                             onSave(cust.id, amt, selectedMethod, refText)
+                            onDismiss()
                         }
                     }
                 },
@@ -358,17 +419,38 @@ fun ReceivePaymentDialog(
     )
 }
 
-// Voice Entry Modal
+// Voice Entry Modal with Animated Audio Pulse Rings
 @Composable
 fun VoiceEntryModal(
     onDismiss: () -> Unit,
     onProcessVoice: (spokenText: String) -> Unit
 ) {
     var spokenInput by remember { mutableStateOf("") }
+    val pulseTransition = rememberInfiniteTransition(label = "mic_pulse")
+
+    val ringScale1 by pulseTransition.animateFloat(
+        initialValue = 1.0f,
+        targetValue = 1.35f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1200, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "ring_scale_1"
+    )
+
+    val ringAlpha1 by pulseTransition.animateFloat(
+        initialValue = 0.45f,
+        targetValue = 0.08f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1200, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "ring_alpha_1"
+    )
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("🎙️ Voice Entry", fontWeight = FontWeight.Bold) },
+        title = { Text("🎙️ Voice Entry (Gemini AI)", fontWeight = FontWeight.Bold) },
         text = {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -377,20 +459,49 @@ fun VoiceEntryModal(
             ) {
                 Box(
                     modifier = Modifier
-                        .size(80.dp)
-                        .clip(CircleShape)
-                        .background(PrimaryBlue.copy(alpha = 0.15f)),
+                        .size(100.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Mic,
-                        contentDescription = "Voice Mic",
-                        tint = PrimaryBlue,
-                        modifier = Modifier.size(40.dp)
+                    // Outer animated pulse ring
+                    Box(
+                        modifier = Modifier
+                            .size(90.dp)
+                            .scale(ringScale1)
+                            .clip(CircleShape)
+                            .background(PrimaryBlue.copy(alpha = ringAlpha1))
                     )
+
+                    // Inner mic core
+                    Box(
+                        modifier = Modifier
+                            .size(68.dp)
+                            .clip(CircleShape)
+                            .background(
+                                Brush.radialGradient(
+                                    colors = listOf(
+                                        PrimaryBlue.copy(alpha = 0.35f),
+                                        PrimaryBlueBg
+                                    )
+                                )
+                            )
+                            .border(1.5.dp, PrimaryBlue.copy(alpha = 0.6f), CircleShape),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Mic,
+                            contentDescription = "Voice Mic",
+                            tint = PrimaryBlue,
+                            modifier = Modifier.size(34.dp)
+                        )
+                    }
                 }
 
-                Text("Tap & speak or type spoken command", style = MaterialTheme.typography.bodySmall, color = Color(0xFF64748B))
+                Text(
+                    "Speak or type transaction in Hindi, Hinglish, or English",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = TextSecondary,
+                    textAlign = TextAlign.Center
+                )
 
                 OutlinedTextField(
                     value = spokenInput,
@@ -399,11 +510,18 @@ fun VoiceEntryModal(
                     modifier = Modifier.fillMaxWidth().testTag("voice_input_field")
                 )
 
-                Text(
-                    text = "Examples:\n• Rahul ko 500 rupaye udhar diya\n• Amit ne 1000 cash diya\n• Suresh ne 5000 advance diya",
-                    fontSize = 11.sp,
-                    color = Color(0xFF64748B)
-                )
+                Surface(
+                    color = Color.White.copy(alpha = 0.06f),
+                    shape = RoundedCornerShape(10.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = "Examples:\n• Rahul ko 500 rupaye udhar diya\n• Amit ne 1000 cash diya\n• Suresh ne 5000 advance diya",
+                        fontSize = 11.sp,
+                        color = TextSecondary,
+                        modifier = Modifier.padding(8.dp)
+                    )
+                }
             }
         },
         confirmButton = {
@@ -414,11 +532,12 @@ fun VoiceEntryModal(
                     } else {
                         onProcessVoice("Rahul ko 500 rupaye udhar diya grocery ke liye")
                     }
+                    onDismiss()
                 },
                 colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue),
                 modifier = Modifier.testTag("process_voice_button")
             ) {
-                Text("Process Voice")
+                Text("Process with AI")
             }
         },
         dismissButton = {
@@ -436,34 +555,42 @@ fun VoiceConfirmationModal(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Confirm Voice Transaction", fontWeight = FontWeight.Bold) },
+        title = { Text("Confirm AI Transaction", fontWeight = FontWeight.Bold) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                Text("You said: \"${parsed.rawSpokenText}\"", fontSize = 12.sp, color = Color(0xFF64748B))
+                Text("Parsed from: \"${parsed.rawSpokenText}\"", fontSize = 12.sp, color = TextSecondary)
 
                 Card(
-                    colors = CardDefaults.cardColors(containerColor = PrimaryBlueBg),
-                    modifier = Modifier.fillMaxWidth()
+                    colors = CardDefaults.cardColors(containerColor = PrimaryBlueBg.copy(alpha = 0.7f)),
+                    shape = RoundedCornerShape(14.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .border(1.dp, PrimaryBlue.copy(alpha = 0.35f), RoundedCornerShape(14.dp))
                 ) {
-                    Column(modifier = Modifier.padding(12.dp)) {
+                    Column(modifier = Modifier.padding(14.dp)) {
                         Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
-                            Text("Customer:", fontWeight = FontWeight.Bold, fontSize = 13.sp)
-                            Text(parsed.customerName, fontWeight = FontWeight.Bold, color = PrimaryBlue, fontSize = 13.sp)
+                            Text("Customer:", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = TextSecondary)
+                            Text(parsed.customerName, fontWeight = FontWeight.Bold, color = PrimaryBlue, fontSize = 14.sp)
                         }
-                        Spacer(modifier = Modifier.height(4.dp))
+                        Spacer(modifier = Modifier.height(6.dp))
                         Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
-                            Text("Transaction:", fontWeight = FontWeight.Bold, fontSize = 13.sp)
-                            Text(parsed.transactionType, fontWeight = FontWeight.Bold, color = if (parsed.transactionType == "UDHAAR") RedUdhar else GreenAdvance, fontSize = 13.sp)
+                            Text("Transaction:", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = TextSecondary)
+                            Text(
+                                parsed.transactionType,
+                                fontWeight = FontWeight.Bold,
+                                color = if (parsed.transactionType == "UDHAAR") RedUdhar else GreenAdvance,
+                                fontSize = 13.sp
+                            )
                         }
-                        Spacer(modifier = Modifier.height(4.dp))
+                        Spacer(modifier = Modifier.height(6.dp))
                         Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
-                            Text("Amount:", fontWeight = FontWeight.Bold, fontSize = 13.sp)
-                            Text("₹${parsed.amount.toInt()}", fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                            Text("Amount:", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = TextSecondary)
+                            Text("₹${parsed.amount.toInt()}", fontWeight = FontWeight.Bold, color = TextPrimary, fontSize = 16.sp)
                         }
-                        Spacer(modifier = Modifier.height(4.dp))
+                        Spacer(modifier = Modifier.height(6.dp))
                         Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
-                            Text("Note:", fontSize = 12.sp, color = Color(0xFF64748B))
-                            Text(parsed.note, fontSize = 12.sp, color = Color(0xFF334155))
+                            Text("Note:", fontSize = 12.sp, color = TextSecondary)
+                            Text(parsed.note, fontSize = 12.sp, color = TextPrimary)
                         }
                     }
                 }
@@ -471,7 +598,10 @@ fun VoiceConfirmationModal(
         },
         confirmButton = {
             Button(
-                onClick = { onConfirm(parsed) },
+                onClick = {
+                    onConfirm(parsed)
+                    onDismiss()
+                },
                 colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue),
                 modifier = Modifier.testTag("confirm_voice_save_button")
             ) {

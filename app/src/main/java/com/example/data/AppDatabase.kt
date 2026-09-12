@@ -37,6 +37,15 @@ abstract class AppDatabase : RoomDatabase() {
                     "udhar_khata_db"
                 )
                     .addMigrations(MIGRATION_1_2)
+                    .addCallback(object : RoomDatabase.Callback() {
+                        override fun onOpen(db: SupportSQLiteDatabase) {
+                            super.onOpen(db)
+                            db.setForeignKeyConstraintsEnabled(true)
+                            db.execSQL("DELETE FROM chat_messages WHERE customerId NOT IN (SELECT id FROM customers)")
+                            db.execSQL("DELETE FROM customer_orders WHERE customerId NOT IN (SELECT id FROM customers)")
+                            db.execSQL("DELETE FROM ledger_transactions WHERE customerId NOT IN (SELECT id FROM customers)")
+                        }
+                    })
                     .build()
                 INSTANCE = instance
                 instance

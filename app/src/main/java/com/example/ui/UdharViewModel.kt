@@ -128,8 +128,8 @@ class UdharViewModel(application: Application) : AndroidViewModel(application) {
         _transactionFilter.value = filter
     }
 
-    // Actions
     fun saveUdhar(customerId: Int, amount: Double, note: String, dateMillis: Long) {
+        if (customerId <= 0) return // Validate customer ID
         viewModelScope.launch {
             val uid = currentUser.value?.uid
             repository.addTransaction(
@@ -147,6 +147,7 @@ class UdharViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun savePayment(customerId: Int, amount: Double, method: String, reference: String) {
+        if (customerId <= 0) return // Validate customer ID
         viewModelScope.launch {
             val uid = currentUser.value?.uid
             repository.addTransaction(
@@ -165,6 +166,7 @@ class UdharViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun saveAdvance(customerId: Int, amount: Double, method: String, note: String) {
+        if (customerId <= 0) return // Validate customer ID
         viewModelScope.launch {
             val uid = currentUser.value?.uid
             repository.addTransaction(
@@ -223,6 +225,7 @@ class UdharViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun saveOrder(customerId: Int, itemsSummary: String, total: Double, advance: Double) {
+        if (customerId <= 0) return // Validate customer ID
         viewModelScope.launch {
             repository.addOrder(
                 CustomerOrder(
@@ -250,21 +253,30 @@ class UdharViewModel(application: Application) : AndroidViewModel(application) {
 
     fun confirmVoiceTransaction(parsed: ParsedTransaction) {
         viewModelScope.launch {
-            val customerId = parsed.matchedCustomerId ?: run {
-                // If customer not matched, create new or use first customer
-                allCustomers.value.firstOrNull()?.id ?: repository.addCustomer(
-                    Customer(name = parsed.customerName, phone = "98765 00000", location = "Bhopal, MP")
-                ).toInt()
+            var customerId = parsed.matchedCustomerId
+            
+            if (customerId == null || customerId <= 0) {
+                if (allCustomers.value.isNotEmpty()) {
+                    customerId = allCustomers.value.first().id
+                } else {
+                    // Create a new customer first, then use the returned ID
+                    val newCustomerId = repository.addCustomer(
+                        Customer(name = parsed.customerName, phone = "98765 00000", location = "Bhopal, MP")
+                    ).toInt()
+                    customerId = newCustomerId
+                }
             }
 
-            repository.addTransaction(
-                LedgerTransaction(
-                    customerId = customerId,
-                    type = parsed.transactionType,
-                    amount = parsed.amount,
-                    note = parsed.note
+            if (customerId != null && customerId > 0) {
+                repository.addTransaction(
+                    LedgerTransaction(
+                        customerId = customerId,
+                        type = parsed.transactionType,
+                        amount = parsed.amount,
+                        note = parsed.note
+                    )
                 )
-            )
+            }
             isVoiceConfirmationOpen.value = false
         }
     }

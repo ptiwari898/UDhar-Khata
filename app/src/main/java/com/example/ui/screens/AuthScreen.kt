@@ -100,7 +100,7 @@ fun AuthScreen(
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(BackgroundSlate)
+            .background(Color.Transparent)
     ) {
         Column(
             modifier = Modifier

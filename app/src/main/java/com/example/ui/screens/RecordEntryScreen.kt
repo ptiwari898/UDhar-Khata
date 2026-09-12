@@ -351,7 +351,7 @@ fun RecordEntryScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(BackgroundSlate)
+            .background(Color.Transparent)
     ) {
         // Top Header Bar
         Surface(
@@ -586,11 +586,11 @@ fun RecordEntryScreen(
                     // Suggested Voice Prompts Chips
                     Spacer(modifier = Modifier.height(10.dp))
                     Text("Try speaking or clicking these prompts:", fontSize = 10.sp, color = TextSecondary)
-                    Row(
+                    Column(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(top = 4.dp),
-                        horizontalArrangement = Arrangement.SpaceEvenly
+                        verticalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
                         listOf(
                             "Rahul 850 udhar grocery",
@@ -600,13 +600,13 @@ fun RecordEntryScreen(
                             Surface(
                                 shape = RoundedCornerShape(12.dp),
                                 color = PrimaryBlueBg,
-                                modifier = Modifier.clickable {
-                                    processVoiceText(sample)
-                                }
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable { processVoiceText(sample) }
                             ) {
                                 Text(
                                     text = "💡 $sample",
-                                    fontSize = 10.sp,
+                                    fontSize = 12.sp,
                                     color = PrimaryBlue,
                                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                                 )
@@ -638,7 +638,7 @@ fun RecordEntryScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clip(RoundedCornerShape(12.dp))
-                            .background(BackgroundSlate)
+                            .background(Color.Transparent)
                             .padding(4.dp),
                         horizontalArrangement = Arrangement.spacedBy(4.dp)
                     ) {

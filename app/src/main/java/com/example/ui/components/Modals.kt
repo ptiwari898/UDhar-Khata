@@ -108,6 +108,7 @@ fun AddCustomerDialog(
 
                     if (validationError == null) {
                         onSave(name, phone, location, risk)
+                        onDismiss()
                     }
                 },
                 colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue),
@@ -200,6 +201,7 @@ fun AddOrderDialog(
                     selectedCust?.let { cust ->
                         if (total > 0) {
                             onSave(cust.id, itemsText, total, adv)
+                            onDismiss()
                         }
                     }
                 },

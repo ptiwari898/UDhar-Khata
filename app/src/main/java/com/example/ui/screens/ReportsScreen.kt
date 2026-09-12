@@ -45,7 +45,7 @@ fun ReportsScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(BackgroundSlate)
+            .background(Color.Transparent)
             .verticalScroll(scrollState)
             .padding(16.dp)
     ) {
@@ -55,20 +55,20 @@ fun ReportsScreen(
         // Financial Overview Card
         Card(
             shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = PrimaryBlue),
+            colors = CardDefaults.cardColors(containerColor = CardSurface),
             modifier = Modifier.fillMaxWidth()
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
-                Text("Monthly Business Financials", color = Color(0xFF1C1B1F).copy(alpha = 0.8f), fontSize = 12.sp)
+                Text("Monthly Business Financials", color = TextSecondary, fontSize = 12.sp)
                 Spacer(modifier = Modifier.height(6.dp))
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                     Column {
-                        Text("Total Udhar", color = Color(0xFF1C1B1F), fontSize = 11.sp)
-                        Text("₹ 22,500", color = Color(0xFF1C1B1F), fontWeight = FontWeight.ExtraBold, fontSize = 18.sp)
+                        Text("Total Udhar", color = TextSecondary, fontSize = 11.sp)
+                        Text("₹ 22,500", color = RedUdhar, fontWeight = FontWeight.ExtraBold, fontSize = 18.sp)
                     }
                     Column {
-                        Text("Total Collection", color = Color(0xFF1C1B1F), fontSize = 11.sp)
-                        Text("₹ 18,200", color = Color(0xFF1C1B1F), fontWeight = FontWeight.ExtraBold, fontSize = 18.sp)
+                        Text("Total Collection", color = TextSecondary, fontSize = 11.sp)
+                        Text("₹ 18,200", color = GreenAdvance, fontWeight = FontWeight.ExtraBold, fontSize = 18.sp)
                     }
                 }
             }

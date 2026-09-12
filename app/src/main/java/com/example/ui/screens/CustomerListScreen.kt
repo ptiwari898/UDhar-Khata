@@ -54,7 +54,9 @@ import com.example.data.CustomerFinancialSummary
 import com.example.data.OverallShopSummary
 import com.example.ui.UdharViewModel
 import com.example.ui.components.CustomerAvatar
+import com.example.ui.components.GlassCard
 import com.example.ui.components.RiskBadge
+import com.example.ui.components.currentGlassState
 import com.example.ui.theme.BackgroundSlate
 import com.example.ui.theme.BorderLight
 import com.example.ui.theme.CardSurface
@@ -77,6 +79,7 @@ fun CustomerListScreen(
     modifier: Modifier = Modifier
 ) {
     var sortExpanded by remember { mutableStateOf(false) }
+    val glassState = currentGlassState()
 
     val customersList = summary?.customerBreakdown?.filter {
         it.customer.name.contains(searchQuery, ignoreCase = true) ||
@@ -95,7 +98,7 @@ fun CustomerListScreen(
             modifier = modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .background(BackgroundSlate)
+                .background(Color.Transparent)
         ) {
             // Header Bar
             Row(
@@ -135,8 +138,8 @@ fun CustomerListScreen(
                 leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = TextMuted) },
                 shape = RoundedCornerShape(12.dp),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedContainerColor = CardSurface,
-                    unfocusedContainerColor = CardSurface,
+                    focusedContainerColor = CardSurface.copy(alpha = 0.68f),
+                    unfocusedContainerColor = CardSurface.copy(alpha = 0.68f),
                     focusedBorderColor = PrimaryBlue,
                     unfocusedBorderColor = BorderLight,
                     focusedTextColor = TextPrimary,
@@ -170,7 +173,7 @@ fun CustomerListScreen(
                     }
                     Surface(
                         shape = RoundedCornerShape(8.dp),
-                        color = CardSurface,
+                        color = CardSurface.copy(alpha = 0.72f),
                         modifier = Modifier.menuAnchor()
                     ) {
                         Row(
@@ -221,17 +224,18 @@ fun CustomerListScreen(
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 items(customersList, key = { it.customer.id }) { item ->
-                    Card(
+                    GlassCard(
+                        state = glassState,
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable { onCustomerClick(item.customer.id) }
                             .testTag("customer_item_${item.customer.id}"),
                         shape = RoundedCornerShape(12.dp),
-                        colors = CardDefaults.cardColors(containerColor = CardSurface),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                        containerColor = CardSurface.copy(alpha = 0.68f),
+                        padding = 12.dp
                     ) {
                         Row(
-                            modifier = Modifier.padding(12.dp),
+                            modifier = Modifier,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             CustomerAvatar(name = item.customer.name)
@@ -264,12 +268,38 @@ fun CustomerListScreen(
                             }
 
                             Column(horizontalAlignment = Alignment.End) {
-                                Text(
-                                    text = "₹ ${item.currentOutstanding.toInt()}",
-                                    fontWeight = FontWeight.Bold,
-                                    color = if (item.currentOutstanding > 0) RedUdhar else GreenUdharRepaid,
-                                    fontSize = 14.sp
-                                )
+                                // Calculate net amounts
+                                val netOutstanding = maxOf(0.0, item.currentOutstanding - item.advanceBalance)
+                                val netAdvance = maxOf(0.0, item.advanceBalance - item.currentOutstanding)
+                                
+                                if (netAdvance > 0) {
+                                    Text(
+                                        text = "Advance",
+                                        fontSize = 9.sp,
+                                        color = GreenUdharRepaid,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    Text(
+                                        text = "₹ ${netAdvance.toInt()}",
+                                        fontWeight = FontWeight.Bold,
+                                        color = GreenUdharRepaid,
+                                        fontSize = 14.sp
+                                    )
+                                } else if (netOutstanding > 0) {
+                                    Text(
+                                        text = "₹ ${netOutstanding.toInt()}",
+                                        fontWeight = FontWeight.Bold,
+                                        color = RedUdhar,
+                                        fontSize = 14.sp
+                                    )
+                                } else {
+                                    Text(
+                                        text = "₹ 0",
+                                        fontWeight = FontWeight.Bold,
+                                        color = GreenUdharRepaid,
+                                        fontSize = 14.sp
+                                    )
+                                }
                                 Text(
                                     text = "${String.format("%.1f", item.percentageShare)}%",
                                     fontSize = 10.sp,
@@ -287,7 +317,7 @@ fun CustomerListScreen(
 
             // Bottom Summary Bar
             Surface(
-                color = PrimaryBlueBg,
+                color = PrimaryBlueBg.copy(alpha = 0.78f),
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Row(

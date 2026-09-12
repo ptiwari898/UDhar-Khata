@@ -69,7 +69,7 @@ fun CustomerChatScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(BackgroundSlate)
+            .background(Color.Transparent)
     ) {
         // Chat Header
         Surface(
@@ -114,7 +114,7 @@ fun CustomerChatScreen(
                     Card(
                         shape = RoundedCornerShape(12.dp),
                         colors = CardDefaults.cardColors(
-                            containerColor = if (isShop) PrimaryBlue else CardSurface
+                            containerColor = if (isShop) PrimaryBlueBg else CardSurface
                         ),
                         modifier = Modifier.testTag("chat_msg_${msg.id}")
                     ) {
@@ -124,7 +124,7 @@ fun CustomerChatScreen(
                             }
                             Text(
                                 text = msg.message,
-                                color = if (isShop) Color(0xFF1C1B1F) else TextPrimary,
+                                color = if (isShop) TextPrimary else TextPrimary,
                                 fontSize = 13.sp
                             )
                         }

@@ -82,7 +82,7 @@ fun TransactionHistoryScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(BackgroundSlate)
+            .background(Color.Transparent)
     ) {
         // Header
         Row(
@@ -114,12 +114,12 @@ fun TransactionHistoryScreen(
                 val isSelected = activeFilter.equals(filterName, ignoreCase = true)
                 Surface(
                     shape = RoundedCornerShape(16.dp),
-                    color = if (isSelected) PrimaryBlue else CardSurface,
+                    color = if (isSelected) PrimaryBlueBg else CardSurface,
                     modifier = Modifier.clickable { viewModel.setTransactionFilter(filterName) }
                 ) {
                     Text(
                         text = filterName,
-                        color = if (isSelected) Color(0xFF1C1B1F) else TextSecondary,
+                        color = if (isSelected) PrimaryBlue else TextSecondary,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp)

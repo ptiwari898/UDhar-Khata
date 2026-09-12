@@ -2,35 +2,34 @@ package com.example.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// Primary Colors - Elegant Dark (Material 3 Dark Purple/Lavender Theme)
-val PrimaryBlue = Color(0xFFD0BCFF)
-val PrimaryBlueLight = Color(0xFFE8DEF8)
-val PrimaryBlueBg = Color(0xFF332D41)
+// Warm Amber & Espresso Palette
+val PrimaryBlue = Color(0xFFF59E0B)       // Warm Amber Gold
+val PrimaryBlueLight = Color(0xFFFDE68A)  // Warm Buttercream
+val PrimaryBlueBg = Color(0xFF38230B)     // Deep Amber Roast
 
-// Financial Colors (Dark Mode Optimized)
-val GreenUdharRepaid = Color(0xFF81C784)
-val GreenAdvance = Color(0xFF4CAF50)
-val GreenBg = Color(0xFF1B382B)
+// Financial Colors
+val GreenUdharRepaid = Color(0xFF10B981)  // Pine Emerald
+val GreenAdvance = Color(0xFF10B981)
+val GreenBg = Color(0xFF083323)
 
-val RedUdhar = Color(0xFFF2B8B5)
-val RedBg = Color(0xFF410E0B)
+val RedUdhar = Color(0xFFFB7185)          // Terracotta Rose
+val RedBg = Color(0xFF3D0B16)
 
-val OrangeMedium = Color(0xFFFFB74D)
-val OrangeBg = Color(0xFF3B281B)
+val OrangeMedium = Color(0xFFF97316)      // Tangerine
+val OrangeBg = Color(0xFF3D1B07)
 
-// Neutral Dark Grays - Elegant Dark Theme (#1C1B1F canvas)
-val BackgroundSlate = Color(0xFF1C1B1F)
-val CardSurface = Color(0xFF28262C)
-val TextPrimary = Color(0xFFE6E1E5)
-val TextSecondary = Color(0xFFCCC2DC)
-val TextMuted = Color(0xFF938F99)
-val BorderLight = Color(0xFF49454F)
+// Neutral Warm Dark Tones
+val BackgroundSlate = Color(0xFF0E0C0A)   // Espresso Dark Roast
+val CardSurface = Color(0x991E1A16)       // Smoked Amber Glass
+val TextPrimary = Color(0xFFFFFBEB)       // Warm Pearl White
+val TextSecondary = Color(0xFFD4C5B3)     // Warm Sand
+val TextMuted = Color(0xFF8C8275)         // Warm Muted Taupe
+val BorderLight = Color(0xFF4A3C2C)       // Smoked Bronze
 
-// Pie Chart Slice Colors matching Elegant Dark Palette
-val SliceBlue1 = Color(0xFFD0BCFF)
-val SliceBlue2 = Color(0xFFBBC3FF)
-val SliceGreen1 = Color(0xFF81C784)
-val SliceOrange1 = Color(0xFFFFB74D)
-val SliceRed1 = Color(0xFFF2B8B5)
-val SlicePurple1 = Color(0xFFB69DF8)
-
+// Pie Chart Slice Colors
+val SliceBlue1 = Color(0xFFF59E0B)
+val SliceBlue2 = Color(0xFFFBBF24)
+val SliceGreen1 = Color(0xFF10B981)
+val SliceOrange1 = Color(0xFFF97316)
+val SliceRed1 = Color(0xFFFB7185)
+val SlicePurple1 = Color(0xFFA78BFA)

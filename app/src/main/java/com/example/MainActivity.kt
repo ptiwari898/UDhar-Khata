@@ -6,6 +6,13 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -51,6 +58,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
@@ -60,6 +68,7 @@ import com.example.ui.UdharViewModel
 import com.example.ui.components.AddCustomerDialog
 import com.example.ui.components.AddOrderDialog
 import com.example.ui.components.AddUdharDialog
+import com.example.ui.components.GlassBackdrop
 import com.example.ui.components.ReceivePaymentDialog
 import com.example.ui.components.VoiceConfirmationModal
 import com.example.ui.components.VoiceEntryModal
@@ -103,7 +112,7 @@ fun UdharKhataApp(viewModel: UdharViewModel) {
     val currentUser by viewModel.currentUser.collectAsState()
 
     if (currentUser == null) {
-        AuthScreen(viewModel = viewModel)
+        GlassBackdrop { AuthScreen(viewModel = viewModel) }
         return
     }
 
@@ -147,17 +156,18 @@ fun UdharKhataApp(viewModel: UdharViewModel) {
         }
     }
 
-    ModalNavigationDrawer(
-        drawerState = drawerState,
-        drawerContent = {
-            ModalDrawerSheet(
-                drawerContainerColor = CardSurface,
+    GlassBackdrop {
+        ModalNavigationDrawer(
+            drawerState = drawerState,
+            drawerContent = {
+                ModalDrawerSheet(
+                drawerContainerColor = CardSurface.copy(alpha = 0.84f),
                 modifier = Modifier.width(300.dp)
             ) {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(PrimaryBlue)
+                        .background(PrimaryBlue.copy(alpha = 0.72f))
                         .padding(20.dp)
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -244,17 +254,30 @@ fun UdharKhataApp(viewModel: UdharViewModel) {
                         .padding(horizontal = 12.dp)
                         .testTag("drawer_logout")
                 )
+                }
             }
-        }
-    ) {
-        Scaffold(
+        ) {
+            Scaffold(
             modifier = Modifier.fillMaxSize(),
+            containerColor = Color.Transparent,
             bottomBar = {
                 if (selectedCustomerId == null && !isViewingStatement && !isViewingChat) {
-                    NavigationBar(
-                        containerColor = CardSurface,
-                        tonalElevation = 8.dp
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(
+                                Brush.verticalGradient(
+                                    colors = listOf(
+                                        Color.White.copy(alpha = 0.16f),
+                                        Color(0xB8102A32)
+                                    )
+                                )
+                            )
                     ) {
+                        NavigationBar(
+                            containerColor = Color.Transparent,
+                            tonalElevation = 0.dp
+                        ) {
                         val navItems = listOf(
                             Triple("Home", Icons.Default.Home, "nav_home"),
                             Triple("Record Entry", Icons.Default.AddCircle, "nav_entry"),
@@ -280,19 +303,32 @@ fun UdharKhataApp(viewModel: UdharViewModel) {
                                 modifier = Modifier.testTag(tag)
                             )
                         }
+                        }
                     }
                 }
             }
         ) { innerPadding ->
-            when {
-                shopProfile == null -> {
-                    ProfileScreen(
-                        profile = null,
-                        viewModel = viewModel,
-                        modifier = Modifier.padding(innerPadding)
-                    )
-                }
+            val screenKey = when {
+                isViewingStatement -> "statement"
+                isViewingChat -> "chat"
+                selectedCustomerId != null -> "customer-detail"
+                else -> selectedTab
+            }
 
+            AnimatedContent(
+                targetState = screenKey,
+                transitionSpec = {
+                    (fadeIn(animationSpec = tween(220)) + slideInHorizontally(
+                        animationSpec = tween(220),
+                        initialOffsetX = { it / 12 }
+                    )).togetherWith(fadeOut(animationSpec = tween(120)) + slideOutHorizontally(
+                        animationSpec = tween(120),
+                        targetOffsetX = { -it / 16 }
+                    ))
+                },
+                label = "screen_transition"
+            ) {
+                when {
                 // 1. Customer Statement Screen
                 isViewingStatement && currentCustomer != null -> {
                     val custTxns = allTransactions.filter { it.customerId == currentCustomer.id }
@@ -330,7 +366,7 @@ fun UdharKhataApp(viewModel: UdharViewModel) {
                     )
                 }
 
-                // 4. Main Tab Navigation Screens
+                // 4. Main Tab Navigation Screens (always available)
                 else -> {
                     when (selectedTab) {
                         "Profile" -> {
@@ -387,6 +423,7 @@ fun UdharKhataApp(viewModel: UdharViewModel) {
                             )
                         }
                     }
+                }
                 }
             }
 
@@ -465,6 +502,7 @@ fun UdharKhataApp(viewModel: UdharViewModel) {
                     upiId = shopProfile?.upiId.orEmpty(),
                     onDismiss = { viewModel.isWhatsAppReminderOpen.value = false }
                 )
+            }
             }
         }
     }
