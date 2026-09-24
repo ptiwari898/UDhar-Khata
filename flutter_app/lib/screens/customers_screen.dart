@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../models/models.dart';
 import '../state/ledger_state.dart';
+import '../theme/app_theme.dart';
 import 'add_customer_screen.dart';
 import 'customer_detail_screen.dart';
 
@@ -19,6 +19,13 @@ class _CustomersScreenState extends State<CustomersScreen> {
   @override
   Widget build(BuildContext context) {
     final state = widget.state;
+    final p = state.activePalette;
+
+    final cardBg = p.isDark ? AppColors.popupSurface : Colors.white;
+    final cardBorder = p.isDark ? Colors.white12 : const Color(0xFFE5E7EB);
+    final titleColor = p.textPrimary;
+    final subtitleColor = p.textSecondary;
+
     var customerSummaries = state.customers.map(state.getCustomerSummary).toList();
 
     // Filter by Search
@@ -39,10 +46,11 @@ class _CustomersScreenState extends State<CustomersScreen> {
     }
 
     return Scaffold(
-      backgroundColor: const Color(0xFFFAF7F2),
+      backgroundColor: Colors.transparent,
       floatingActionButton: FloatingActionButton.extended(
-        backgroundColor: const Color(0xFFDF7528),
-        foregroundColor: Colors.white,
+        heroTag: null,
+        backgroundColor: p.primaryAccent,
+        foregroundColor: p.textDarkOnWhite,
         elevation: 3,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         icon: const Icon(Icons.add, size: 20),
@@ -58,23 +66,23 @@ class _CustomersScreenState extends State<CustomersScreen> {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(18, 12, 18, 100),
           children: [
-            // Header Bar (Screen 5)
+            // Header Bar
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
+                Text(
                   'Customers',
-                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Color(0xFF1E1E1E)),
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: titleColor),
                 ),
                 Container(
                   width: 38,
                   height: 38,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: Colors.white,
-                    border: Border.all(color: const Color(0xFFE5E7EB)),
+                    color: cardBg,
+                    border: Border.all(color: cardBorder),
                   ),
-                  child: const Icon(Icons.qr_code_scanner, size: 20, color: Color(0xFF1E1E1E)),
+                  child: Icon(Icons.qr_code_scanner, size: 20, color: titleColor),
                 ),
               ],
             ),
@@ -84,12 +92,12 @@ class _CustomersScreenState extends State<CustomersScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 14),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: cardBg,
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: const Color(0xFFE5E7EB)),
+                border: Border.all(color: cardBorder),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.03),
+                    color: Colors.black.withValues(alpha: p.isDark ? 0.2 : 0.03),
                     blurRadius: 6,
                     offset: const Offset(0, 2),
                   ),
@@ -97,15 +105,15 @@ class _CustomersScreenState extends State<CustomersScreen> {
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.search, color: Color(0xFF9CA3AF), size: 20),
+                  Icon(Icons.search, color: subtitleColor, size: 20),
                   const SizedBox(width: 10),
                   Expanded(
                     child: TextField(
                       onChanged: (v) => setState(() => _search = v),
-                      style: const TextStyle(color: Color(0xFF1E1E1E), fontSize: 14),
-                      decoration: const InputDecoration(
+                      style: TextStyle(color: titleColor, fontSize: 14),
+                      decoration: InputDecoration(
                         hintText: 'Search customers...',
-                        hintStyle: TextStyle(color: Color(0xFF9CA3AF), fontSize: 14),
+                        hintStyle: TextStyle(color: p.textMuted, fontSize: 14),
                         border: InputBorder.none,
                       ),
                     ),
@@ -120,13 +128,13 @@ class _CustomersScreenState extends State<CustomersScreen> {
               scrollDirection: Axis.horizontal,
               child: Row(
                 children: [
-                  _buildFilterChip('All'),
+                  _buildFilterChip('All', p, cardBg, cardBorder, titleColor),
                   const SizedBox(width: 8),
-                  _buildFilterChip('Pending'),
+                  _buildFilterChip('Pending', p, cardBg, cardBorder, titleColor),
                   const SizedBox(width: 8),
-                  _buildFilterChip('Overdue'),
+                  _buildFilterChip('Overdue', p, cardBg, cardBorder, titleColor),
                   const SizedBox(width: 8),
-                  _buildFilterChip('Active'),
+                  _buildFilterChip('Active', p, cardBg, cardBorder, titleColor),
                 ],
               ),
             ),
@@ -140,11 +148,11 @@ class _CustomersScreenState extends State<CustomersScreen> {
               final isSettled = outstanding == 0;
               final statusText = isSettled ? 'Settled' : (isOverdue ? 'Overdue' : 'Active');
               final badgeBg = isSettled
-                  ? const Color(0xFFF3F4F6)
-                  : (isOverdue ? const Color(0xFFFEE2E2) : const Color(0xFFDCFCE7));
+                  ? (p.isDark ? Colors.white12 : const Color(0xFFF3F4F6))
+                  : (isOverdue ? p.redBg : p.greenBg);
               final badgeTextColor = isSettled
-                  ? const Color(0xFF6B7280)
-                  : (isOverdue ? const Color(0xFFDC2626) : const Color(0xFF16A34A));
+                  ? subtitleColor
+                  : (isOverdue ? p.redUdhar : p.greenAdvance);
 
               final initials = c.name.isNotEmpty
                   ? c.name.split(' ').map((w) => w.isNotEmpty ? w[0] : '').take(2).join()
@@ -163,12 +171,12 @@ class _CustomersScreenState extends State<CustomersScreen> {
                   margin: const EdgeInsets.only(bottom: 10),
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: cardBg,
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: const Color(0xFFE5E7EB)),
+                    border: Border.all(color: cardBorder),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.02),
+                        color: Colors.black.withValues(alpha: p.isDark ? 0.2 : 0.02),
                         blurRadius: 6,
                         offset: const Offset(0, 2),
                       ),
@@ -179,11 +187,11 @@ class _CustomersScreenState extends State<CustomersScreen> {
                       // Avatar
                       CircleAvatar(
                         radius: 20,
-                        backgroundColor: isOverdue ? const Color(0xFFFFEDD5) : const Color(0xFFE0E7FF),
+                        backgroundColor: isOverdue ? p.orangeBg : (p.isDark ? const Color(0x336366F1) : const Color(0xFFE0E7FF)),
                         child: Text(
                           initials,
                           style: TextStyle(
-                            color: isOverdue ? const Color(0xFFC2410C) : const Color(0xFF4338CA),
+                            color: isOverdue ? p.orangeMedium : (p.isDark ? const Color(0xFFA5B4FC) : const Color(0xFF4338CA)),
                             fontWeight: FontWeight.bold,
                             fontSize: 13,
                           ),
@@ -196,12 +204,12 @@ class _CustomersScreenState extends State<CustomersScreen> {
                           children: [
                             Text(
                               c.name,
-                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Color(0xFF1E1E1E)),
+                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: titleColor),
                             ),
                             const SizedBox(height: 2),
                             Text(
                               c.phone,
-                              style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
+                              style: TextStyle(fontSize: 12, color: subtitleColor),
                             ),
                           ],
                         ),
@@ -211,7 +219,7 @@ class _CustomersScreenState extends State<CustomersScreen> {
                         children: [
                           Text(
                             '₹${outstanding.toInt()}',
-                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Color(0xFF1E1E1E)),
+                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: titleColor),
                           ),
                           const SizedBox(height: 4),
                           Container(
@@ -242,21 +250,21 @@ class _CustomersScreenState extends State<CustomersScreen> {
     );
   }
 
-  Widget _buildFilterChip(String label) {
+  Widget _buildFilterChip(String label, ThemePalette p, Color cardBg, Color cardBorder, Color titleColor) {
     final isSelected = _selectedFilter == label;
     return GestureDetector(
       onTap: () => setState(() => _selectedFilter = label),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF78350F) : Colors.white,
+          color: isSelected ? p.primaryAccent : cardBg,
           borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: isSelected ? const Color(0xFF78350F) : const Color(0xFFE5E7EB)),
+          border: Border.all(color: isSelected ? p.primaryAccent : cardBorder),
         ),
         child: Text(
           label,
           style: TextStyle(
-            color: isSelected ? Colors.white : const Color(0xFF4B5563),
+            color: isSelected ? p.textDarkOnWhite : titleColor,
             fontWeight: FontWeight.bold,
             fontSize: 12,
           ),
@@ -265,3 +273,4 @@ class _CustomersScreenState extends State<CustomersScreen> {
     );
   }
 }
+

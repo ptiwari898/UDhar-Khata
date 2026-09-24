@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../models/models.dart';
 import '../state/ledger_state.dart';
+import '../theme/app_theme.dart';
 
 class AddCustomerScreen extends StatefulWidget {
   final LedgerState state;
@@ -59,111 +59,140 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFFAF7F2),
-      appBar: AppBar(
+    final p = widget.state.activePalette;
+    final cardBg = p.isDark ? AppColors.popupSurface : Colors.white;
+    final cardBorder = p.isDark ? Colors.white12 : const Color(0xFFE5E7EB);
+    final titleColor = p.textPrimary;
+    final subtitleColor = p.textSecondary;
+
+    return AtmosphericBackdrop(
+      palette: p,
+      child: Scaffold(
         backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Color(0xFF1E1E1E)),
-          onPressed: () => Navigator.pop(context),
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          leading: IconButton(
+            icon: Icon(Icons.arrow_back, color: titleColor),
+            onPressed: () => Navigator.pop(context),
+          ),
+          title: Text(
+            'Add Customer',
+            style: TextStyle(color: titleColor, fontWeight: FontWeight.bold, fontSize: 18),
+          ),
+          centerTitle: false,
         ),
-        title: const Text(
-          'Add Customer',
-          style: TextStyle(color: Color(0xFF1E1E1E), fontWeight: FontWeight.bold, fontSize: 18),
-        ),
-        centerTitle: false,
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-        child: Column(
-          children: [
-            // Add Photo Avatar Circle
-            Center(
-              child: Column(
-                children: [
-                  Container(
-                    width: 76,
-                    height: 76,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: const Color(0xFFE5E7EB),
-                      border: Border.all(color: const Color(0xFFD1D5DB)),
+        body: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+          child: Column(
+            children: [
+              // Add Photo Avatar Circle
+              Center(
+                child: Column(
+                  children: [
+                    Container(
+                      width: 76,
+                      height: 76,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: cardBg,
+                        border: Border.all(color: cardBorder),
+                      ),
+                      child: Icon(Icons.person, size: 44, color: p.textMuted),
                     ),
-                    child: const Icon(Icons.person, size: 44, color: Color(0xFF9CA3AF)),
-                  ),
-                  const SizedBox(height: 6),
-                  const Text(
-                    '+ Add Photo',
-                    style: TextStyle(color: Color(0xFF6B7280), fontSize: 12, fontWeight: FontWeight.bold),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 24),
-
-            // Form Fields
-            _buildInputField(
-              label: 'Full Name *',
-              controller: _nameCtrl,
-              hint: 'e.g. Ramesh Kumar',
-            ),
-            const SizedBox(height: 16),
-
-            _buildInputField(
-              label: 'Mobile Number *',
-              controller: _phoneCtrl,
-              hint: '+91 98765 43210',
-              keyboardType: TextInputType.phone,
-              suffixIcon: IconButton(
-                icon: const Icon(Icons.perm_contact_calendar_outlined, color: Color(0xFF6B7280)),
-                onPressed: () {
-                  _phoneCtrl.text = '+91 98765 43210';
-                },
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            _buildInputField(
-              label: 'Address',
-              controller: _addressCtrl,
-              hint: 'Shop No. 12, Main Market',
-            ),
-            const SizedBox(height: 16),
-
-            _buildInputField(
-              label: 'Credit Limit (Optional)',
-              controller: _creditLimitCtrl,
-              hint: '₹ 10,000',
-              keyboardType: TextInputType.number,
-            ),
-            const SizedBox(height: 16),
-
-            _buildInputField(
-              label: 'Notes',
-              controller: _notesCtrl,
-              hint: 'Regular customer',
-              maxLines: 2,
-            ),
-            const SizedBox(height: 32),
-
-            // Save Customer Button
-            SizedBox(
-              width: double.infinity,
-              height: 52,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFDF7528),
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                  elevation: 2,
+                    const SizedBox(height: 6),
+                    Text(
+                      '+ Add Photo',
+                      style: TextStyle(color: subtitleColor, fontSize: 12, fontWeight: FontWeight.bold),
+                    ),
+                  ],
                 ),
-                onPressed: _saveCustomer,
-                child: const Text('Save Customer', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
               ),
-            ),
-            const SizedBox(height: 40),
-          ],
+              const SizedBox(height: 24),
+
+              // Form Fields
+              _buildInputField(
+                label: 'Full Name *',
+                controller: _nameCtrl,
+                hint: 'e.g. Ramesh Kumar',
+                p: p,
+                cardBg: cardBg,
+                cardBorder: cardBorder,
+                titleColor: titleColor,
+              ),
+              const SizedBox(height: 16),
+
+              _buildInputField(
+                label: 'Mobile Number *',
+                controller: _phoneCtrl,
+                hint: '+91 98765 43210',
+                keyboardType: TextInputType.phone,
+                p: p,
+                cardBg: cardBg,
+                cardBorder: cardBorder,
+                titleColor: titleColor,
+                suffixIcon: IconButton(
+                  icon: Icon(Icons.perm_contact_calendar_outlined, color: subtitleColor),
+                  onPressed: () {
+                    _phoneCtrl.text = '+91 98765 43210';
+                  },
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              _buildInputField(
+                label: 'Address',
+                controller: _addressCtrl,
+                hint: 'Shop No. 12, Main Market',
+                p: p,
+                cardBg: cardBg,
+                cardBorder: cardBorder,
+                titleColor: titleColor,
+              ),
+              const SizedBox(height: 16),
+
+              _buildInputField(
+                label: 'Credit Limit (Optional)',
+                controller: _creditLimitCtrl,
+                hint: '₹ 10,000',
+                keyboardType: TextInputType.number,
+                p: p,
+                cardBg: cardBg,
+                cardBorder: cardBorder,
+                titleColor: titleColor,
+              ),
+              const SizedBox(height: 16),
+
+              _buildInputField(
+                label: 'Notes',
+                controller: _notesCtrl,
+                hint: 'Regular customer',
+                maxLines: 2,
+                p: p,
+                cardBg: cardBg,
+                cardBorder: cardBorder,
+                titleColor: titleColor,
+              ),
+              const SizedBox(height: 32),
+
+              // Save Customer Button
+              SizedBox(
+                width: double.infinity,
+                height: 52,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: p.primaryAccent,
+                    foregroundColor: p.textDarkOnWhite,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    elevation: 2,
+                  ),
+                  onPressed: _saveCustomer,
+                  child: const Text('Save Customer', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                ),
+              ),
+              const SizedBox(height: 40),
+            ],
+          ),
         ),
       ),
     );
@@ -173,6 +202,10 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
     required String label,
     required TextEditingController controller,
     required String hint,
+    required ThemePalette p,
+    required Color cardBg,
+    required Color cardBorder,
+    required Color titleColor,
     TextInputType keyboardType = TextInputType.text,
     int maxLines = 1,
     Widget? suffixIcon,
@@ -182,23 +215,23 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
       children: [
         Text(
           label,
-          style: const TextStyle(color: Color(0xFF374151), fontWeight: FontWeight.bold, fontSize: 13),
+          style: TextStyle(color: titleColor, fontWeight: FontWeight.bold, fontSize: 13),
         ),
         const SizedBox(height: 6),
         Container(
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: cardBg,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: const Color(0xFFE5E7EB)),
+            border: Border.all(color: cardBorder),
           ),
           child: TextField(
             controller: controller,
             keyboardType: keyboardType,
             maxLines: maxLines,
-            style: const TextStyle(color: Color(0xFF1E1E1E), fontSize: 14),
+            style: TextStyle(color: titleColor, fontSize: 14),
             decoration: InputDecoration(
               hintText: hint,
-              hintStyle: const TextStyle(color: Color(0xFF9CA3AF), fontSize: 14),
+              hintStyle: TextStyle(color: p.textMuted, fontSize: 14),
               contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
               border: InputBorder.none,
               suffixIcon: suffixIcon,
@@ -209,3 +242,4 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
     );
   }
 }
+

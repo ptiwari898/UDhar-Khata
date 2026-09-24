@@ -25,18 +25,39 @@ class Modals {
               children: [
                 TextField(
                   controller: nameCtrl,
-                  decoration: const InputDecoration(labelText: 'Customer Name', labelStyle: TextStyle(color: AppColors.textSecondary)),
+                  style: const TextStyle(color: AppColors.textPrimary, fontSize: 15),
+                  decoration: const InputDecoration(
+                    labelText: 'Customer Name',
+                    labelStyle: TextStyle(color: AppColors.textSecondary),
+                    hintStyle: TextStyle(color: AppColors.textMuted),
+                    enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: AppColors.borderLight)),
+                    focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: AppColors.accentGold)),
+                  ),
                 ),
                 const SizedBox(height: 12),
                 TextField(
                   controller: phoneCtrl,
                   keyboardType: TextInputType.phone,
-                  decoration: const InputDecoration(labelText: 'Mobile Number', labelStyle: TextStyle(color: AppColors.textSecondary)),
+                  style: const TextStyle(color: AppColors.textPrimary, fontSize: 15),
+                  decoration: const InputDecoration(
+                    labelText: 'Mobile Number',
+                    labelStyle: TextStyle(color: AppColors.textSecondary),
+                    hintStyle: TextStyle(color: AppColors.textMuted),
+                    enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: AppColors.borderLight)),
+                    focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: AppColors.accentGold)),
+                  ),
                 ),
                 const SizedBox(height: 12),
                 TextField(
                   controller: locCtrl,
-                  decoration: const InputDecoration(labelText: 'Location / City', labelStyle: TextStyle(color: AppColors.textSecondary)),
+                  style: const TextStyle(color: AppColors.textPrimary, fontSize: 15),
+                  decoration: const InputDecoration(
+                    labelText: 'Location / City',
+                    labelStyle: TextStyle(color: AppColors.textSecondary),
+                    hintStyle: TextStyle(color: AppColors.textMuted),
+                    enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: AppColors.borderLight)),
+                    focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: AppColors.accentGold)),
+                  ),
                 ),
                 const SizedBox(height: 16),
                 Row(
@@ -46,6 +67,7 @@ class Modals {
                     DropdownButton<String>(
                       value: selectedRisk,
                       dropdownColor: AppColors.dropdownSurface,
+                      style: const TextStyle(color: AppColors.textPrimary, fontSize: 14),
                       borderRadius: BorderRadius.circular(12),
                       items: ['Low', 'Medium', 'High'].map((r) => DropdownMenuItem(value: r, child: Text(r, style: const TextStyle(color: Colors.white)))).toList(),
                       onChanged: (val) {
@@ -108,8 +130,14 @@ class Modals {
                 DropdownButtonFormField<Customer>(
                   initialValue: selectedCust,
                   dropdownColor: AppColors.dropdownSurface,
+                  style: const TextStyle(color: AppColors.textPrimary, fontSize: 15),
                   borderRadius: BorderRadius.circular(14),
-                  decoration: const InputDecoration(labelText: 'Customer', labelStyle: TextStyle(color: AppColors.textSecondary)),
+                  decoration: const InputDecoration(
+                    labelText: 'Customer',
+                    labelStyle: TextStyle(color: AppColors.textSecondary),
+                    enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: AppColors.borderLight)),
+                    focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: AppColors.accentGold)),
+                  ),
                   items: state.customers.map((c) => DropdownMenuItem(value: c, child: Text(c.name, style: const TextStyle(color: Colors.white)))).toList(),
                   onChanged: (val) => setDialogState(() => selectedCust = val),
                 ),
@@ -117,12 +145,26 @@ class Modals {
                 TextField(
                   controller: amountCtrl,
                   keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(labelText: 'Amount (₹)', labelStyle: TextStyle(color: AppColors.textSecondary)),
+                  style: const TextStyle(color: AppColors.textPrimary, fontSize: 16, fontWeight: FontWeight.bold),
+                  decoration: const InputDecoration(
+                    labelText: 'Amount (₹)',
+                    labelStyle: TextStyle(color: AppColors.textSecondary),
+                    hintStyle: TextStyle(color: AppColors.textMuted),
+                    enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: AppColors.borderLight)),
+                    focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: AppColors.accentGold)),
+                  ),
                 ),
                 const SizedBox(height: 12),
                 TextField(
                   controller: noteCtrl,
-                  decoration: const InputDecoration(labelText: 'Note / Items', labelStyle: TextStyle(color: AppColors.textSecondary)),
+                  style: const TextStyle(color: AppColors.textPrimary, fontSize: 15),
+                  decoration: const InputDecoration(
+                    labelText: 'Note / Items',
+                    labelStyle: TextStyle(color: AppColors.textSecondary),
+                    hintStyle: TextStyle(color: AppColors.textMuted),
+                    enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: AppColors.borderLight)),
+                    focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: AppColors.accentGold)),
+                  ),
                 ),
               ],
             ),
@@ -181,8 +223,14 @@ class Modals {
                 DropdownButtonFormField<Customer>(
                   initialValue: selectedCust,
                   dropdownColor: AppColors.dropdownSurface,
+                  style: const TextStyle(color: AppColors.textPrimary, fontSize: 15),
                   borderRadius: BorderRadius.circular(14),
-                  decoration: const InputDecoration(labelText: 'Customer', labelStyle: TextStyle(color: AppColors.textSecondary)),
+                  decoration: const InputDecoration(
+                    labelText: 'Customer',
+                    labelStyle: TextStyle(color: AppColors.textSecondary),
+                    enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: AppColors.borderLight)),
+                    focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: AppColors.accentGold)),
+                  ),
                   items: state.customers.map((c) => DropdownMenuItem(value: c, child: Text(c.name, style: const TextStyle(color: Colors.white)))).toList(),
                   onChanged: (val) => setDialogState(() => selectedCust = val),
                 ),
@@ -190,7 +238,14 @@ class Modals {
                 TextField(
                   controller: amountCtrl,
                   keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(labelText: 'Amount (₹)', labelStyle: TextStyle(color: AppColors.textSecondary)),
+                  style: const TextStyle(color: AppColors.textPrimary, fontSize: 16, fontWeight: FontWeight.bold),
+                  decoration: const InputDecoration(
+                    labelText: 'Amount (₹)',
+                    labelStyle: TextStyle(color: AppColors.textSecondary),
+                    hintStyle: TextStyle(color: AppColors.textMuted),
+                    enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: AppColors.borderLight)),
+                    focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: AppColors.accentGold)),
+                  ),
                 ),
                 const SizedBox(height: 14),
                 const Text('Payment Method', style: TextStyle(color: AppColors.textSecondary, fontSize: 12)),
@@ -201,7 +256,7 @@ class Modals {
                     return Padding(
                       padding: const EdgeInsets.only(right: 8),
                       child: ChoiceChip(
-                        label: Text(m),
+                        label: Text(m, style: TextStyle(color: isSel ? const Color(0xFF062622) : Colors.white, fontWeight: FontWeight.bold)),
                         selected: isSel,
                         selectedColor: AppColors.greenAdvance,
                         backgroundColor: AppColors.cardSurface,
@@ -213,7 +268,14 @@ class Modals {
                 const SizedBox(height: 12),
                 TextField(
                   controller: refCtrl,
-                  decoration: const InputDecoration(labelText: 'Reference / Remark', labelStyle: TextStyle(color: AppColors.textSecondary)),
+                  style: const TextStyle(color: AppColors.textPrimary, fontSize: 15),
+                  decoration: const InputDecoration(
+                    labelText: 'Reference / Remark',
+                    labelStyle: TextStyle(color: AppColors.textSecondary),
+                    hintStyle: TextStyle(color: AppColors.textMuted),
+                    enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: AppColors.borderLight)),
+                    focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: AppColors.accentGold)),
+                  ),
                 ),
               ],
             ),
@@ -266,27 +328,54 @@ class Modals {
                 DropdownButtonFormField<Customer>(
                   initialValue: selectedCust,
                   dropdownColor: AppColors.dropdownSurface,
+                  style: const TextStyle(color: AppColors.textPrimary, fontSize: 15),
                   borderRadius: BorderRadius.circular(14),
-                  decoration: const InputDecoration(labelText: 'Customer', labelStyle: TextStyle(color: AppColors.textSecondary)),
+                  decoration: const InputDecoration(
+                    labelText: 'Customer',
+                    labelStyle: TextStyle(color: AppColors.textSecondary),
+                    enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: AppColors.borderLight)),
+                    focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: AppColors.accentGold)),
+                  ),
                   items: state.customers.map((c) => DropdownMenuItem(value: c, child: Text(c.name, style: const TextStyle(color: Colors.white)))).toList(),
                   onChanged: (val) => setDialogState(() => selectedCust = val),
                 ),
                 const SizedBox(height: 12),
                 TextField(
                   controller: itemsCtrl,
-                  decoration: const InputDecoration(labelText: 'Items List', labelStyle: TextStyle(color: AppColors.textSecondary)),
+                  style: const TextStyle(color: AppColors.textPrimary, fontSize: 15),
+                  decoration: const InputDecoration(
+                    labelText: 'Items List',
+                    labelStyle: TextStyle(color: AppColors.textSecondary),
+                    hintStyle: TextStyle(color: AppColors.textMuted),
+                    enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: AppColors.borderLight)),
+                    focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: AppColors.accentGold)),
+                  ),
                 ),
                 const SizedBox(height: 12),
                 TextField(
                   controller: totalCtrl,
                   keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(labelText: 'Total Amount (₹)', labelStyle: TextStyle(color: AppColors.textSecondary)),
+                  style: const TextStyle(color: AppColors.textPrimary, fontSize: 16, fontWeight: FontWeight.bold),
+                  decoration: const InputDecoration(
+                    labelText: 'Total Amount (₹)',
+                    labelStyle: TextStyle(color: AppColors.textSecondary),
+                    hintStyle: TextStyle(color: AppColors.textMuted),
+                    enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: AppColors.borderLight)),
+                    focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: AppColors.accentGold)),
+                  ),
                 ),
                 const SizedBox(height: 12),
                 TextField(
                   controller: advCtrl,
                   keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(labelText: 'Advance Paid (₹)', labelStyle: TextStyle(color: AppColors.textSecondary)),
+                  style: const TextStyle(color: AppColors.textPrimary, fontSize: 15),
+                  decoration: const InputDecoration(
+                    labelText: 'Advance Paid (₹)',
+                    labelStyle: TextStyle(color: AppColors.textSecondary),
+                    hintStyle: TextStyle(color: AppColors.textMuted),
+                    enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: AppColors.borderLight)),
+                    focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: AppColors.accentGold)),
+                  ),
                 ),
               ],
             ),
@@ -644,7 +733,7 @@ class Modals {
     );
   }
 
-  static void _showVoiceConfirm(BuildContext context, LedgerState state, Map<String, dynamic> parsed) {
+  static void showVoiceConfirm(BuildContext context, LedgerState state, Map<String, dynamic> parsed) {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -856,10 +945,14 @@ class Modals {
                 ] else ...[
                   TextField(
                     controller: titleCtrl,
+                    style: const TextStyle(color: AppColors.textPrimary, fontSize: 15),
                     decoration: const InputDecoration(
                       labelText: 'Supplier / Party Name',
                       labelStyle: TextStyle(color: AppColors.textSecondary),
+                      hintStyle: TextStyle(color: AppColors.textMuted),
                       hintText: 'e.g. Amul Milk, Kirana Distributor',
+                      enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: AppColors.borderLight)),
+                      focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: AppColors.accentGold)),
                     ),
                   ),
                 ],
@@ -869,10 +962,15 @@ class Modals {
                 TextField(
                   controller: amountCtrl,
                   keyboardType: TextInputType.number,
+                  style: const TextStyle(color: AppColors.textPrimary, fontSize: 16, fontWeight: FontWeight.bold),
                   decoration: const InputDecoration(
                     labelText: 'Amount (₹)',
                     labelStyle: TextStyle(color: AppColors.textSecondary),
+                    hintStyle: TextStyle(color: AppColors.textMuted),
                     prefixText: '₹ ',
+                    prefixStyle: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold),
+                    enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: AppColors.borderLight)),
+                    focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: AppColors.accentGold)),
                   ),
                 ),
                 const SizedBox(height: 14),
@@ -955,10 +1053,14 @@ class Modals {
                 // Note
                 TextField(
                   controller: noteCtrl,
+                  style: const TextStyle(color: AppColors.textPrimary, fontSize: 15),
                   decoration: const InputDecoration(
                     labelText: 'Notes / Remarks',
                     labelStyle: TextStyle(color: AppColors.textSecondary),
+                    hintStyle: TextStyle(color: AppColors.textMuted),
                     hintText: 'Bill #, items, or agreement',
+                    enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: AppColors.borderLight)),
+                    focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: AppColors.accentGold)),
                   ),
                 ),
               ],

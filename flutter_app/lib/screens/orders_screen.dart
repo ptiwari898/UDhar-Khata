@@ -10,14 +10,23 @@ class OrdersScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final orders = state.orders;
+    final p = state.activePalette;
+
+    final cardBg = p.isDark ? AppColors.popupSurface : Colors.white;
+    final cardBorder = p.isDark ? Colors.white12 : const Color(0xFFE5E7EB);
+    final titleColor = p.textPrimary;
+    final subtitleColor = p.textSecondary;
 
     return Scaffold(
       backgroundColor: Colors.transparent,
       floatingActionButton: FloatingActionButton.extended(
-        backgroundColor: const Color(0xFFA78BFA),
-        foregroundColor: const Color(0xFF062622),
-        icon: const Icon(Icons.add_shopping_cart),
-        label: const Text('Create Order', style: TextStyle(fontWeight: FontWeight.bold)),
+        heroTag: null,
+        backgroundColor: p.primaryAccent,
+        foregroundColor: p.textDarkOnWhite,
+        elevation: 3,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        icon: const Icon(Icons.add_shopping_cart, size: 20),
+        label: const Text('Create Order', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
         onPressed: () => Modals.showAddOrder(context, state),
       ),
       body: ListView(
@@ -29,8 +38,8 @@ class OrdersScreen extends StatelessWidget {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Orders & Advances', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
-                  Text('${orders.length} Active Orders', style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                  Text('Orders & Advances', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: titleColor)),
+                  Text('${orders.length} Active Orders', style: TextStyle(fontSize: 12, color: subtitleColor)),
                 ],
               ),
             ],
@@ -41,39 +50,59 @@ class OrdersScreen extends StatelessWidget {
             final due = order.totalAmount - order.advancePaid;
 
             Color statusColor;
+            Color statusBg;
             switch (order.status.toUpperCase()) {
               case 'READY':
-                statusColor = AppColors.greenAdvance;
+                statusColor = p.greenAdvance;
+                statusBg = p.greenBg;
                 break;
               case 'DELIVERED':
-                statusColor = AppColors.primaryBlue;
+                statusColor = p.primaryAccent;
+                statusBg = p.primaryAccent.withValues(alpha: 0.18);
                 break;
               default:
-                statusColor = AppColors.orangeMedium;
+                statusColor = p.orangeMedium;
+                statusBg = p.orangeBg;
                 break;
             }
 
             return Padding(
               padding: const EdgeInsets.only(bottom: 12),
-              child: GlassCard(
-                radius: 20,
+              child: Container(
                 padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: cardBg,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: cardBorder),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: p.isDark ? 0.3 : 0.03),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
-                          cust?.name ?? 'Customer',
-                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: AppColors.textPrimary),
+                        Flexible(
+                          child: Text(
+                            cust?.name ?? 'Customer',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: titleColor),
+                          ),
                         ),
+                        const SizedBox(width: 8),
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                           decoration: BoxDecoration(
-                            color: statusColor.withValues(alpha: 0.18),
+                            color: statusBg,
                             borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: statusColor.withValues(alpha: 0.5)),
+                            border: Border.all(color: statusColor.withValues(alpha: 0.4)),
                           ),
                           child: Text(
                             order.status,
@@ -85,31 +114,31 @@ class OrdersScreen extends StatelessWidget {
                     const SizedBox(height: 8),
                     Text(
                       order.itemsSummary,
-                      style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                      style: TextStyle(color: subtitleColor, fontSize: 13),
                     ),
-                    const Divider(height: 20, color: Colors.white12),
+                    Divider(height: 20, color: cardBorder),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text('Total Bill', style: TextStyle(fontSize: 10, color: AppColors.textMuted)),
-                            Text('₹ ${order.totalAmount.toInt()}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppColors.textPrimary)),
+                            Text('Total Bill', style: TextStyle(fontSize: 11, color: subtitleColor)),
+                            Text('₹ ${order.totalAmount.toInt()}', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: titleColor)),
                           ],
                         ),
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text('Advance Paid', style: TextStyle(fontSize: 10, color: AppColors.textMuted)),
-                            Text('₹ ${order.advancePaid.toInt()}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppColors.greenAdvance)),
+                            Text('Advance Paid', style: TextStyle(fontSize: 11, color: subtitleColor)),
+                            Text('₹ ${order.advancePaid.toInt()}', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: p.greenAdvance)),
                           ],
                         ),
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
-                            const Text('Remaining Due', style: TextStyle(fontSize: 10, color: AppColors.textMuted)),
-                            Text('₹ ${due.toInt()}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppColors.redUdhar)),
+                            Text('Remaining Due', style: TextStyle(fontSize: 11, color: subtitleColor)),
+                            Text('₹ ${due.toInt()}', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: p.redUdhar)),
                           ],
                         ),
                       ],

@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
-import '../models/models.dart';
 import '../state/ledger_state.dart';
+import '../theme/app_theme.dart';
 import '../widgets/modals.dart';
 import 'add_customer_screen.dart';
-import 'customer_detail_screen.dart';
 import 'record_entry_screen.dart';
 import 'reminders_calendar_screen.dart';
 import 'voice_entry_screen.dart';
@@ -25,14 +24,20 @@ class DashboardScreen extends StatelessWidget {
     final summary = state.getSummary();
     final profile = state.shopProfile;
     final activeReminders = state.reminders.where((r) => !r.isSettled).toList();
+    final p = state.activePalette;
+
+    final cardBg = p.isDark ? AppColors.popupSurface : Colors.white;
+    final cardBorder = p.isDark ? Colors.white12 : const Color(0xFFE5E7EB);
+    final titleColor = p.textPrimary;
+    final subtitleColor = p.textSecondary;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFFAF7F2),
+      backgroundColor: Colors.transparent,
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.fromLTRB(20, 12, 20, 100),
           children: [
-            // Top Bar Header (Screen 4)
+            // Top Bar Header
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -45,10 +50,10 @@ class DashboardScreen extends StatelessWidget {
                         height: 40,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: Colors.white,
-                          border: Border.all(color: const Color(0xFFE5E7EB)),
+                          color: cardBg,
+                          border: Border.all(color: cardBorder),
                         ),
-                        child: const Icon(Icons.menu, size: 20, color: Color(0xFF1E1E1E)),
+                        child: Icon(Icons.menu, size: 20, color: titleColor),
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -59,19 +64,19 @@ class DashboardScreen extends StatelessWidget {
                           children: [
                             Text(
                               profile.shopName,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
-                                color: Color(0xFF1E1E1E),
+                                color: titleColor,
                               ),
                             ),
                             const SizedBox(width: 4),
-                            const Icon(Icons.keyboard_arrow_down, size: 18, color: Color(0xFF6B7280)),
+                            Icon(Icons.keyboard_arrow_down, size: 18, color: subtitleColor),
                           ],
                         ),
                         Text(
                           'Good Morning, ${profile.ownerName.split(' ').first}',
-                          style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
+                          style: TextStyle(fontSize: 12, color: subtitleColor),
                         ),
                       ],
                     ),
@@ -89,13 +94,13 @@ class DashboardScreen extends StatelessWidget {
                     height: 40,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: Colors.white,
-                      border: Border.all(color: const Color(0xFFE5E7EB)),
+                      color: cardBg,
+                      border: Border.all(color: cardBorder),
                     ),
                     child: Stack(
                       alignment: Alignment.center,
                       children: [
-                        const Icon(Icons.notifications_none, size: 20, color: Color(0xFF1E1E1E)),
+                        Icon(Icons.notifications_none, size: 20, color: titleColor),
                         if (activeReminders.isNotEmpty)
                           Positioned(
                             top: 8,
@@ -103,9 +108,9 @@ class DashboardScreen extends StatelessWidget {
                             child: Container(
                               width: 8,
                               height: 8,
-                              decoration: const BoxDecoration(
+                              decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: Color(0xFFEF4444),
+                                color: p.redUdhar,
                               ),
                             ),
                           ),
@@ -117,20 +122,20 @@ class DashboardScreen extends StatelessWidget {
             ),
             const SizedBox(height: 18),
 
-            // Hero Card: Total Outstanding (₹1,24,580 | +8.4% vs last month)
+            // Hero Card: Total Outstanding
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(22),
               decoration: BoxDecoration(
-                gradient: const LinearGradient(
+                gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [Color(0xFFE07828), Color(0xFFC45914)],
+                  colors: [p.primaryAccent, p.primaryAccent.withValues(alpha: 0.8)],
                 ),
                 borderRadius: BorderRadius.circular(22),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFFC45914).withValues(alpha: 0.35),
+                    color: p.primaryAccent.withValues(alpha: 0.35),
                     blurRadius: 18,
                     offset: const Offset(0, 8),
                   ),
@@ -142,19 +147,19 @@ class DashboardScreen extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
+                      Text(
                         'Total Outstanding',
-                        style: TextStyle(color: Color(0xFFFDEEE3), fontSize: 13, fontWeight: FontWeight.w600),
+                        style: TextStyle(color: p.textDarkOnWhite.withValues(alpha: 0.9), fontSize: 13, fontWeight: FontWeight.w600),
                       ),
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.2),
+                          color: Colors.white.withValues(alpha: 0.25),
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        child: const Text(
+                        child: Text(
                           '↑ 8.4% vs last month',
-                          style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
+                          style: TextStyle(color: p.textDarkOnWhite, fontSize: 11, fontWeight: FontWeight.bold),
                         ),
                       ),
                     ],
@@ -162,10 +167,10 @@ class DashboardScreen extends StatelessWidget {
                   const SizedBox(height: 10),
                   Text(
                     '₹${summary.currentOutstandingUdhar.toInt() == 16940 ? "1,24,580" : summary.currentOutstandingUdhar.toInt().toString()}',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 34,
                       fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                      color: p.textDarkOnWhite,
                       letterSpacing: 0.5,
                     ),
                   ),
@@ -181,25 +186,25 @@ class DashboardScreen extends StatelessWidget {
                   child: Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: cardBg,
                       borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: const Color(0xFFE5E7EB)),
+                      border: Border.all(color: cardBorder),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.03),
+                          color: Colors.black.withValues(alpha: p.isDark ? 0.2 : 0.03),
                           blurRadius: 8,
                           offset: const Offset(0, 2),
                         ),
                       ],
                     ),
-                    child: const Column(
+                    child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text("Today's Collection", style: TextStyle(color: Color(0xFF6B7280), fontSize: 12)),
-                        SizedBox(height: 6),
+                        Text("Today's Collection", style: TextStyle(color: subtitleColor, fontSize: 12)),
+                        const SizedBox(height: 6),
                         Text(
                           '₹12,400',
-                          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF16A34A)),
+                          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: p.greenAdvance),
                         ),
                       ],
                     ),
@@ -210,25 +215,25 @@ class DashboardScreen extends StatelessWidget {
                   child: Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: cardBg,
                       borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: const Color(0xFFE5E7EB)),
+                      border: Border.all(color: cardBorder),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.03),
+                          color: Colors.black.withValues(alpha: p.isDark ? 0.2 : 0.03),
                           blurRadius: 8,
                           offset: const Offset(0, 2),
                         ),
                       ],
                     ),
-                    child: const Column(
+                    child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text("Today's Udhaar", style: TextStyle(color: Color(0xFF6B7280), fontSize: 12)),
-                        SizedBox(height: 6),
+                        Text("Today's Udhaar", style: TextStyle(color: subtitleColor, fontSize: 12)),
+                        const SizedBox(height: 6),
                         Text(
                           '₹7,850',
-                          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFFDC2626)),
+                          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: p.redUdhar),
                         ),
                       ],
                     ),
@@ -245,8 +250,9 @@ class DashboardScreen extends StatelessWidget {
                 _buildQuickAction(
                   icon: Icons.person_add_outlined,
                   label: 'Add\nCustomer',
-                  color: const Color(0xFF2563EB),
-                  bgColor: const Color(0xFFEFF6FF),
+                  color: p.isDark ? const Color(0xFF60A5FA) : const Color(0xFF2563EB),
+                  bgColor: p.isDark ? const Color(0x263B82F6) : const Color(0xFFEFF6FF),
+                  textColor: titleColor,
                   onTap: () {
                     Navigator.push(
                       context,
@@ -257,8 +263,9 @@ class DashboardScreen extends StatelessWidget {
                 _buildQuickAction(
                   icon: Icons.arrow_upward_rounded,
                   label: 'Give\nUdhaar',
-                  color: const Color(0xFFEA580C),
-                  bgColor: const Color(0xFFFFF7ED),
+                  color: p.redUdhar,
+                  bgColor: p.redBg,
+                  textColor: titleColor,
                   onTap: () {
                     Navigator.push(
                       context,
@@ -274,8 +281,9 @@ class DashboardScreen extends StatelessWidget {
                 _buildQuickAction(
                   icon: Icons.arrow_downward_rounded,
                   label: 'Receive\nPayment',
-                  color: const Color(0xFF16A34A),
-                  bgColor: const Color(0xFFF0FDF4),
+                  color: p.greenAdvance,
+                  bgColor: p.greenBg,
+                  textColor: titleColor,
                   onTap: () {
                     Modals.showReceivePayment(context, state);
                   },
@@ -283,8 +291,9 @@ class DashboardScreen extends StatelessWidget {
                 _buildQuickAction(
                   icon: Icons.mic_rounded,
                   label: 'Voice\nEntry',
-                  color: const Color(0xFF0284C7),
-                  bgColor: const Color(0xFFF0F9FF),
+                  color: p.orangeMedium,
+                  bgColor: p.orangeBg,
+                  textColor: titleColor,
                   onTap: () {
                     Navigator.push(
                       context,
@@ -296,7 +305,7 @@ class DashboardScreen extends StatelessWidget {
             ),
             const SizedBox(height: 20),
 
-            // Due Date Reminders Banner (3 Alert Options)
+            // Due Date Reminders Banner
             GestureDetector(
               onTap: () {
                 Navigator.push(
@@ -307,12 +316,12 @@ class DashboardScreen extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: cardBg,
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: const Color(0xFFE5E7EB)),
+                  border: Border.all(color: cardBorder),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.03),
+                      color: Colors.black.withValues(alpha: p.isDark ? 0.2 : 0.03),
                       blurRadius: 6,
                       offset: const Offset(0, 2),
                     ),
@@ -324,51 +333,51 @@ class DashboardScreen extends StatelessWidget {
                       width: 40,
                       height: 40,
                       decoration: BoxDecoration(
-                        color: const Color(0xFFDF7528).withValues(alpha: 0.12),
+                        color: p.primaryAccent.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      child: const Icon(Icons.calendar_month_rounded, color: Color(0xFFDF7528), size: 20),
+                      child: Icon(Icons.calendar_month_rounded, color: p.primaryAccent, size: 20),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
+                          Text(
                             'Due Date Reminders',
-                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Color(0xFF1E1E1E)),
+                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: titleColor),
                           ),
                           Text(
                             '${activeReminders.length} Active • 3 Alert Options',
-                            style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
+                            style: TextStyle(fontSize: 12, color: subtitleColor),
                           ),
                         ],
                       ),
                     ),
-                    const Text(
+                    Text(
                       'Open Calendar',
-                      style: TextStyle(color: Color(0xFFDF7528), fontWeight: FontWeight.bold, fontSize: 12),
+                      style: TextStyle(color: p.primaryAccent, fontWeight: FontWeight.bold, fontSize: 12),
                     ),
-                    const Icon(Icons.chevron_right, color: Color(0xFFDF7528), size: 18),
+                    Icon(Icons.chevron_right, color: p.primaryAccent, size: 18),
                   ],
                 ),
               ),
             ),
             const SizedBox(height: 24),
 
-            // Recent Transactions Section (Screen 4)
+            // Recent Transactions Section
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
+                Text(
                   'Recent Transactions',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF1E1E1E)),
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: titleColor),
                 ),
                 GestureDetector(
                   onTap: () => onNavigateTab(1), // Customers
-                  child: const Text(
+                  child: Text(
                     'See All',
-                    style: TextStyle(color: Color(0xFFDF7528), fontWeight: FontWeight.bold, fontSize: 13),
+                    style: TextStyle(color: p.primaryAccent, fontWeight: FontWeight.bold, fontSize: 13),
                   ),
                 ),
               ],
@@ -387,19 +396,19 @@ class DashboardScreen extends StatelessWidget {
                 margin: const EdgeInsets.only(bottom: 10),
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: cardBg,
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: const Color(0xFFE5E7EB)),
+                  border: Border.all(color: cardBorder),
                 ),
                 child: Row(
                   children: [
                     CircleAvatar(
                       radius: 20,
-                      backgroundColor: isUdhaar ? const Color(0xFFFFEDD5) : const Color(0xFFDCFCE7),
+                      backgroundColor: isUdhaar ? p.redBg : p.greenBg,
                       child: Text(
                         initials,
                         style: TextStyle(
-                          color: isUdhaar ? const Color(0xFFC2410C) : const Color(0xFF15803D),
+                          color: isUdhaar ? p.redUdhar : p.greenAdvance,
                           fontWeight: FontWeight.bold,
                           fontSize: 13,
                         ),
@@ -412,12 +421,12 @@ class DashboardScreen extends StatelessWidget {
                         children: [
                           Text(
                             cust.name,
-                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Color(0xFF1E1E1E)),
+                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: titleColor),
                           ),
                           const SizedBox(height: 2),
                           Text(
                             '${t.type} • ${t.date.day} Sep ${t.date.year}',
-                            style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
+                            style: TextStyle(fontSize: 12, color: subtitleColor),
                           ),
                         ],
                       ),
@@ -427,7 +436,7 @@ class DashboardScreen extends StatelessWidget {
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 15,
-                        color: isUdhaar ? const Color(0xFFDC2626) : const Color(0xFF16A34A),
+                        color: isUdhaar ? p.redUdhar : p.greenAdvance,
                       ),
                     ),
                   ],
@@ -445,6 +454,7 @@ class DashboardScreen extends StatelessWidget {
     required String label,
     required Color color,
     required Color bgColor,
+    required Color textColor,
     required VoidCallback onTap,
   }) {
     return GestureDetector(
@@ -457,7 +467,7 @@ class DashboardScreen extends StatelessWidget {
             decoration: BoxDecoration(
               color: bgColor,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: color.withValues(alpha: 0.2)),
+              border: Border.all(color: color.withValues(alpha: 0.3)),
             ),
             child: Icon(icon, color: color, size: 26),
           ),
@@ -465,10 +475,11 @@ class DashboardScreen extends StatelessWidget {
           Text(
             label,
             textAlign: TextAlign.center,
-            style: const TextStyle(color: Color(0xFF374151), fontSize: 11, fontWeight: FontWeight.w600, height: 1.2),
+            style: TextStyle(color: textColor, fontSize: 11, fontWeight: FontWeight.w600, height: 1.2),
           ),
         ],
       ),
     );
   }
 }
+

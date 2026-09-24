@@ -25,8 +25,14 @@ class _RemindersCalendarScreenState extends State<RemindersCalendarScreen> {
   @override
   Widget build(BuildContext context) {
     final state = widget.state;
+    final p = state.activePalette;
     final allReminders = state.reminders;
     final today = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
+
+    final cardBg = p.isDark ? AppColors.popupSurface : Colors.white;
+    final cardBorder = p.isDark ? Colors.white12 : const Color(0xFFE5E7EB);
+    final titleColor = p.textPrimary;
+    final subtitleColor = p.textSecondary;
 
     // Summary calculations
     double totalToRecover = 0;
@@ -80,7 +86,7 @@ class _RemindersCalendarScreenState extends State<RemindersCalendarScreen> {
         elevation: 0,
         leading: widget.onBack != null
             ? IconButton(
-                icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
+                icon: Icon(Icons.arrow_back, color: titleColor),
                 onPressed: widget.onBack,
               )
             : null,
@@ -89,30 +95,34 @@ class _RemindersCalendarScreenState extends State<RemindersCalendarScreen> {
             Container(
               padding: const EdgeInsets.all(7),
               decoration: BoxDecoration(
-                color: AppColors.primaryBlue.withValues(alpha: 0.2),
+                color: p.primaryAccent.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: const Icon(Icons.calendar_month_rounded, color: AppColors.primaryBlue, size: 20),
+              child: Icon(Icons.calendar_month_rounded, color: p.primaryAccent, size: 20),
             ),
             const SizedBox(width: 10),
-            const Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Payment & Bill Reminders',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: AppColors.textPrimary),
-                ),
-                Text(
-                  'उधारी वसूली व बिल भुगतान कैलेंडर',
-                  style: TextStyle(fontSize: 11, color: AppColors.textSecondary),
-                ),
-              ],
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Payment & Bill Reminders',
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: titleColor),
+                  ),
+                  Text(
+                    'उधारी वसूली व बिल भुगतान कैलेंडर',
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(fontSize: 11, color: subtitleColor),
+                  ),
+                ],
+              ),
             ),
           ],
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.add_alert_rounded, color: AppColors.primaryBlue),
+            icon: Icon(Icons.add_alert_rounded, color: p.primaryAccent),
             tooltip: 'Add Due Date Reminder',
             onPressed: () => Modals.showAddReminder(context, state),
           ),
@@ -127,8 +137,20 @@ class _RemindersCalendarScreenState extends State<RemindersCalendarScreen> {
             Row(
               children: [
                 Expanded(
-                  child: GlassCard(
+                  child: Container(
                     padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: cardBg,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: cardBorder),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: p.isDark ? 0.3 : 0.03),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -137,31 +159,43 @@ class _RemindersCalendarScreenState extends State<RemindersCalendarScreen> {
                             Container(
                               padding: const EdgeInsets.all(6),
                               decoration: BoxDecoration(
-                                color: AppColors.redUdhar.withValues(alpha: 0.15),
+                                color: p.redBg,
                                 shape: BoxShape.circle,
                               ),
-                              child: const Icon(Icons.call_received, color: AppColors.redUdhar, size: 16),
+                              child: Icon(Icons.call_received, color: p.redUdhar, size: 16),
                             ),
                             const SizedBox(width: 6),
-                            const Expanded(
-                              child: Text('Recover Udhar', style: TextStyle(color: AppColors.textSecondary, fontSize: 11)),
+                            Expanded(
+                              child: Text('Recover Udhar', style: TextStyle(color: subtitleColor, fontSize: 11, fontWeight: FontWeight.bold)),
                             ),
                           ],
                         ),
                         const SizedBox(height: 8),
                         Text(
                           '₹ ${totalToRecover.toInt()}',
-                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: AppColors.redUdhar),
+                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: p.redUdhar),
                         ),
-                        const Text('ग्राहकों से लेना है', style: TextStyle(color: AppColors.textSecondary, fontSize: 10)),
+                        Text('ग्राहकों से लेना है', style: TextStyle(color: subtitleColor, fontSize: 10)),
                       ],
                     ),
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: GlassCard(
+                  child: Container(
                     padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: cardBg,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: cardBorder),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: p.isDark ? 0.3 : 0.03),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -170,23 +204,23 @@ class _RemindersCalendarScreenState extends State<RemindersCalendarScreen> {
                             Container(
                               padding: const EdgeInsets.all(6),
                               decoration: BoxDecoration(
-                                color: AppColors.primaryBlue.withValues(alpha: 0.15),
+                                color: p.primaryAccent.withValues(alpha: 0.15),
                                 shape: BoxShape.circle,
                               ),
-                              child: const Icon(Icons.call_made, color: AppColors.primaryBlue, size: 16),
+                              child: Icon(Icons.call_made, color: p.primaryAccent, size: 16),
                             ),
                             const SizedBox(width: 6),
-                            const Expanded(
-                              child: Text('Pay Bills', style: TextStyle(color: AppColors.textSecondary, fontSize: 11)),
+                            Expanded(
+                              child: Text('Pay Bills', style: TextStyle(color: subtitleColor, fontSize: 11, fontWeight: FontWeight.bold)),
                             ),
                           ],
                         ),
                         const SizedBox(height: 8),
                         Text(
                           '₹ ${totalToPay.toInt()}',
-                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: AppColors.primaryBlue),
+                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: p.primaryAccent),
                         ),
-                        const Text('सप्लायर को देना है', style: TextStyle(color: AppColors.textSecondary, fontSize: 10)),
+                        Text('सप्लायर को देना है', style: TextStyle(color: subtitleColor, fontSize: 10)),
                       ],
                     ),
                   ),
@@ -196,29 +230,41 @@ class _RemindersCalendarScreenState extends State<RemindersCalendarScreen> {
             const SizedBox(height: 12),
 
             // 3 Alert Options Info Strip
-            GlassCard(
-              padding: const EdgeInsets.all(12),
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: cardBg,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: cardBorder),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: p.isDark ? 0.3 : 0.03),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Row(
+                  Row(
                     children: [
-                      Icon(Icons.notifications_active_outlined, color: AppColors.primaryBlue, size: 18),
-                      SizedBox(width: 8),
+                      Icon(Icons.notifications_active_outlined, color: p.primaryAccent, size: 18),
+                      const SizedBox(width: 8),
                       Text(
                         'Smart 3-Tier Alert System',
-                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppColors.textPrimary),
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: titleColor),
                       ),
                     ],
                   ),
                   const SizedBox(height: 8),
                   Row(
                     children: [
-                      _buildAlertBadge('⚡ 1. On Due Date', 'Same day 9 AM'),
+                      _buildAlertBadge('⚡ 1. On Due Date', 'Same day 9 AM', p),
                       const SizedBox(width: 6),
-                      _buildAlertBadge('🔔 2. 1 Day Prior', '24h advance alert'),
+                      _buildAlertBadge('🔔 2. 1 Day Prior', '24h advance alert', p),
                       const SizedBox(width: 6),
-                      _buildAlertBadge('📅 3. 3 Days Prior', 'Heavy balance alert'),
+                      _buildAlertBadge('📅 3. 3 Days Prior', 'Heavy balance alert', p),
                     ],
                   ),
                 ],
@@ -227,9 +273,9 @@ class _RemindersCalendarScreenState extends State<RemindersCalendarScreen> {
             const SizedBox(height: 16),
 
             // Horizontal Date Strip (Calendar Quick Selector)
-            const Text(
+            Text(
               'Select Calendar Date',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppColors.textPrimary),
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: titleColor),
             ),
             const SizedBox(height: 8),
             SizedBox(
@@ -258,13 +304,14 @@ class _RemindersCalendarScreenState extends State<RemindersCalendarScreen> {
                       margin: const EdgeInsets.only(right: 8),
                       decoration: BoxDecoration(
                         color: isSelected
-                            ? AppColors.primaryBlue
-                            : (isToday ? AppColors.primaryBlue.withValues(alpha: 0.15) : AppColors.cardSurface),
+                            ? p.primaryAccent
+                            : (isToday ? p.primaryAccent.withValues(alpha: 0.15) : cardBg),
                         borderRadius: BorderRadius.circular(14),
                         border: Border.all(
                           color: isSelected
-                              ? AppColors.primaryBlue
-                              : (isToday ? AppColors.primaryBlue.withValues(alpha: 0.4) : Colors.white10),
+                              ? p.primaryAccent
+                              : (isToday ? p.primaryAccent.withValues(alpha: 0.5) : cardBorder),
+                          width: isSelected || isToday ? 1.5 : 1.0,
                         ),
                       ),
                       child: Column(
@@ -275,7 +322,7 @@ class _RemindersCalendarScreenState extends State<RemindersCalendarScreen> {
                             style: TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.w500,
-                              color: isSelected ? const Color(0xFF062622) : AppColors.textSecondary,
+                              color: isSelected ? p.textDarkOnWhite : subtitleColor,
                             ),
                           ),
                           const SizedBox(height: 2),
@@ -284,7 +331,7 @@ class _RemindersCalendarScreenState extends State<RemindersCalendarScreen> {
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
-                              color: isSelected ? const Color(0xFF062622) : AppColors.textPrimary,
+                              color: isSelected ? p.textDarkOnWhite : titleColor,
                             ),
                           ),
                           const SizedBox(height: 3),
@@ -296,8 +343,8 @@ class _RemindersCalendarScreenState extends State<RemindersCalendarScreen> {
                                   width: 5,
                                   height: 5,
                                   margin: const EdgeInsets.symmetric(horizontal: 1),
-                                  decoration: const BoxDecoration(
-                                    color: AppColors.redUdhar,
+                                  decoration: BoxDecoration(
+                                    color: p.redUdhar,
                                     shape: BoxShape.circle,
                                   ),
                                 ),
@@ -307,7 +354,7 @@ class _RemindersCalendarScreenState extends State<RemindersCalendarScreen> {
                                   height: 5,
                                   margin: const EdgeInsets.symmetric(horizontal: 1),
                                   decoration: BoxDecoration(
-                                    color: isSelected ? const Color(0xFF062622) : AppColors.primaryBlue,
+                                    color: isSelected ? p.textDarkOnWhite : p.primaryAccent,
                                     shape: BoxShape.circle,
                                   ),
                                 ),
@@ -327,11 +374,11 @@ class _RemindersCalendarScreenState extends State<RemindersCalendarScreen> {
               scrollDirection: Axis.horizontal,
               child: Row(
                 children: [
-                  _buildFilterChip('ALL', 'All (${allReminders.length})'),
-                  _buildFilterChip('TODAY_OVERDUE', '⚡ Due Today / Overdue (${dueTodayCount + overdueCount})'),
-                  _buildFilterChip('RECOVER_UDHAR', '💰 Recover Udhar'),
-                  _buildFilterChip('PAY_SUPPLIER', '📦 Supplier Bills'),
-                  _buildFilterChip('SETTLED', '✅ Settled'),
+                  _buildFilterChip('ALL', 'All (${allReminders.length})', p),
+                  _buildFilterChip('TODAY_OVERDUE', '⚡ Due Today / Overdue (${dueTodayCount + overdueCount})', p),
+                  _buildFilterChip('RECOVER_UDHAR', '💰 Recover Udhar', p),
+                  _buildFilterChip('PAY_SUPPLIER', '📦 Supplier Bills', p),
+                  _buildFilterChip('SETTLED', '✅ Settled', p),
                 ],
               ),
             ),
@@ -344,67 +391,72 @@ class _RemindersCalendarScreenState extends State<RemindersCalendarScreen> {
                   padding: const EdgeInsets.symmetric(vertical: 40),
                   child: Column(
                     children: [
-                      const Icon(Icons.event_available, size: 52, color: Colors.white24),
+                      Icon(Icons.event_available, size: 52, color: subtitleColor.withValues(alpha: 0.5)),
                       const SizedBox(height: 12),
-                      const Text(
+                      Text(
                         'No Reminders Found',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textSecondary),
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: titleColor),
                       ),
                       const SizedBox(height: 6),
-                      const Text(
+                      Text(
                         'Tap "Set Reminder" to schedule payment recovery or bill alerts.',
                         textAlign: TextAlign.center,
-                        style: TextStyle(fontSize: 12, color: Colors.white38),
+                        style: TextStyle(fontSize: 12, color: subtitleColor),
                       ),
                       const SizedBox(height: 16),
                       ElevatedButton.icon(
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primaryBlue,
-                          foregroundColor: const Color(0xFF062622),
+                          backgroundColor: p.primaryAccent,
+                          foregroundColor: p.textDarkOnWhite,
+                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         ),
                         onPressed: () => Modals.showAddReminder(context, state),
-                        icon: const Icon(Icons.add_alarm_rounded),
-                        label: const Text('Add Due Date Reminder'),
+                        icon: const Icon(Icons.add_alarm_rounded, size: 18),
+                        label: const Text('Add Due Date Reminder', style: TextStyle(fontWeight: FontWeight.bold)),
                       ),
                     ],
                   ),
                 ),
               )
             else
-              ...filtered.map((reminder) => _buildReminderCard(context, state, reminder, today)),
+              ...filtered.map((reminder) => _buildReminderCard(context, state, reminder, today, p)),
           ],
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
-        backgroundColor: AppColors.primaryBlue,
-        foregroundColor: const Color(0xFF062622),
+        heroTag: null,
+        backgroundColor: p.primaryAccent,
+        foregroundColor: p.textDarkOnWhite,
+        elevation: 3,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         onPressed: () => Modals.showAddReminder(context, state),
-        icon: const Icon(Icons.add_alarm_rounded),
-        label: const Text('Set Reminder', style: TextStyle(fontWeight: FontWeight.bold)),
+        icon: const Icon(Icons.add_alarm_rounded, size: 20),
+        label: const Text('Set Reminder', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
       ),
     );
   }
 
-  Widget _buildAlertBadge(String title, String desc) {
+  Widget _buildAlertBadge(String title, String desc, ThemePalette p) {
     return Expanded(
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
         decoration: BoxDecoration(
-          color: AppColors.backgroundSlate.withValues(alpha: 0.6),
+          color: p.isDark ? AppColors.popupSurface.withValues(alpha: 0.8) : const Color(0xFFF9FAFB),
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: Colors.white10),
+          border: Border.all(color: p.isDark ? Colors.white12 : const Color(0xFFE5E7EB)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               title,
-              style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+              style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: p.textPrimary),
               overflow: TextOverflow.ellipsis,
             ),
             Text(
               desc,
-              style: const TextStyle(fontSize: 8, color: AppColors.textSecondary),
+              style: TextStyle(fontSize: 8, color: p.textSecondary),
               overflow: TextOverflow.ellipsis,
             ),
           ],
@@ -413,26 +465,31 @@ class _RemindersCalendarScreenState extends State<RemindersCalendarScreen> {
     );
   }
 
-  Widget _buildFilterChip(String key, String label) {
+  Widget _buildFilterChip(String key, String label, ThemePalette p) {
     final isSelected = _activeFilter == key;
+    final cardBg = p.isDark ? AppColors.popupSurface : Colors.white;
+    final cardBorder = p.isDark ? Colors.white12 : const Color(0xFFE5E7EB);
+
     return Padding(
       padding: const EdgeInsets.only(right: 8),
       child: InkWell(
         onTap: () => setState(() => _activeFilter = key),
         borderRadius: BorderRadius.circular(20),
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
           decoration: BoxDecoration(
-            color: isSelected ? AppColors.primaryBlue : AppColors.cardSurface,
+            color: isSelected ? p.primaryAccent : cardBg,
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: isSelected ? AppColors.primaryBlue : Colors.white12),
+            border: Border.all(
+              color: isSelected ? p.primaryAccent : cardBorder,
+            ),
           ),
           child: Text(
             label,
             style: TextStyle(
               fontSize: 12,
               fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-              color: isSelected ? const Color(0xFF062622) : AppColors.textSecondary,
+              color: isSelected ? p.textDarkOnWhite : p.textSecondary,
             ),
           ),
         ),
@@ -445,34 +502,56 @@ class _RemindersCalendarScreenState extends State<RemindersCalendarScreen> {
     LedgerState state,
     PaymentReminder reminder,
     DateTime today,
+    ThemePalette p,
   ) {
     final rDate = DateTime(reminder.dueDate.year, reminder.dueDate.month, reminder.dueDate.day);
     final daysDiff = rDate.difference(today).inDays;
 
+    final cardBg = p.isDark ? AppColors.popupSurface : Colors.white;
+    final cardBorder = p.isDark ? Colors.white12 : const Color(0xFFE5E7EB);
+
     String statusText;
     Color statusColor;
+    Color statusBg;
     if (reminder.isSettled) {
       statusText = '✅ SETTLED / चुकता';
-      statusColor = AppColors.greenAdvance;
+      statusColor = p.greenAdvance;
+      statusBg = p.greenBg;
     } else if (daysDiff < 0) {
       statusText = '⚠️ OVERDUE (${-daysDiff}d ago)';
-      statusColor = AppColors.redUdhar;
+      statusColor = p.redUdhar;
+      statusBg = p.redBg;
     } else if (daysDiff == 0) {
       statusText = '⚡ DUE TODAY (आज)';
-      statusColor = const Color(0xFFFFA726);
+      statusColor = p.orangeMedium;
+      statusBg = p.orangeBg;
     } else if (daysDiff == 1) {
       statusText = '🔔 DUE TOMORROW (कल)';
-      statusColor = AppColors.primaryBlue;
+      statusColor = p.primaryAccent;
+      statusBg = p.primaryAccent.withValues(alpha: 0.18);
     } else {
       statusText = '📅 IN $daysDiff DAYS';
-      statusColor = AppColors.textSecondary;
+      statusColor = p.textSecondary;
+      statusBg = p.isDark ? Colors.white10 : const Color(0xFFF3F4F6);
     }
 
     final isUdhar = reminder.reminderType == 'RECOVER_UDHAR';
 
-    return GlassCard(
+    return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: cardBg,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: cardBorder),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: p.isDark ? 0.3 : 0.03),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -483,7 +562,7 @@ class _RemindersCalendarScreenState extends State<RemindersCalendarScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: statusColor.withValues(alpha: 0.15),
+                  color: statusBg,
                   borderRadius: BorderRadius.circular(6),
                   border: Border.all(color: statusColor.withValues(alpha: 0.4)),
                 ),
@@ -495,7 +574,7 @@ class _RemindersCalendarScreenState extends State<RemindersCalendarScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: (isUdhar ? AppColors.redUdhar : AppColors.primaryBlue).withValues(alpha: 0.15),
+                  color: (isUdhar ? p.redUdhar : p.primaryAccent).withValues(alpha: 0.18),
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(
@@ -503,7 +582,7 @@ class _RemindersCalendarScreenState extends State<RemindersCalendarScreen> {
                   style: TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.bold,
-                    color: isUdhar ? AppColors.redUdhar : AppColors.primaryBlue,
+                    color: isUdhar ? p.redUdhar : p.primaryAccent,
                   ),
                 ),
               ),
@@ -525,7 +604,7 @@ class _RemindersCalendarScreenState extends State<RemindersCalendarScreen> {
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
-                        color: AppColors.textPrimary,
+                        color: p.textPrimary,
                         decoration: reminder.isSettled ? TextDecoration.lineThrough : null,
                       ),
                     ),
@@ -533,7 +612,7 @@ class _RemindersCalendarScreenState extends State<RemindersCalendarScreen> {
                       const SizedBox(height: 2),
                       Text(
                         reminder.note,
-                        style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                        style: TextStyle(color: p.textSecondary, fontSize: 12),
                       ),
                     ],
                   ],
@@ -546,8 +625,8 @@ class _RemindersCalendarScreenState extends State<RemindersCalendarScreen> {
                   fontWeight: FontWeight.bold,
                   fontSize: 18,
                   color: reminder.isSettled
-                      ? AppColors.textSecondary
-                      : (isUdhar ? AppColors.redUdhar : AppColors.primaryBlue),
+                      ? p.textSecondary
+                      : (isUdhar ? p.redUdhar : p.primaryAccent),
                   decoration: reminder.isSettled ? TextDecoration.lineThrough : null,
                 ),
               ),
@@ -558,29 +637,29 @@ class _RemindersCalendarScreenState extends State<RemindersCalendarScreen> {
           // Due Date & Alert Pill
           Row(
             children: [
-              const Icon(Icons.calendar_today_outlined, size: 14, color: AppColors.textSecondary),
+              Icon(Icons.calendar_today_outlined, size: 14, color: p.textSecondary),
               const SizedBox(width: 6),
               Text(
                 'Due: ${reminder.dueDate.day.toString().padLeft(2, '0')}/${reminder.dueDate.month.toString().padLeft(2, '0')}/${reminder.dueDate.year}',
-                style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                style: TextStyle(fontSize: 12, color: p.textSecondary),
               ),
               const Spacer(),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
-                  color: AppColors.cardSurface,
+                  color: p.primaryAccent.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(6),
-                  border: Border.all(color: Colors.white12),
+                  border: Border.all(color: p.primaryAccent.withValues(alpha: 0.4)),
                 ),
                 child: Text(
                   state.getAlertOptionLabel(reminder.alertOption),
-                  style: const TextStyle(fontSize: 10, color: AppColors.primaryBlue),
+                  style: TextStyle(fontSize: 10, color: p.primaryAccent, fontWeight: FontWeight.bold),
                 ),
               ),
             ],
           ),
           const SizedBox(height: 12),
-          const Divider(color: Colors.white10, height: 1),
+          Divider(color: cardBorder, height: 1),
           const SizedBox(height: 8),
 
           // Actions
@@ -591,7 +670,7 @@ class _RemindersCalendarScreenState extends State<RemindersCalendarScreen> {
                 child: OutlinedButton.icon(
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 8),
-                    side: BorderSide(color: const Color(0xFF25D366).withValues(alpha: 0.6)),
+                    side: const BorderSide(color: Color(0xFF25D366)),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                   ),
                   onPressed: () {
@@ -623,12 +702,12 @@ class _RemindersCalendarScreenState extends State<RemindersCalendarScreen> {
               IconButton.filledTonal(
                 style: IconButton.styleFrom(
                   backgroundColor: reminder.isSettled
-                      ? AppColors.greenAdvance.withValues(alpha: 0.2)
-                      : AppColors.cardSurface,
+                      ? p.greenBg
+                      : (p.isDark ? Colors.white10 : const Color(0xFFF3F4F6)),
                 ),
                 icon: Icon(
                   reminder.isSettled ? Icons.check_circle : Icons.check_circle_outline,
-                  color: reminder.isSettled ? AppColors.greenAdvance : AppColors.textSecondary,
+                  color: reminder.isSettled ? p.greenAdvance : p.textSecondary,
                   size: 20,
                 ),
                 tooltip: reminder.isSettled ? 'Mark Unsettled' : 'Mark Settled (चुकता)',
@@ -646,7 +725,7 @@ class _RemindersCalendarScreenState extends State<RemindersCalendarScreen> {
 
               // Delete Reminder
               IconButton(
-                icon: const Icon(Icons.delete_outline, color: Colors.white38, size: 20),
+                icon: Icon(Icons.delete_outline, color: p.textSecondary.withValues(alpha: 0.6), size: 20),
                 tooltip: 'Delete Reminder',
                 onPressed: () => state.deleteReminder(reminder.id),
               ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../models/models.dart';
 import '../state/ledger_state.dart';
+import '../theme/app_theme.dart';
 
 class UpiPaymentScreen extends StatelessWidget {
   final LedgerState state;
@@ -19,156 +20,166 @@ class UpiPaymentScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final profile = state.shopProfile;
     final upiId = profile.upiId.isNotEmpty ? profile.upiId : 'shivamstore@oksbi';
+    final p = state.activePalette;
 
-    return Scaffold(
-      backgroundColor: const Color(0xFFFAF7F2),
-      appBar: AppBar(
+    final cardBg = p.isDark ? AppColors.popupSurface : Colors.white;
+    final cardBorder = p.isDark ? Colors.white12 : const Color(0xFFE5E7EB);
+    final titleColor = p.textPrimary;
+    final subtitleColor = p.textSecondary;
+
+    return AtmosphericBackdrop(
+      palette: p,
+      child: Scaffold(
         backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Color(0xFF1E1E1E)),
-          onPressed: () => Navigator.pop(context),
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          leading: IconButton(
+            icon: Icon(Icons.arrow_back, color: titleColor),
+            onPressed: () => Navigator.pop(context),
+          ),
+          title: Text(
+            'UPI Payment',
+            style: TextStyle(color: titleColor, fontWeight: FontWeight.bold, fontSize: 18),
+          ),
+          centerTitle: false,
         ),
-        title: const Text(
-          'UPI Payment',
-          style: TextStyle(color: Color(0xFF1E1E1E), fontWeight: FontWeight.bold, fontSize: 18),
-        ),
-        centerTitle: false,
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-        child: Column(
-          children: [
-            Text(
-              customer.name,
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Color(0xFF1E1E1E)),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              'Pay ₹${amount.toInt()}',
-              style: const TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: Color(0xFF1E1E1E)),
-            ),
-            const SizedBox(height: 20),
-
-            // Crisp QR Code Container
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.08),
-                    blurRadius: 16,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-                border: Border.all(color: const Color(0xFFEBE6DF)),
+        body: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+          child: Column(
+            children: [
+              Text(
+                customer.name,
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: titleColor),
               ),
-              child: Column(
-                children: [
-                  CustomPaint(
-                    size: const Size(200, 200),
-                    painter: _QrPatternPainter(),
+              const SizedBox(height: 4),
+              Text(
+                'Pay ₹${amount.toInt()}',
+                style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: titleColor),
+              ),
+              const SizedBox(height: 20),
+
+              // Crisp QR Code Container
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white, // Keep QR background white for scanners to read
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: p.isDark ? 0.3 : 0.08),
+                      blurRadius: 16,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                  border: Border.all(color: cardBorder),
+                ),
+                child: Column(
+                  children: [
+                    CustomPaint(
+                      size: const Size(200, 200),
+                      painter: _QrPatternPainter(),
+                    ),
+                    const SizedBox(height: 16),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF4EFEA),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'UPI ID: $upiId',
+                            style: const TextStyle(color: Color(0xFF4B5563), fontWeight: FontWeight.bold, fontSize: 13),
+                          ),
+                          const SizedBox(width: 8),
+                          GestureDetector(
+                            onTap: () {
+                              Clipboard.setData(ClipboardData(text: upiId));
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('UPI ID copied to clipboard!'),
+                                  duration: Duration(seconds: 1),
+                                ),
+                              );
+                            },
+                            child: Icon(Icons.copy, size: 16, color: p.primaryAccent),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              // Share QR Button
+              SizedBox(
+                width: double.infinity,
+                height: 50,
+                child: ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: p.primaryAccent,
+                    foregroundColor: p.textDarkOnWhite,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    elevation: 2,
                   ),
-                  const SizedBox(height: 16),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                  onPressed: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('UPI QR Code shared with ${customer.name}!'),
+                        backgroundColor: const Color(0xFF16A34A),
+                        behavior: SnackBarBehavior.floating,
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.share, size: 20),
+                  label: const Text('Share QR', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                ),
+              ),
+              const SizedBox(height: 12),
+
+              // Open in UPI App
+              SizedBox(
+                width: double.infinity,
+                height: 50,
+                child: OutlinedButton.icon(
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: titleColor,
+                    backgroundColor: cardBg,
+                    side: BorderSide(color: cardBorder),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  ),
+                  onPressed: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Launching installed UPI App (GPay / PhonePe / Paytm)...'),
+                        behavior: SnackBarBehavior.floating,
+                      ),
+                    );
+                  },
+                  icon: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFF4EFEA),
-                      borderRadius: BorderRadius.circular(10),
+                      color: const Color(0xFF4285F4),
+                      borderRadius: BorderRadius.circular(4),
                     ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          'UPI ID: $upiId',
-                          style: const TextStyle(color: Color(0xFF4B5563), fontWeight: FontWeight.bold, fontSize: 13),
-                        ),
-                        const SizedBox(width: 8),
-                        GestureDetector(
-                          onTap: () {
-                            Clipboard.setData(ClipboardData(text: upiId));
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('UPI ID copied to clipboard!'),
-                                duration: Duration(seconds: 1),
-                              ),
-                            );
-                          },
-                          child: const Icon(Icons.copy, size: 16, color: Color(0xFFDF7528)),
-                        ),
-                      ],
-                    ),
+                    child: const Text('GPay', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
                   ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 24),
-
-            // Share QR Button
-            SizedBox(
-              width: double.infinity,
-              height: 50,
-              child: ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFDF7528),
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                  elevation: 2,
+                  label: const Text('Open in UPI App', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
                 ),
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('UPI QR Code shared with ${customer.name}!'),
-                      backgroundColor: const Color(0xFF16A34A),
-                      behavior: SnackBarBehavior.floating,
-                    ),
-                  );
-                },
-                icon: const Icon(Icons.share, size: 20),
-                label: const Text('Share QR', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
               ),
-            ),
-            const SizedBox(height: 12),
+              const SizedBox(height: 16),
 
-            // Open in UPI App
-            SizedBox(
-              width: double.infinity,
-              height: 50,
-              child: OutlinedButton.icon(
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: const Color(0xFF1E1E1E),
-                  side: const BorderSide(color: Color(0xFFD1D5DB)),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                ),
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Launching installed UPI App (GPay / PhonePe / Paytm)...'),
-                      behavior: SnackBarBehavior.floating,
-                    ),
-                  );
-                },
-                icon: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF4285F4),
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: const Text('GPay', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
-                ),
-                label: const Text('Open in UPI App', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+              // Note
+              Text(
+                'After payment, manually confirm in the app.',
+                style: TextStyle(color: subtitleColor, fontSize: 12),
               ),
-            ),
-            const SizedBox(height: 16),
-
-            // Note
-            const Text(
-              'After payment, manually confirm in the app.',
-              style: TextStyle(color: Color(0xFF9CA3AF), fontSize: 12),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -226,3 +237,4 @@ class _QrPatternPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
+
