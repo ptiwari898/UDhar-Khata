@@ -170,6 +170,8 @@ class LedgerTransaction {
     paymentMethod: json['paymentMethod'] as String? ?? 'Cash',
     reference: json['reference'] as String? ?? '',
   );
+
+  DateTime get timestamp => date;
 }
 
 class CustomerOrder {

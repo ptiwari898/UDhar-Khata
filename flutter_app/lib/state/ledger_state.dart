@@ -3,13 +3,23 @@ import 'package:flutter/foundation.dart';
 import '../data/storage_service.dart';
 import '../models/models.dart';
 import '../theme/app_theme.dart';
+import 'app_translations.dart';
 
 class LedgerState extends ChangeNotifier {
   final LocalStorageService _storageService = LocalStorageService();
   AppThemeMode _themeMode = AppThemeMode.defaultGoldenHour;
+  AppLanguage _language = AppLanguage.english;
 
   AppThemeMode get themeMode => _themeMode;
   ThemePalette get activePalette => AppPalettes.getPalette(_themeMode);
+  AppLanguage get language => _language;
+
+  void setLanguage(AppLanguage lang) {
+    _language = lang;
+    notifyListeners();
+  }
+
+  String tr(String key) => AppTranslations.getText(key, _language);
 
   void setThemeMode(AppThemeMode mode) {
     _themeMode = mode;
@@ -343,6 +353,9 @@ class LedgerState extends ChangeNotifier {
   ShopProfile get shopProfile => _shopProfile;
   List<Customer> get customers => List.unmodifiable(_customers);
   List<LedgerTransaction> get transactions => List.unmodifiable(_transactions);
+  List<LedgerTransaction> getCustomerTransactions(int customerId) {
+    return _transactions.where((t) => t.customerId == customerId).toList();
+  }
   List<CustomerOrder> get orders => List.unmodifiable(_orders);
   List<ChatMessage> get chatMessages => List.unmodifiable(_chatMessages);
   List<PaymentReminder> get reminders => List.unmodifiable(_reminders);

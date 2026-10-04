@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../state/app_translations.dart';
 import '../state/ledger_state.dart';
 import '../theme/app_theme.dart';
 
@@ -91,6 +92,78 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       Text(_upiCtrl.text, style: TextStyle(color: p.primaryAccent, fontSize: 12, fontWeight: FontWeight.bold)),
                     ],
                   ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // Language Selection Card
+          Container(
+            padding: const EdgeInsets.all(18),
+            decoration: BoxDecoration(
+              color: cardBg,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: cardBorder),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: p.isDark ? 0.3 : 0.03),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.translate_rounded, color: p.primaryAccent, size: 20),
+                    const SizedBox(width: 8),
+                    Text(
+                      'App Language (भाषा)',
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: titleColor),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Select interface language / अपनी भाषा चुनें',
+                  style: TextStyle(fontSize: 12, color: subtitleColor),
+                ),
+                const SizedBox(height: 14),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _LanguageOptionCard(
+                        label: 'English',
+                        subtitle: 'Default',
+                        isSelected: state.language == AppLanguage.english,
+                        palette: p,
+                        onTap: () => state.setLanguage(AppLanguage.english),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: _LanguageOptionCard(
+                        label: 'हिंदी',
+                        subtitle: 'Hindi',
+                        isSelected: state.language == AppLanguage.hindi,
+                        palette: p,
+                        onTap: () => state.setLanguage(AppLanguage.hindi),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: _LanguageOptionCard(
+                        label: 'Hinglish',
+                        subtitle: 'Indian',
+                        isSelected: state.language == AppLanguage.hinglish,
+                        palette: p,
+                        onTap: () => state.setLanguage(AppLanguage.hinglish),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -473,3 +546,62 @@ class _ThemeOptionCard extends StatelessWidget {
     );
   }
 }
+
+class _LanguageOptionCard extends StatelessWidget {
+  final String label;
+  final String subtitle;
+  final bool isSelected;
+  final ThemePalette palette;
+  final VoidCallback onTap;
+
+  const _LanguageOptionCard({
+    required this.label,
+    required this.subtitle,
+    required this.isSelected,
+    required this.palette,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final activeColor = palette.primaryAccent;
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? activeColor.withValues(alpha: 0.18) : (palette.isDark ? AppColors.popupSurface : const Color(0xFFF9FAFB)),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isSelected ? activeColor : (palette.isDark ? Colors.white12 : const Color(0xFFE5E7EB)),
+            width: isSelected ? 1.8 : 1.0,
+          ),
+        ),
+        child: Column(
+          children: [
+            Icon(Icons.g_translate_rounded, color: isSelected ? activeColor : palette.textSecondary, size: 20),
+            const SizedBox(height: 6),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                color: isSelected ? activeColor : palette.textPrimary,
+              ),
+            ),
+            Text(
+              subtitle,
+              style: TextStyle(
+                fontSize: 10,
+                color: isSelected ? activeColor.withValues(alpha: 0.8) : palette.textSecondary,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+

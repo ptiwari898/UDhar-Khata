@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/models.dart';
 import '../state/ledger_state.dart';
 import '../theme/app_theme.dart';
+import '../utils/pdf_generator.dart';
 
 class CustomerStatementScreen extends StatelessWidget {
   final Customer customer;
@@ -46,8 +47,10 @@ class CustomerStatementScreen extends StatelessWidget {
             IconButton(
               icon: Icon(Icons.share, color: titleColor),
               onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Statement shared for ${customer.name}!')),
+                PdfStatementGenerator.printOrShareStatement(
+                  customer: customer,
+                  transactions: state.getCustomerTransactions(customer.id),
+                  shop: state.shopProfile,
                 );
               },
             ),
@@ -160,8 +163,10 @@ class CustomerStatementScreen extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   _buildExportBtn(Icons.picture_as_pdf, 'Export PDF', p, cardBg, cardBorder, titleColor, () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Exporting PDF statement...')),
+                    PdfStatementGenerator.printOrShareStatement(
+                      customer: customer,
+                      transactions: state.getCustomerTransactions(customer.id),
+                      shop: state.shopProfile,
                     );
                   }),
                   _buildExportBtn(Icons.table_chart, 'Export CSV', p, cardBg, cardBorder, titleColor, () {
