@@ -7,11 +7,11 @@ import 'app_translations.dart';
 
 class LedgerState extends ChangeNotifier {
   final LocalStorageService _storageService = LocalStorageService();
-  AppThemeMode _themeMode = AppThemeMode.udharGlass;
+  AppThemeMode _themeMode = AppThemeMode.lightMode;
   AppLanguage _language = AppLanguage.english;
   bool _glassEffectEnabled = true;
   double _glassBlurSigma = 22.0;
-  bool _isDarkTheme = true;
+  bool _isDarkTheme = false;
   bool _useSystemColors = false;
   String _selectedThemeColor = 'BLUE';
 

@@ -186,36 +186,36 @@ class ThemePalette {
 
 class AppColors {
   // Backwards compatibility default palette references
-  static const canvasTop = Color(0xFF4A5A6C);
-  static const canvasMid = Color(0xFFDF8532);
-  static const canvasBottom = Color(0xFF42170A);
+  static const canvasTop = Color(0xFFF8FAFC);
+  static const canvasMid = Color(0xFFF1F5F9);
+  static const canvasBottom = Color(0xFFE2E8F0);
 
-  static const buttonSolidWhite = Color(0xFFFFFFFF);
-  static const textDarkOnWhite = Color(0xFF1E140C);
-  static const accentGold = Color(0xFFFFB347);
-  static const accentRose = Color(0xFFFF7B72);
-  static const accentMint = Color(0xFF4ADE80);
+  static const buttonSolidWhite = Color(0xFF2563EB);
+  static const textDarkOnWhite = Color(0xFFFFFFFF);
+  static const accentGold = Color(0xFF2563EB);
+  static const accentRose = Color(0xFFE11D48);
+  static const accentMint = Color(0xFF16A34A);
 
-  static const glassSurface = Color(0x28FFFFFF);
-  static const glassBorder = Color(0x55FFFFFF);
-  static const textPrimary = Color(0xFFFFFFFF);
-  static const textSecondary = Color(0xD8FFF5EB);
-  static const textMuted = Color(0xAAFFF0DF);
+  static const glassSurface = Color(0xFFFFFFFF);
+  static const glassBorder = Color(0xFFE2E8F0);
+  static const textPrimary = Color(0xFF0F172A);
+  static const textSecondary = Color(0xFF334155);
+  static const textMuted = Color(0xFF64748B);
 
-  static const primaryBlue = Color(0xFFFFFFFF);
-  static const primaryBlueBg = Color(0x33FFFFFF);
-  static const primaryBlueLight = Color(0xFFFFE8D6);
-  static const greenAdvance = Color(0xFF4ADE80);
-  static const greenBg = Color(0x264ADE80);
-  static const redUdhar = Color(0xFFFF7B72);
-  static const redBg = Color(0x26FF7B72);
-  static const orangeMedium = Color(0xFFFFB347);
-  static const orangeBg = Color(0x26FFB347);
-  static const backgroundSlate = Color(0xFF2C160B);
-  static const cardSurface = Color(0x26FFFFFF);
-  static const dropdownSurface = Color(0xFF2A1710); // Solid opaque dropdown menu surface
-  static const popupSurface = Color(0xFF24140D);    // Solid opaque modal & popup surface
-  static const borderLight = Color(0x40FFFFFF);
+  static const primaryBlue = Color(0xFF2563EB);
+  static const primaryBlueBg = Color(0xFFDBEAFE);
+  static const primaryBlueLight = Color(0xFFEFF6FF);
+  static const greenAdvance = Color(0xFF16A34A);
+  static const greenBg = Color(0xFFDCFCE7);
+  static const redUdhar = Color(0xFFE11D48);
+  static const redBg = Color(0xFFFFE4E6);
+  static const orangeMedium = Color(0xFFEA580C);
+  static const orangeBg = Color(0xFFFFEDD5);
+  static const backgroundSlate = Color(0xFFFFFFFF);
+  static const cardSurface = Color(0xFFFFFFFF);
+  static const dropdownSurface = Color(0xFFFFFFFF); // Clean white dropdown surface
+  static const popupSurface = Color(0xFFFFFFFF);    // Clean white modal surface
+  static const borderLight = Color(0xFFE2E8F0);
 }
 
 class AppPalettes {
@@ -256,40 +256,40 @@ class AppPalettes {
     isDark: true,
   );
 
-  // 2. LIGHT SILK DAYLIGHT
+  // 2. LIGHT SILK DAYLIGHT (Modern Minimalist Light)
   static const lightMode = ThemePalette(
     mode: AppThemeMode.lightMode,
-    title: 'Light Silk',
-    subtitle: 'Frosted Ivory Silk & Caramel Glow',
+    title: 'Minimal Light',
+    subtitle: 'Crisp Daylight Slate & High-Contrast Cards',
     icon: Icons.light_mode_rounded,
     gradientColors: [
-      Color(0xFFF8FAFC), // Crisp Ice Mist
-      Color(0xFFFDF6EE), // Warm Pearl Ivory
-      Color(0xFFFDE8D0), // Soft Golden Peach
-      Color(0xFFFCE1C2), // Warm Caramel Mist
-      Color(0xFFF5D6B4), // Soft Sand Base
+      Color(0xFFFFFFFF), // Pure Crisp White
+      Color(0xFFF8FAFC), // Slate Mist Tint
+      Color(0xFFF1F5F9), // Soft Slate Daylight
+      Color(0xFFF8FAFC),
+      Color(0xFFFFFFFF),
     ],
-    stops: [0.0, 0.22, 0.52, 0.78, 1.0],
-    orb1Color: Color(0xFFFFCC80),
-    orb2Color: Color(0xFFBAE6FD),
-    orb3Color: Color(0xFFFFE0B2),
-    glassSurface: Color(0x8AFFFFFF), // Frosted Bright Glass
-    glassBorder: Color(0xB3FFFFFF),
-    glassHighlight: Color(0xDDFFFFFF),
-    cardShadow: Color(0x12000000),
-    textPrimary: Color(0xFF1E293B),  // Crisp Dark Slate
-    textSecondary: Color(0xFF475569),
+    stops: [0.0, 0.25, 0.50, 0.75, 1.0],
+    orb1Color: Color(0xFFE2E8F0),
+    orb2Color: Color(0xFFE2E8F0),
+    orb3Color: Color(0xFFCBD5E1),
+    glassSurface: Color(0xFFFFFFFF), // Pure Opaque White Glass
+    glassBorder: Color(0xFFE2E8F0),  // Clean Precision Slate Border
+    glassHighlight: Color(0xFFFFFFFF),
+    cardShadow: Color(0x0F0F172A),
+    textPrimary: Color(0xFF0F172A),   // Deep Slate High Contrast Text
+    textSecondary: Color(0xFF334155), // Crisp Slate Secondary Text
     textMuted: Color(0xFF64748B),
-    buttonSolidWhite: Color(0xFF1E293B), // Dark solid button in light mode
-    textDarkOnWhite: Color(0xFFFFFFFF),  // White text on dark button
-    redUdhar: Color(0xFFDC2626),
-    redBg: Color(0x20DC2626),
-    greenAdvance: Color(0xFF059669),
-    greenBg: Color(0x20059669),
-    orangeMedium: Color(0xFFD97706),
-    orangeBg: Color(0x20D97706),
-    primaryAccent: Color(0xFFD97706),
-    navBarBg: Color(0x40FFFFFF),
+    buttonSolidWhite: Color(0xFF2563EB), // Cobalt Accent Primary CTA
+    textDarkOnWhite: Color(0xFFFFFFFF),  // White text on Cobalt CTA
+    redUdhar: Color(0xFFE11D48),       // Crisp Rose Red (You Give)
+    redBg: Color(0xFFFFE4E6),
+    greenAdvance: Color(0xFF16A34A),   // Crisp Emerald Green (You Get)
+    greenBg: Color(0xFFDCFCE7),
+    orangeMedium: Color(0xFFEA580C),
+    orangeBg: Color(0xFFFFEDD5),
+    primaryAccent: Color(0xFF2563EB),  // Vibrant Cobalt Accent
+    navBarBg: Color(0xFAFFFFFF),
     isDark: false,
   );
 
@@ -378,8 +378,8 @@ class GlassCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final effectiveColor = containerColor ?? Colors.white.withValues(alpha: isGlassEnabled ? 0.08 : 0.95);
-    final effectiveBorder = borderColor ?? Colors.white.withValues(alpha: isGlassEnabled ? 0.18 : 0.30);
+    final effectiveColor = containerColor ?? Colors.white;
+    final effectiveBorder = borderColor ?? const Color(0xFFE2E8F0);
 
     Widget cardBody = Container(
       padding: padding ?? const EdgeInsets.all(18),
@@ -390,22 +390,11 @@ class GlassCard extends StatelessWidget {
           color: effectiveBorder,
           width: 1.2,
         ),
-        gradient: isGlassEnabled
-            ? LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Colors.white.withValues(alpha: 0.16),
-                  (containerColor ?? Colors.white.withValues(alpha: 0.08)),
-                  (containerColor ?? Colors.white.withValues(alpha: 0.04)),
-                ],
-              )
-            : null,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: isGlassEnabled ? 0.40 : 0.15),
-            blurRadius: 24,
-            offset: const Offset(0, 10),
+            color: const Color(0x0C0F172A),
+            blurRadius: 16,
+            offset: const Offset(0, 4),
           ),
         ],
       ),

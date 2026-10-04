@@ -130,6 +130,7 @@ UDhar-Khata/
 3. **Run on Android Emulator / Connected Phone**:
    ```bash
    flutter run -d emulator-5554
+   "%LOCALAPPDATA%\Android\Sdk\emulator\emulator.exe" -avd Medium_Phone
    ```
 
 4. **Run on Web Browser**:
