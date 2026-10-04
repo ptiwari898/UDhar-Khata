@@ -126,6 +126,14 @@ class Customer {
     creditLimit: (json['creditLimit'] as num?)?.toDouble() ?? 15000.0,
     notes: json['notes'] as String? ?? '',
   );
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is Customer && runtimeType == other.runtimeType && id == other.id;
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class LedgerTransaction {

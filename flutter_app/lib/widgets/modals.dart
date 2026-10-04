@@ -926,7 +926,7 @@ class Modals {
                     ),
                     child: DropdownButtonHideUnderline(
                       child: DropdownButton<Customer>(
-                        value: selectedCust,
+                        value: state.customers.where((c) => c.id == selectedCust?.id).firstOrNull ?? state.customers.firstOrNull,
                         isExpanded: true,
                         dropdownColor: AppColors.dropdownSurface,
                         borderRadius: BorderRadius.circular(14),

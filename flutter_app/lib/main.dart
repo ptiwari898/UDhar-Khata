@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'screens/auth_screen.dart';
 import 'screens/customers_screen.dart';
@@ -32,7 +33,7 @@ class _UdharKhataAppState extends State<UdharKhataApp> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = _ledgerState.themeMode == AppThemeMode.darkMode;
+    final isDark = _ledgerState.isDarkTheme;
 
     return MaterialApp(
       title: 'Udhar Khata',
@@ -273,47 +274,106 @@ class _LedgerMainScreenState extends State<LedgerMainScreen> {
           ],
         ),
       ),
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          color: navBgColor,
-          border: Border(top: BorderSide(color: navBorderColor)),
+      bottomNavigationBar: SafeArea(
+        child: Container(
+          margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(32),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                decoration: BoxDecoration(
+                  color: palette.glassSurface,
+                  borderRadius: BorderRadius.circular(32),
+                  border: Border.all(
+                    color: palette.glassBorder,
+                    width: 1.2,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: palette.cardShadow,
+                      blurRadius: 24,
+                      offset: const Offset(0, 10),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    _buildNavItem(0, Icons.home_rounded, Icons.home_outlined, 'Home', palette),
+                    _buildNavItem(1, Icons.people_rounded, Icons.people_outline_rounded, 'Customers', palette),
+                    _buildNavItem(2, Icons.shopping_bag_rounded, Icons.shopping_bag_outlined, 'Orders', palette),
+                    _buildNavItem(3, Icons.assessment_rounded, Icons.assessment_outlined, 'Reports', palette),
+                    _buildNavItem(4, Icons.grid_view_rounded, Icons.grid_view_outlined, 'More', palette),
+                  ],
+                ),
+              ),
+            ),
+          ),
         ),
-        child: SafeArea(
-          child: NavigationBar(
-            height: 64,
-            backgroundColor: navBgColor,
-            elevation: 0,
-            indicatorColor: isLightMode ? const Color(0xFFFED7AA) : const Color(0xFF374151),
-            selectedIndex: _selectedIndex > 4 ? 0 : _selectedIndex,
-            onDestinationSelected: (index) => setState(() => _selectedIndex = index),
-            destinations: const [
-              NavigationDestination(
-                icon: Icon(Icons.home_outlined, color: Color(0xFF6B7280)),
-                selectedIcon: Icon(Icons.home, color: Color(0xFFDF7528)),
-                label: 'Home',
+      ),
+    );
+  }
+
+  Widget _buildNavItem(int index, IconData activeIcon, IconData inactiveIcon, String label, ThemePalette palette) {
+    final isSelected = (_selectedIndex > 4 ? 0 : _selectedIndex) == index;
+    final activeColor = palette.primaryAccent;
+    final inactiveColor = palette.textMuted;
+
+    return GestureDetector(
+      onTap: () => setState(() => _selectedIndex = index),
+      behavior: HitTestBehavior.opaque,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeOutCubic,
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? activeColor.withValues(alpha: 0.18) : Colors.transparent,
+          borderRadius: BorderRadius.circular(24),
+          border: isSelected ? Border.all(color: activeColor.withValues(alpha: 0.50), width: 1.2) : null,
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: activeColor.withValues(alpha: 0.25),
+                    blurRadius: 12,
+                    spreadRadius: 1,
+                  )
+                ]
+              : null,
+        ),
+        child: Row(
+          children: [
+            AnimatedScale(
+              scale: isSelected ? 1.15 : 1.0,
+              duration: const Duration(milliseconds: 250),
+              curve: Curves.easeOutBack,
+              child: AnimatedRotation(
+                turns: isSelected ? 0.02 : 0.0,
+                duration: const Duration(milliseconds: 250),
+                child: Icon(
+                  isSelected ? activeIcon : inactiveIcon,
+                  size: 22,
+                  color: isSelected ? activeColor : inactiveColor,
+                ),
               ),
-              NavigationDestination(
-                icon: Icon(Icons.people_outline, color: Color(0xFF6B7280)),
-                selectedIcon: Icon(Icons.people, color: Color(0xFFDF7528)),
-                label: 'Customers',
-              ),
-              NavigationDestination(
-                icon: Icon(Icons.shopping_bag_outlined, color: Color(0xFF6B7280)),
-                selectedIcon: Icon(Icons.shopping_bag, color: Color(0xFFDF7528)),
-                label: 'Orders',
-              ),
-              NavigationDestination(
-                icon: Icon(Icons.assessment_outlined, color: Color(0xFF6B7280)),
-                selectedIcon: Icon(Icons.assessment, color: Color(0xFFDF7528)),
-                label: 'Reports',
-              ),
-              NavigationDestination(
-                icon: Icon(Icons.more_horiz, color: Color(0xFF6B7280)),
-                selectedIcon: Icon(Icons.more_horiz, color: Color(0xFFDF7528)),
-                label: 'More',
+            ),
+            if (isSelected) ...[
+              const SizedBox(width: 6),
+              AnimatedOpacity(
+                opacity: isSelected ? 1.0 : 0.0,
+                duration: const Duration(milliseconds: 200),
+                child: Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: activeColor,
+                  ),
+                ),
               ),
             ],
-          ),
+          ],
         ),
       ),
     );

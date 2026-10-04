@@ -170,7 +170,173 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           const SizedBox(height: 16),
 
-          // Theme Mode Switcher
+
+
+          // Wallvault Appearance Card (Matching Screenshot)
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: cardBg,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: cardBorder),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: p.isDark ? 0.35 : 0.04),
+                  blurRadius: 10,
+                  offset: const Offset(0, 3),
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Appearance',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                    color: titleColor,
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                // 1. Dark Theme Switch Row
+                Row(
+                  children: [
+                    Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: p.isDark ? const Color(0x33FFFFFF) : const Color(0xFFF1F5F9),
+                      ),
+                      child: Icon(
+                        Icons.nightlight_round,
+                        size: 20,
+                        color: titleColor,
+                      ),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Dark Theme',
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold,
+                              color: titleColor,
+                            ),
+                          ),
+                          Text(
+                            'Use dark theme for the app',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: subtitleColor,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Switch.adaptive(
+                      value: state.isDarkTheme,
+                      activeColor: p.primaryAccent,
+                      onChanged: (val) => state.setDarkTheme(val),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Divider(color: cardBorder),
+                const SizedBox(height: 12),
+
+                // 2. Use System Colors Switch Row
+                Row(
+                  children: [
+                    Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: p.isDark ? const Color(0x33FFFFFF) : const Color(0xFFF1F5F9),
+                      ),
+                      child: Icon(
+                        Icons.auto_awesome_rounded,
+                        size: 20,
+                        color: titleColor,
+                      ),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Use System Colors',
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold,
+                              color: titleColor,
+                            ),
+                          ),
+                          Text(
+                            'Material You dynamic colors (Android 12+)',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: subtitleColor,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Switch.adaptive(
+                      value: state.useSystemColors,
+                      activeColor: p.primaryAccent,
+                      onChanged: (val) => state.setUseSystemColors(val),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Divider(color: cardBorder),
+                const SizedBox(height: 14),
+
+                // 3. Theme Color Swatch Grid Header
+                Row(
+                  children: [
+                    Icon(Icons.palette_rounded, size: 20, color: titleColor),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Theme Color',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                        color: titleColor,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+
+                // 8 Dual-Split Swatch Cards (2 rows x 4 columns)
+                _buildThemeColorGrid(state, p),
+                const SizedBox(height: 12),
+
+                // Selected Color Text Indicator (Matching Screenshot)
+                Text(
+                  'Selected: ${state.selectedThemeColor}',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    color: subtitleColor,
+                    letterSpacing: 0.8,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // Liquid Glass & Blur Settings (Wallvault Style Settings)
           Container(
             padding: const EdgeInsets.all(18),
             decoration: BoxDecoration(
@@ -188,58 +354,63 @@ class _ProfileScreenState extends State<ProfileScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'App Theme & Appearance',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: titleColor),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Choose your preferred visual theme',
-                  style: TextStyle(fontSize: 12, color: subtitleColor),
-                ),
-                const SizedBox(height: 14),
                 Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    // 1. Golden Hour (Default)
-                    Expanded(
-                      child: _ThemeOptionCard(
-                        title: 'Golden Hour',
-                        subtitle: 'Sunset Amber',
-                        icon: Icons.wb_twilight_rounded,
-                        isSelected: state.themeMode == AppThemeMode.defaultGoldenHour,
-                        activeColor: const Color(0xFFDF8532),
-                        palette: p,
-                        onTap: () => state.setThemeMode(AppThemeMode.defaultGoldenHour),
-                      ),
+                    Row(
+                      children: [
+                        Icon(Icons.blur_on_rounded, color: p.primaryAccent, size: 22),
+                        const SizedBox(width: 8),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Liquid Glass Effect',
+                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: titleColor),
+                            ),
+                            Text(
+                              'App-wide frosted backdrop blur',
+                              style: TextStyle(fontSize: 12, color: subtitleColor),
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 8),
-                    // 2. Dark Mode
-                    Expanded(
-                      child: _ThemeOptionCard(
-                        title: 'Dark Mode',
-                        subtitle: 'Midnight',
-                        icon: Icons.dark_mode_rounded,
-                        isSelected: state.themeMode == AppThemeMode.darkMode,
-                        activeColor: const Color(0xFF38BDFC),
-                        palette: p,
-                        onTap: () => state.setThemeMode(AppThemeMode.darkMode),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    // 3. Light Mode
-                    Expanded(
-                      child: _ThemeOptionCard(
-                        title: 'Light Mode',
-                        subtitle: 'Daylight',
-                        icon: Icons.light_mode_rounded,
-                        isSelected: state.themeMode == AppThemeMode.lightMode,
-                        activeColor: const Color(0xFFD97706),
-                        palette: p,
-                        onTap: () => state.setThemeMode(AppThemeMode.lightMode),
-                      ),
+                    Switch.adaptive(
+                      value: state.glassEffectEnabled,
+                      activeColor: p.primaryAccent,
+                      onChanged: (val) => state.setGlassEffectEnabled(val),
                     ),
                   ],
                 ),
+                if (state.glassEffectEnabled) ...[
+                  const SizedBox(height: 14),
+                  Divider(color: cardBorder),
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Glass Blur Intensity',
+                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: titleColor),
+                      ),
+                      Text(
+                        '${state.glassBlurSigma.toInt()}px',
+                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: p.primaryAccent),
+                      ),
+                    ],
+                  ),
+                  Slider(
+                    value: state.glassBlurSigma,
+                    min: 10.0,
+                    max: 32.0,
+                    divisions: 22,
+                    activeColor: p.primaryAccent,
+                    inactiveColor: p.primaryAccent.withValues(alpha: 0.25),
+                    label: '${state.glassBlurSigma.toInt()}px',
+                    onChanged: (val) => state.setGlassBlurSigma(val),
+                  ),
+                ],
               ],
             ),
           ),
@@ -482,6 +653,73 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildThemeColorGrid(LedgerState state, ThemePalette palette) {
+    final presetKeys = ['PURPLE', 'BLUE', 'TEAL', 'GREEN', 'ORANGE', 'RED', 'PINK', 'VIOLET'];
+
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 4,
+        crossAxisSpacing: 12,
+        mainAxisSpacing: 12,
+        childAspectRatio: 1.25,
+      ),
+      itemCount: presetKeys.length,
+      itemBuilder: (context, index) {
+        final key = presetKeys[index];
+        final preset = WallvaultPresets.getPreset(key);
+        final isSelected = state.selectedThemeColor.toUpperCase() == key;
+
+        return GestureDetector(
+          onTap: () => state.setSelectedThemeColor(key),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: isSelected ? Colors.white : Colors.transparent,
+                width: isSelected ? 3.0 : 0.0,
+              ),
+              boxShadow: isSelected
+                  ? [
+                      BoxShadow(
+                        color: preset.primary.withValues(alpha: 0.55),
+                        blurRadius: 12,
+                        spreadRadius: 2,
+                      ),
+                    ]
+                  : [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.15),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(isSelected ? 13 : 16),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Container(
+                      color: preset.primary,
+                    ),
+                  ),
+                  Expanded(
+                    child: Container(
+                      color: preset.secondary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }

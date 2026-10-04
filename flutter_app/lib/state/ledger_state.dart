@@ -7,12 +7,26 @@ import 'app_translations.dart';
 
 class LedgerState extends ChangeNotifier {
   final LocalStorageService _storageService = LocalStorageService();
-  AppThemeMode _themeMode = AppThemeMode.defaultGoldenHour;
+  AppThemeMode _themeMode = AppThemeMode.udharGlass;
   AppLanguage _language = AppLanguage.english;
+  bool _glassEffectEnabled = true;
+  double _glassBlurSigma = 22.0;
+  bool _isDarkTheme = true;
+  bool _useSystemColors = false;
+  String _selectedThemeColor = 'BLUE';
 
   AppThemeMode get themeMode => _themeMode;
-  ThemePalette get activePalette => AppPalettes.getPalette(_themeMode);
+  ThemePalette get activePalette => AppPalettes.getPalette(
+        _themeMode,
+        selectedPreset: _selectedThemeColor,
+        isDarkOverride: _isDarkTheme,
+      );
   AppLanguage get language => _language;
+  bool get glassEffectEnabled => _glassEffectEnabled;
+  double get glassBlurSigma => _glassBlurSigma;
+  bool get isDarkTheme => _isDarkTheme;
+  bool get useSystemColors => _useSystemColors;
+  String get selectedThemeColor => _selectedThemeColor;
 
   void setLanguage(AppLanguage lang) {
     _language = lang;
@@ -23,21 +37,50 @@ class LedgerState extends ChangeNotifier {
 
   void setThemeMode(AppThemeMode mode) {
     _themeMode = mode;
+    _persist();
+    notifyListeners();
+  }
+
+  void setDarkTheme(bool isDark) {
+    _isDarkTheme = isDark;
+    _persist();
+    notifyListeners();
+  }
+
+  void setUseSystemColors(bool useSystem) {
+    _useSystemColors = useSystem;
+    _persist();
+    notifyListeners();
+  }
+
+  void setSelectedThemeColor(String colorName) {
+    _selectedThemeColor = colorName.toUpperCase();
+    _persist();
+    notifyListeners();
+  }
+
+  void setGlassEffectEnabled(bool enabled) {
+    _glassEffectEnabled = enabled;
+    _persist();
+    notifyListeners();
+  }
+
+  void setGlassBlurSigma(double sigma) {
+    _glassBlurSigma = sigma;
+    _persist();
     notifyListeners();
   }
 
   void cycleThemeMode() {
     switch (_themeMode) {
-      case AppThemeMode.defaultGoldenHour:
-        _themeMode = AppThemeMode.darkMode;
-        break;
-      case AppThemeMode.darkMode:
+      case AppThemeMode.udharGlass:
         _themeMode = AppThemeMode.lightMode;
         break;
       case AppThemeMode.lightMode:
-        _themeMode = AppThemeMode.defaultGoldenHour;
+        _themeMode = AppThemeMode.udharGlass;
         break;
     }
+    _persist();
     notifyListeners();
   }
 

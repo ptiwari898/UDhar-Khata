@@ -2,9 +2,79 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 
 enum AppThemeMode {
-  defaultGoldenHour, // Warm Sunset Amber, Slate Mist & Espresso Caramel (Reference Design)
-  darkMode,          // Midnight Obsidian & Neon Amber Glow
-  lightMode,         // Frosted Ivory Silk & Warm Amber Caramel
+  udharGlass, // Udhar Khata Liquid Glass Theme (formerly Wallvault Glass)
+  lightMode,  // Light Silk Daylight Theme
+}
+
+class WallvaultColorPreset {
+  final String id;
+  final String name;
+  final Color primary;
+  final Color secondary;
+
+  const WallvaultColorPreset({
+    required this.id,
+    required this.name,
+    required this.primary,
+    required this.secondary,
+  });
+}
+
+class WallvaultPresets {
+  static const Map<String, WallvaultColorPreset> presets = {
+    'PURPLE': WallvaultColorPreset(
+      id: 'PURPLE',
+      name: 'PURPLE',
+      primary: Color(0xFF6366F1), // Royal Indigo
+      secondary: Color(0xFFA855F7), // Bright Purple
+    ),
+    'BLUE': WallvaultColorPreset(
+      id: 'BLUE',
+      name: 'BLUE',
+      primary: Color(0xFF2563EB), // Vibrant Blue
+      secondary: Color(0xFF06B6D4), // Cyan Electric
+    ),
+    'TEAL': WallvaultColorPreset(
+      id: 'TEAL',
+      name: 'TEAL',
+      primary: Color(0xFF0D9488), // Deep Teal
+      secondary: Color(0xFF10B981), // Emerald Green
+    ),
+    'GREEN': WallvaultColorPreset(
+      id: 'GREEN',
+      name: 'GREEN',
+      primary: Color(0xFF16A34A), // Forest Green
+      secondary: Color(0xFF84CC16), // Lime Green
+    ),
+    'ORANGE': WallvaultColorPreset(
+      id: 'ORANGE',
+      name: 'ORANGE',
+      primary: Color(0xFFEA580C), // Deep Orange
+      secondary: Color(0xFFF97316), // Amber Orange
+    ),
+    'RED': WallvaultColorPreset(
+      id: 'RED',
+      name: 'RED',
+      primary: Color(0xFFDC2626), // Crimson Red
+      secondary: Color(0xFFF43F5E), // Coral Rose
+    ),
+    'PINK': WallvaultColorPreset(
+      id: 'PINK',
+      name: 'PINK',
+      primary: Color(0xFFDB2777), // Hot Pink
+      secondary: Color(0xFFEC4899), // Magenta Rose
+    ),
+    'VIOLET': WallvaultColorPreset(
+      id: 'VIOLET',
+      name: 'VIOLET',
+      primary: Color(0xFF7C3AED), // Deep Violet
+      secondary: Color(0xFFC084FC), // Soft Lavender
+    ),
+  };
+
+  static WallvaultColorPreset getPreset(String id) {
+    return presets[id.toUpperCase()] ?? presets['BLUE']!;
+  }
 }
 
 class ThemePalette {
@@ -65,6 +135,53 @@ class ThemePalette {
     required this.navBarBg,
     required this.isDark,
   });
+
+  ThemePalette withPreset(WallvaultColorPreset preset, {bool? isDarkOverride}) {
+    final dark = isDarkOverride ?? isDark;
+    return ThemePalette(
+      mode: mode,
+      title: title,
+      subtitle: subtitle,
+      icon: icon,
+      gradientColors: dark
+          ? [
+              const Color(0xFF0A0E17),
+              const Color(0xFF111827),
+              preset.primary.withValues(alpha: 0.15),
+              const Color(0xFF0F172A),
+              const Color(0xFF06090E),
+            ]
+          : [
+              const Color(0xFFF8FAFC),
+              const Color(0xFFF1F5F9),
+              preset.primary.withValues(alpha: 0.08),
+              const Color(0xFFE2E8F0),
+              const Color(0xFFCBD5E1),
+            ],
+      stops: stops,
+      orb1Color: preset.primary,
+      orb2Color: preset.secondary,
+      orb3Color: orb3Color,
+      glassSurface: dark ? const Color(0x1F222F3E) : const Color(0x99FFFFFF),
+      glassBorder: dark ? preset.primary.withValues(alpha: 0.35) : preset.primary.withValues(alpha: 0.25),
+      glassHighlight: glassHighlight,
+      cardShadow: cardShadow,
+      textPrimary: dark ? const Color(0xFFF8FAFC) : const Color(0xFF0F172A),
+      textSecondary: dark ? const Color(0xFF94A3B8) : const Color(0xFF475569),
+      textMuted: textMuted,
+      buttonSolidWhite: preset.primary,
+      textDarkOnWhite: const Color(0xFFFFFFFF),
+      redUdhar: redUdhar,
+      redBg: redBg,
+      greenAdvance: greenAdvance,
+      greenBg: greenBg,
+      orangeMedium: orangeMedium,
+      orangeBg: orangeBg,
+      primaryAccent: preset.primary,
+      navBarBg: navBarBg,
+      isDark: dark,
+    );
+  }
 }
 
 class AppColors {
@@ -102,81 +219,44 @@ class AppColors {
 }
 
 class AppPalettes {
-  // 1. DEFAULT GOLDEN HOUR SILK (Reference Theme)
-  static const defaultGoldenHour = ThemePalette(
-    mode: AppThemeMode.defaultGoldenHour,
-    title: 'Golden Hour (Default)',
-    subtitle: 'Warm Sunset Amber & Espresso Silk',
-    icon: Icons.wb_twilight_rounded,
+  // 1. UDHAR KHATA LIQUID GLASS (Primary Glass Theme)
+  static const udharGlass = ThemePalette(
+    mode: AppThemeMode.udharGlass,
+    title: 'Udhar Khata Glass',
+    subtitle: 'Cyber Obsidian, Electric Cyan & Violet Glow',
+    icon: Icons.auto_awesome_rounded,
     gradientColors: [
-      Color(0xFF4A5A6C), // Slate Mist
-      Color(0xFF88645C),
-      Color(0xFFDF8532), // Sunset Amber Gold
-      Color(0xFF8F3E15),
-      Color(0xFF42170A), // Espresso Caramel
-    ],
-    stops: [0.0, 0.22, 0.52, 0.78, 1.0],
-    orb1Color: Color(0xFFFFA726),
-    orb2Color: Color(0xFF64748B),
-    orb3Color: Color(0xFFD97706),
-    glassSurface: Color(0x24FFFFFF),
-    glassBorder: Color(0x55FFFFFF),
-    glassHighlight: Color(0x38FFFFFF),
-    cardShadow: Color(0x38000000),
-    textPrimary: Color(0xFFFFFFFF),
-    textSecondary: Color(0xD8FFF5EB),
-    textMuted: Color(0xAAFFF0DF),
-    buttonSolidWhite: Color(0xFFFFFFFF),
-    textDarkOnWhite: Color(0xFF1E140C),
-    redUdhar: Color(0xFFFF7B72),
-    redBg: Color(0x26FF7B72),
-    greenAdvance: Color(0xFF4ADE80),
-    greenBg: Color(0x264ADE80),
-    orangeMedium: Color(0xFFFFB347),
-    orangeBg: Color(0x26FFB347),
-    primaryAccent: Color(0xFFFFA726),
-    navBarBg: Color(0x2B000000),
-    isDark: true,
-  );
-
-  // 2. DARK OBSIDIAN MIDNIGHT
-  static const darkMode = ThemePalette(
-    mode: AppThemeMode.darkMode,
-    title: 'Dark Obsidian',
-    subtitle: 'Midnight Velvet & Neon Amber Glass',
-    icon: Icons.dark_mode_rounded,
-    gradientColors: [
-      Color(0xFF11141A), // Deep Obsidian Charcoal
-      Color(0xFF181822),
-      Color(0xFF1F1511), // Deep Smoked Espresso
-      Color(0xFF140D0B),
-      Color(0xFF090605), // Pure Onyx Base
+      Color(0xFF0A0E17), // Deep Obsidian Midnight Space
+      Color(0xFF111827),
+      Color(0xFF1E1430), // Electric Violet Ambient Glow
+      Color(0xFF0F172A), // Slate Obsidian
+      Color(0xFF06090E), // Pure Onyx Velvet Base
     ],
     stops: [0.0, 0.25, 0.55, 0.80, 1.0],
-    orb1Color: Color(0xFFFF8F00), // Glowing Amber Neon
-    orb2Color: Color(0xFF38BDFC), // Subtle Sapphire Accent
-    orb3Color: Color(0xFFE11D48), // Deep Rose Ambient
-    glassSurface: Color(0x18FFFFFF),
-    glassBorder: Color(0x33FFFFFF),
-    glassHighlight: Color(0x24FFFFFF),
-    cardShadow: Color(0x60000000),
+    orb1Color: Color(0xFF00F2FE), // Cyan Electric Glow
+    orb2Color: Color(0xFF7F00FF), // Neon Violet Ambient
+    orb3Color: Color(0xFFFF0844), // Crimson Coral Highlight
+    glassSurface: Color(0x1F222F3E), // Ultra-clear Liquid Glass Surface
+    glassBorder: Color(0x4D00F2FE),  // Cyan Tinted Glass Border
+    glassHighlight: Color(0x38FFFFFF),
+    cardShadow: Color(0x80000000),
     textPrimary: Color(0xFFF8FAFC),
-    textSecondary: Color(0xFFCBD5E1),
-    textMuted: Color(0xFF94A3B8),
-    buttonSolidWhite: Color(0xFFFFFFFF),
-    textDarkOnWhite: Color(0xFF0F172A),
-    redUdhar: Color(0xFFF87171),
-    redBg: Color(0x26F87171),
-    greenAdvance: Color(0xFF34D399),
-    greenBg: Color(0x2634D399),
-    orangeMedium: Color(0xFFFBBF24),
-    orangeBg: Color(0x26FBBF24),
-    primaryAccent: Color(0xFFF59E0B),
-    navBarBg: Color(0x4D000000),
+    textSecondary: Color(0xFF94A3B8),
+    textMuted: Color(0xFF64748B),
+    buttonSolidWhite: Color(0xFF2563EB), // Rich Sapphire Indigo Decent Button CTA
+    textDarkOnWhite: Color(0xFFFFFFFF),  // Crisp White Text
+    redUdhar: Color(0xFFFF4949),
+    redBg: Color(0x2BFF4949),
+    greenAdvance: Color(0xFF00E676),
+    greenBg: Color(0x2B00E676),
+    orangeMedium: Color(0xFFFFAB00),
+    orangeBg: Color(0x2BFFAB00),
+    primaryAccent: Color(0xFF3B82F6),
+    navBarBg: Color(0x3B0F172A),
     isDark: true,
   );
 
-  // 3. LIGHT SILK DAYLIGHT
+  // 2. LIGHT SILK DAYLIGHT
   static const lightMode = ThemePalette(
     mode: AppThemeMode.lightMode,
     title: 'Light Silk',
@@ -213,133 +293,59 @@ class AppPalettes {
     isDark: false,
   );
 
-  static ThemePalette getPalette(AppThemeMode mode) {
-    switch (mode) {
-      case AppThemeMode.darkMode:
-        return darkMode;
-      case AppThemeMode.lightMode:
-        return lightMode;
-      case AppThemeMode.defaultGoldenHour:
-        return defaultGoldenHour;
-    }
+  static ThemePalette getPalette(
+    AppThemeMode mode, {
+    String selectedPreset = 'BLUE',
+    bool? isDarkOverride,
+  }) {
+    final base = (mode == AppThemeMode.lightMode) ? lightMode : udharGlass;
+    final presetObj = WallvaultPresets.getPreset(selectedPreset);
+    return base.withPreset(presetObj, isDarkOverride: isDarkOverride);
   }
 }
 
-class AtmosphericBackdrop extends StatefulWidget {
+class AtmosphericBackdrop extends StatelessWidget {
   final Widget child;
   final ThemePalette? palette;
   const AtmosphericBackdrop({super.key, required this.child, this.palette});
 
   @override
-  State<AtmosphericBackdrop> createState() => _AtmosphericBackdropState();
-}
-
-class _AtmosphericBackdropState extends State<AtmosphericBackdrop>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _pulse;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 8),
-    )..repeat(reverse: true);
-    _pulse = CurvedAnimation(parent: _controller, curve: Curves.easeInOut);
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final p = widget.palette ?? AppPalettes.defaultGoldenHour;
+    final p = palette ?? AppPalettes.udharGlass;
 
-    return AnimatedBuilder(
-      animation: _pulse,
-      builder: (context, child) {
-        final scale = 1.0 + (_pulse.value * 0.12);
-        return AnimatedContainer(
-          duration: const Duration(milliseconds: 500),
-          curve: Curves.easeInOut,
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: p.gradientColors,
-              stops: p.stops,
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 400),
+      curve: Curves.easeInOut,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: p.gradientColors,
+          stops: p.stops,
+        ),
+      ),
+      child: Stack(
+        children: [
+          // Ambient sheen overlay
+          Positioned(
+            top: -100,
+            left: 0,
+            right: 0,
+            height: 350,
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: RadialGradient(
+                  center: Alignment.topCenter,
+                  radius: 1.2,
+                  colors: [
+                    p.primaryAccent.withValues(alpha: p.isDark ? 0.12 : 0.08),
+                    Colors.transparent,
+                  ],
+                ),
+              ),
             ),
           ),
-          child: Stack(
-            children: [
-              // Orb 1 (Top Left Primary Glow)
-              Positioned(
-                top: 140,
-                left: -40,
-                child: _GlowOrb(
-                  color: p.orb1Color,
-                  size: 340 * scale,
-                  alpha: p.isDark ? 0.25 : 0.45,
-                ),
-              ),
-              // Orb 2 (Top Right Ambient Accent)
-              Positioned(
-                top: -60,
-                right: -60,
-                child: _GlowOrb(
-                  color: p.orb2Color,
-                  size: 280,
-                  alpha: p.isDark ? 0.22 : 0.35,
-                ),
-              ),
-              // Orb 3 (Bottom Right Warm Glow)
-              Positioned(
-                bottom: -80,
-                right: 30,
-                child: _GlowOrb(
-                  color: p.orb3Color,
-                  size: 300 * scale,
-                  alpha: p.isDark ? 0.20 : 0.35,
-                ),
-              ),
-              widget.child,
-            ],
-          ),
-        );
-      },
-    );
-  }
-}
-
-class _GlowOrb extends StatelessWidget {
-  final Color color;
-  final double size;
-  final double alpha;
-
-  const _GlowOrb({
-    required this.color,
-    required this.size,
-    required this.alpha,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: color.withValues(alpha: alpha),
-        boxShadow: [
-          BoxShadow(
-            color: color.withValues(alpha: alpha * 1.5),
-            blurRadius: 110,
-            spreadRadius: 60,
-          ),
+          child,
         ],
       ),
     );
@@ -354,6 +360,8 @@ class GlassCard extends StatelessWidget {
   final Color? containerColor;
   final Color? borderColor;
   final VoidCallback? onTap;
+  final bool isGlassEnabled;
+  final double blurSigma;
 
   const GlassCard({
     super.key,
@@ -364,43 +372,54 @@ class GlassCard extends StatelessWidget {
     this.containerColor,
     this.borderColor,
     this.onTap,
+    this.isGlassEnabled = true,
+    this.blurSigma = 24.0,
   });
 
   @override
   Widget build(BuildContext context) {
+    final effectiveColor = containerColor ?? Colors.white.withValues(alpha: isGlassEnabled ? 0.08 : 0.95);
+    final effectiveBorder = borderColor ?? Colors.white.withValues(alpha: isGlassEnabled ? 0.18 : 0.30);
+
+    Widget cardBody = Container(
+      padding: padding ?? const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: effectiveColor,
+        borderRadius: BorderRadius.circular(radius),
+        border: Border.all(
+          color: effectiveBorder,
+          width: 1.2,
+        ),
+        gradient: isGlassEnabled
+            ? LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Colors.white.withValues(alpha: 0.16),
+                  (containerColor ?? Colors.white.withValues(alpha: 0.08)),
+                  (containerColor ?? Colors.white.withValues(alpha: 0.04)),
+                ],
+              )
+            : null,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: isGlassEnabled ? 0.40 : 0.15),
+            blurRadius: 24,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: child,
+    );
+
     Widget cardContent = ClipRRect(
       borderRadius: BorderRadius.circular(radius),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-        child: Container(
-          padding: padding ?? const EdgeInsets.all(18),
-          decoration: BoxDecoration(
-            color: containerColor ?? Colors.white.withValues(alpha: 0.14),
-            borderRadius: BorderRadius.circular(radius),
-            border: Border.all(
-              color: borderColor ?? Colors.white.withValues(alpha: 0.35),
-              width: 1.2,
-            ),
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                Colors.white.withValues(alpha: 0.22),
-                (containerColor ?? Colors.white.withValues(alpha: 0.12)),
-                (containerColor ?? Colors.white.withValues(alpha: 0.06)),
-              ],
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.22),
-                blurRadius: 20,
-                offset: const Offset(0, 8),
-              ),
-            ],
-          ),
-          child: child,
-        ),
-      ),
+      child: isGlassEnabled
+          ? BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: blurSigma, sigmaY: blurSigma),
+              child: cardBody,
+            )
+          : cardBody,
     );
 
     if (onTap != null) {
@@ -415,6 +434,81 @@ class GlassCard extends StatelessWidget {
     }
 
     return cardContent;
+  }
+}
+
+class AnimatedGlassIcon extends StatefulWidget {
+  final IconData icon;
+  final double size;
+  final Color color;
+  final VoidCallback? onTap;
+
+  const AnimatedGlassIcon({
+    super.key,
+    required this.icon,
+    this.size = 24,
+    required this.color,
+    this.onTap,
+  });
+
+  @override
+  State<AnimatedGlassIcon> createState() => _AnimatedGlassIconState();
+}
+
+class _AnimatedGlassIconState extends State<AnimatedGlassIcon>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _scaleAnimation;
+  late Animation<double> _rotationAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 250),
+    );
+    _scaleAnimation = Tween<double>(begin: 1.0, end: 1.25).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeOutBack),
+    );
+    _rotationAnimation = Tween<double>(begin: 0.0, end: 0.08).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _triggerAnimation() {
+    _controller.forward().then((_) => _controller.reverse());
+    widget.onTap?.call();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: _triggerAnimation,
+      behavior: HitTestBehavior.opaque,
+      child: AnimatedBuilder(
+        animation: _controller,
+        builder: (context, child) {
+          return Transform.scale(
+            scale: _scaleAnimation.value,
+            child: Transform.rotate(
+              angle: _rotationAnimation.value,
+              child: Icon(
+                widget.icon,
+                size: widget.size,
+                color: widget.color,
+              ),
+            ),
+          );
+        },
+      ),
+    );
   }
 }
 
@@ -482,6 +576,81 @@ class _BouncyWidgetState extends State<BouncyWidget>
       child: ScaleTransition(
         scale: _scaleAnimation,
         child: widget.child,
+      ),
+    );
+  }
+}
+
+class GlassButton extends StatelessWidget {
+  final String label;
+  final IconData? icon;
+  final VoidCallback onTap;
+  final Color? color;
+  final Color? textColor;
+  final double radius;
+  final EdgeInsetsGeometry? padding;
+
+  const GlassButton({
+    super.key,
+    required this.label,
+    this.icon,
+    required this.onTap,
+    this.color,
+    this.textColor,
+    this.radius = 16,
+    this.padding,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final btnColor = color ?? const Color(0xFF2563EB);
+    final txtColor = textColor ?? Colors.white;
+
+    return BouncyWidget(
+      onTap: onTap,
+      child: Container(
+        padding: padding ?? const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              btnColor,
+              btnColor.withValues(alpha: 0.82),
+            ],
+          ),
+          borderRadius: BorderRadius.circular(radius),
+          border: Border.all(
+            color: Colors.white.withValues(alpha: 0.25),
+            width: 1,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: btnColor.withValues(alpha: 0.35),
+              blurRadius: 14,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (icon != null) ...[
+              Icon(icon, size: 18, color: txtColor),
+              const SizedBox(width: 8),
+            ],
+            Text(
+              label,
+              style: TextStyle(
+                color: txtColor,
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 0.3,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

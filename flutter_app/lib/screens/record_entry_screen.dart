@@ -145,7 +145,7 @@ class _RecordEntryScreenState extends State<RecordEntryScreen> {
                     Expanded(
                       child: DropdownButtonHideUnderline(
                         child: DropdownButton<Customer>(
-                          value: _selectedCustomer,
+                          value: state.customers.where((c) => c.id == _selectedCustomer?.id).firstOrNull ?? state.customers.firstOrNull,
                           isDense: true,
                           dropdownColor: AppColors.dropdownSurface,
                           borderRadius: BorderRadius.circular(14),

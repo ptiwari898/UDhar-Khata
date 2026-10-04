@@ -67,7 +67,7 @@ This repository contains two production-ready implementations:
 
 ```
 UDhar-Khata/
-├── app/                         # Native Android Application
+├── app/                         # Native Android Application (Jetpack Compose & Kotlin)
 │   ├── src/main/java/com/example/
 │   │   ├── data/                # Room DB Entities, DAOs & Repositories
 │   │   ├── services/            # Gemini Voice Parser & SMS Integrations
@@ -82,10 +82,24 @@ UDhar-Khata/
 │   │   ├── state/               # Reactive ChangeNotifier State Store
 │   │   ├── theme/               # Golden Hour Silk Theme & Glass Card Widgets
 │   │   ├── widgets/             # Reusable Modals & Dialogs
-│   │   ├── screens/             # Dashboard, Customers, Detail, Chat, Statement, Orders, Reports
+│   │   ├── screens/             # 14 Full UI Screens (Dashboard, Customers, Chat, Reports, etc.)
 │   │   └── main.dart            # Flutter Entry Point & Navigation
 │   └── pubspec.yaml             # Flutter dependencies & assets
 │
+├── docs/                        # Project Documentation & Design Visuals
+│   └── screenshots/             # UI Screenshots & Mockups
+│
+├── releases/                    # Compiled Production & Testing APK Binaries
+│   ├── UdharKhata.apk
+│   └── UdharKhata-v1.0.apk
+│
+├── scripts/                     # Automation, Test Execution & Emulator Scripts
+│   ├── boot_emulator.ps1
+│   ├── launch_emulator.bat
+│   ├── capture_ui_suite.ps1
+│   └── auto_reload.py
+│
+├── .github/workflows/           # CI/CD GitHub Actions Workflows
 ├── LICENSE                      # MIT License
 └── README.md                    # Project Documentation
 ```
