@@ -138,8 +138,8 @@ class _VoiceEntryScreenState extends State<VoiceEntryScreen>
   @override
   Widget build(BuildContext context) {
     final p = widget.state.activePalette;
-    final cardBg = p.isDark ? AppColors.popupSurface : Colors.white;
-    final cardBorder = p.isDark ? Colors.white12 : const Color(0xFFE5E7EB);
+    final cardBg = Theme.of(context).colorScheme.surfaceContainerLow;
+    final cardBorder = Theme.of(context).colorScheme.outlineVariant;
     final titleColor = p.textPrimary;
     final subtitleColor = p.textSecondary;
 
@@ -256,14 +256,9 @@ class _VoiceEntryScreenState extends State<VoiceEntryScreen>
   Widget _buildSampleVoiceCard(String text, ThemePalette p, Color cardBg, Color cardBorder, Color subtitleColor) {
     return GestureDetector(
       onTap: () => _simulateVoiceInput(text.replaceAll('"', '')),
-      child: Container(
-        width: double.infinity,
+      child: GlassCard(
+        radius: 16,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: BoxDecoration(
-          color: cardBg,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: cardBorder),
-        ),
         child: Row(
           children: [
             Icon(Icons.record_voice_over, size: 18, color: p.primaryAccent),
@@ -326,20 +321,9 @@ class _VoiceEntryScreenState extends State<VoiceEntryScreen>
           padding: const EdgeInsets.all(20),
           child: Column(
             children: [
-              Container(
+              GlassCard(
+                radius: 20,
                 padding: const EdgeInsets.all(18),
-                decoration: BoxDecoration(
-                  color: cardBg,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: cardBorder),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: p.isDark ? 0.2 : 0.04),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
                 child: Column(
                   children: [
                     _buildParsedRow(Icons.person, p.greenAdvance, 'Customer', r.customerName, p, titleColor),

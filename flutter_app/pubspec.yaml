@@ -36,6 +36,11 @@ dependencies:
   cupertino_icons: ^1.0.8
   pdf: ^3.13.1
   printing: ^5.15.1
+  # Vendored with an OpenGLES backdrop orientation fix; see
+  # third_party/liquid_glass_renderer/PATCHES.md.
+  liquid_glass_renderer:
+    path: third_party/liquid_glass_renderer
+  dynamic_color: ^1.8.1
 
 dev_dependencies:
   flutter_test:

@@ -12,8 +12,7 @@ class OrdersScreen extends StatelessWidget {
     final orders = state.orders;
     final p = state.activePalette;
 
-    final cardBg = p.isDark ? AppColors.popupSurface : Colors.white;
-    final cardBorder = p.isDark ? Colors.white12 : const Color(0xFFE5E7EB);
+    final cardBorder = Theme.of(context).colorScheme.outlineVariant;
     final titleColor = p.textPrimary;
     final subtitleColor = p.textSecondary;
 
@@ -68,20 +67,9 @@ class OrdersScreen extends StatelessWidget {
 
             return Padding(
               padding: const EdgeInsets.only(bottom: 12),
-              child: Container(
+              child: GlassCard(
+                radius: 20,
                 padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: cardBg,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: cardBorder),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: p.isDark ? 0.3 : 0.03),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [

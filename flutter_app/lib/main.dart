@@ -1,5 +1,5 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:liquid_glass_renderer/liquid_glass_renderer.dart';
 import 'screens/auth_screen.dart';
 import 'screens/customers_screen.dart';
 import 'screens/dashboard_screen.dart';
@@ -33,64 +33,27 @@ class _UdharKhataAppState extends State<UdharKhataApp> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = _ledgerState.isDarkTheme;
+    final state = _ledgerState;
+    final theme = AppTheme.build(
+      state.colorScheme,
+      state.activePalette,
+      glassEnabled: state.glassEffectEnabled,
+      glassBlurSigma: state.glassBlurSigma,
+    );
 
     return MaterialApp(
       title: 'Udhar Khata',
       debugShowCheckedModeBanner: false,
-      themeMode: isDark ? ThemeMode.dark : ThemeMode.light,
-      theme: ThemeData(
-        brightness: Brightness.light,
-        scaffoldBackgroundColor: const Color(0xFFFAF7F2),
-        primaryColor: const Color(0xFFDF7528),
-        canvasColor: Colors.white,
-        cardColor: Colors.white,
-        useMaterial3: true,
-        fontFamily: 'Roboto',
-        colorScheme: const ColorScheme.light(
-          primary: Color(0xFFDF7528),
-          surface: Colors.white,
-          onSurface: Color(0xFF1E1E1E),
-        ),
-        popupMenuTheme: const PopupMenuThemeData(
-          color: Colors.white,
-          surfaceTintColor: Colors.transparent,
-        ),
-        dropdownMenuTheme: const DropdownMenuThemeData(
-          menuStyle: MenuStyle(
-            backgroundColor: WidgetStatePropertyAll(Colors.white),
-            surfaceTintColor: WidgetStatePropertyAll(Colors.transparent),
-          ),
-        ),
-        dialogTheme: const DialogThemeData(
-          backgroundColor: Colors.white,
-          surfaceTintColor: Colors.transparent,
-        ),
-        inputDecorationTheme: const InputDecorationTheme(
-          labelStyle: TextStyle(color: Color(0xD8FFF5EB)),
-          hintStyle: TextStyle(color: Color(0xAAFFF0DF)),
-          enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Color(0x40FFFFFF))),
-          focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: Color(0xFFFFB347))),
-        ),
+      // Android's stretch overscroll renders the list through an image filter,
+      // which blanks out the glass backdrops (cards go empty or black). A
+      // bounce just moves the content, which glass handles like any scroll.
+      scrollBehavior: const MaterialScrollBehavior().copyWith(
+        physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
+        overscroll: false,
       ),
-      darkTheme: ThemeData(
-        brightness: Brightness.dark,
-        scaffoldBackgroundColor: const Color(0xFF11141A),
-        primaryColor: const Color(0xFFDF7528),
-        canvasColor: const Color(0xFF1E2430),
-        cardColor: const Color(0xFF1E2430),
-        useMaterial3: true,
-        fontFamily: 'Roboto',
-        colorScheme: const ColorScheme.dark(
-          primary: Color(0xFFDF7528),
-          surface: Color(0xFF1E2430),
-          onSurface: Colors.white,
-        ),
-        dialogTheme: const DialogThemeData(
-          backgroundColor: Color(0xFF1E2430),
-          surfaceTintColor: Colors.transparent,
-        ),
-      ),
+      themeMode: state.isDarkTheme ? ThemeMode.dark : ThemeMode.light,
+      theme: theme,
+      darkTheme: theme,
       home: _ledgerState.currentUser == null
           ? AuthScreen(state: _ledgerState)
           : LedgerMainScreen(state: _ledgerState),
@@ -116,22 +79,21 @@ class _LedgerMainScreenState extends State<LedgerMainScreen> {
     final profile = state.shopProfile;
     final palette = state.activePalette;
 
-    final isLightMode = state.themeMode == AppThemeMode.lightMode;
-    final navBgColor = isLightMode ? Colors.white : const Color(0xFF11141A);
-    final navBorderColor = isLightMode ? const Color(0xFFE5E7EB) : const Color(0xFF1F2937);
+    final scheme = Theme.of(context).colorScheme;
+    final navBorderColor = scheme.outlineVariant;
 
     return Scaffold(
       key: _scaffoldKey,
-      backgroundColor: isLightMode ? const Color(0xFFFAF7F2) : const Color(0xFF11141A),
+      backgroundColor: scheme.surface,
       drawer: Drawer(
-        backgroundColor: isLightMode ? Colors.white : const Color(0xFF1E2430),
+        backgroundColor: scheme.surfaceContainerLow,
         child: ListView(
           padding: EdgeInsets.zero,
           children: [
             Container(
               padding: const EdgeInsets.fromLTRB(20, 50, 20, 20),
               decoration: BoxDecoration(
-                color: isLightMode ? const Color(0xFFFFF7ED) : const Color(0xFF181822),
+                color: scheme.primaryContainer,
                 border: Border(bottom: BorderSide(color: navBorderColor)),
               ),
               child: Row(
@@ -141,11 +103,11 @@ class _LedgerMainScreenState extends State<LedgerMainScreen> {
                     height: 52,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: const Color(0xFFDF7528).withValues(alpha: 0.15),
-                      border: Border.all(color: const Color(0xFFDF7528), width: 1.5),
+                      color: scheme.primary.withValues(alpha: 0.15),
+                      border: Border.all(color: scheme.primary, width: 1.5),
                     ),
-                    child: const Center(
-                      child: Icon(Icons.menu_book_rounded, size: 28, color: Color(0xFFDF7528)),
+                    child: Center(
+                      child: Icon(Icons.menu_book_rounded, size: 28, color: scheme.primary),
                     ),
                   ),
                   const SizedBox(width: 14),
@@ -158,13 +120,13 @@ class _LedgerMainScreenState extends State<LedgerMainScreen> {
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 16,
-                            color: isLightMode ? const Color(0xFF1E1E1E) : Colors.white,
+                            color: scheme.onPrimaryContainer,
                           ),
                         ),
                         Text(
                           profile.ownerName,
                           style: TextStyle(
-                            color: isLightMode ? const Color(0xFF6B7280) : Colors.white60,
+                            color: scheme.onPrimaryContainer.withValues(alpha: 0.7),
                             fontSize: 12,
                           ),
                         ),
@@ -175,8 +137,8 @@ class _LedgerMainScreenState extends State<LedgerMainScreen> {
               ),
             ),
             ListTile(
-              leading: const Icon(Icons.home_outlined, color: Color(0xFFDF7528)),
-              title: Text('Home Dashboard', style: TextStyle(color: isLightMode ? const Color(0xFF1E1E1E) : Colors.white)),
+              leading: Icon(Icons.home_outlined, color: scheme.primary),
+              title: Text('Home Dashboard', style: TextStyle(color: scheme.onSurface)),
               selected: _selectedIndex == 0,
               onTap: () {
                 setState(() => _selectedIndex = 0);
@@ -184,8 +146,8 @@ class _LedgerMainScreenState extends State<LedgerMainScreen> {
               },
             ),
             ListTile(
-              leading: const Icon(Icons.people_outline, color: Color(0xFFDF7528)),
-              title: Text('Customers', style: TextStyle(color: isLightMode ? const Color(0xFF1E1E1E) : Colors.white)),
+              leading: Icon(Icons.people_outline, color: scheme.primary),
+              title: Text('Customers', style: TextStyle(color: scheme.onSurface)),
               selected: _selectedIndex == 1,
               onTap: () {
                 setState(() => _selectedIndex = 1);
@@ -193,8 +155,8 @@ class _LedgerMainScreenState extends State<LedgerMainScreen> {
               },
             ),
             ListTile(
-              leading: const Icon(Icons.add_circle_outline, color: Color(0xFFDF7528)),
-              title: Text('Record Entry', style: TextStyle(color: isLightMode ? const Color(0xFF1E1E1E) : Colors.white)),
+              leading: Icon(Icons.add_circle_outline, color: scheme.primary),
+              title: Text('Record Entry', style: TextStyle(color: scheme.onSurface)),
               selected: _selectedIndex == 5,
               onTap: () {
                 setState(() => _selectedIndex = 5);
@@ -202,8 +164,8 @@ class _LedgerMainScreenState extends State<LedgerMainScreen> {
               },
             ),
             ListTile(
-              leading: const Icon(Icons.shopping_bag_outlined, color: Color(0xFFDF7528)),
-              title: Text('Orders & Advances', style: TextStyle(color: isLightMode ? const Color(0xFF1E1E1E) : Colors.white)),
+              leading: Icon(Icons.shopping_bag_outlined, color: scheme.primary),
+              title: Text('Orders & Advances', style: TextStyle(color: scheme.onSurface)),
               selected: _selectedIndex == 2,
               onTap: () {
                 setState(() => _selectedIndex = 2);
@@ -211,8 +173,8 @@ class _LedgerMainScreenState extends State<LedgerMainScreen> {
               },
             ),
             ListTile(
-              leading: const Icon(Icons.assessment_outlined, color: Color(0xFFDF7528)),
-              title: Text('Financial Reports', style: TextStyle(color: isLightMode ? const Color(0xFF1E1E1E) : Colors.white)),
+              leading: Icon(Icons.assessment_outlined, color: scheme.primary),
+              title: Text('Financial Reports', style: TextStyle(color: scheme.onSurface)),
               selected: _selectedIndex == 3,
               onTap: () {
                 setState(() => _selectedIndex = 3);
@@ -220,8 +182,8 @@ class _LedgerMainScreenState extends State<LedgerMainScreen> {
               },
             ),
             ListTile(
-              leading: const Icon(Icons.calendar_month_outlined, color: Color(0xFFDF7528)),
-              title: Text('Due Date Calendar & Reminders', style: TextStyle(color: isLightMode ? const Color(0xFF1E1E1E) : Colors.white)),
+              leading: Icon(Icons.calendar_month_outlined, color: scheme.primary),
+              title: Text('Due Date Calendar & Reminders', style: TextStyle(color: scheme.onSurface)),
               selected: _selectedIndex == 6,
               onTap: () {
                 setState(() => _selectedIndex = 6);
@@ -229,8 +191,8 @@ class _LedgerMainScreenState extends State<LedgerMainScreen> {
               },
             ),
             ListTile(
-              leading: const Icon(Icons.person_outline, color: Color(0xFFDF7528)),
-              title: Text('Shop Profile & Theme', style: TextStyle(color: isLightMode ? const Color(0xFF1E1E1E) : Colors.white)),
+              leading: Icon(Icons.person_outline, color: scheme.primary),
+              title: Text('Shop Profile & Theme', style: TextStyle(color: scheme.onSurface)),
               selected: _selectedIndex == 4,
               onTap: () {
                 setState(() => _selectedIndex = 4);
@@ -239,8 +201,8 @@ class _LedgerMainScreenState extends State<LedgerMainScreen> {
             ),
             Divider(color: navBorderColor),
             ListTile(
-              leading: const Icon(Icons.logout, color: Color(0xFFDC2626)),
-              title: const Text('Sign Out Account', style: TextStyle(color: Color(0xFFDC2626), fontWeight: FontWeight.bold)),
+              leading: Icon(Icons.logout, color: scheme.error),
+              title: Text('Sign Out Account', style: TextStyle(color: scheme.error, fontWeight: FontWeight.bold)),
               onTap: () {
                 Navigator.pop(context);
                 state.logout();
@@ -251,68 +213,97 @@ class _LedgerMainScreenState extends State<LedgerMainScreen> {
       ),
       body: AtmosphericBackdrop(
         palette: palette,
-        child: IndexedStack(
-          index: _selectedIndex,
-          children: [
-            DashboardScreen(
-              state: state,
-              onOpenDrawer: () => _scaffoldKey.currentState?.openDrawer(),
-              onNavigateTab: (idx) => setState(() => _selectedIndex = idx),
-            ),
-            CustomersScreen(state: state),
-            OrdersScreen(state: state),
-            ReportsScreen(state: state),
-            ProfileScreen(state: state),
-            RecordEntryScreen(
-              state: state,
-              onBack: () => setState(() => _selectedIndex = 0),
-            ),
-            RemindersCalendarScreen(
-              state: state,
-              onBack: () => setState(() => _selectedIndex = 0),
-            ),
-          ],
-        ),
-      ),
-      bottomNavigationBar: SafeArea(
-        child: Container(
-          margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(32),
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                decoration: BoxDecoration(
-                  color: palette.glassSurface,
-                  borderRadius: BorderRadius.circular(32),
-                  border: Border.all(
-                    color: palette.glassBorder,
-                    width: 1.2,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: palette.cardShadow,
-                      blurRadius: 24,
-                      offset: const Offset(0, 10),
-                    ),
-                  ],
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    _buildNavItem(0, Icons.home_rounded, Icons.home_outlined, 'Home', palette),
-                    _buildNavItem(1, Icons.people_rounded, Icons.people_outline_rounded, 'Customers', palette),
-                    _buildNavItem(2, Icons.shopping_bag_rounded, Icons.shopping_bag_outlined, 'Orders', palette),
-                    _buildNavItem(3, Icons.assessment_rounded, Icons.assessment_outlined, 'Reports', palette),
-                    _buildNavItem(4, Icons.grid_view_rounded, Icons.grid_view_outlined, 'More', palette),
-                  ],
-                ),
+        // With extendBody, Scaffold only adds the nav bar height to
+        // `padding`; nested screens' FABs position from `viewPadding`, so
+        // mirror it there to keep them above the floating glass bar.
+        child: Builder(
+          builder: (context) {
+            final mq = MediaQuery.of(context);
+            return MediaQuery(
+              data: mq.copyWith(
+                viewPadding: mq.viewPadding.copyWith(bottom: mq.padding.bottom),
               ),
-            ),
-          ),
+              child: IndexedStack(
+                index: _selectedIndex,
+                children: [
+                  DashboardScreen(
+                    state: state,
+                    onOpenDrawer: () => _scaffoldKey.currentState?.openDrawer(),
+                    onNavigateTab: (idx) => setState(() => _selectedIndex = idx),
+                  ),
+                  CustomersScreen(state: state),
+                  OrdersScreen(state: state),
+                  ReportsScreen(state: state),
+                  ProfileScreen(state: state),
+                  RecordEntryScreen(
+                    state: state,
+                    onBack: () => setState(() => _selectedIndex = 0),
+                  ),
+                  RemindersCalendarScreen(
+                    state: state,
+                    onBack: () => setState(() => _selectedIndex = 0),
+                  ),
+                ],
+              ),
+            );
+          },
         ),
       ),
+      extendBody: true,
+      bottomNavigationBar: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+          child: _buildNavBar(context, palette),
+        ),
+      ),
+    );
+  }
+
+  static const double _navBarHeight = 60;
+
+  Widget _buildNavBar(BuildContext context, ThemePalette palette) {
+    final glass = GlassTheme.of(context);
+    final items = Row(
+      mainAxisAlignment: MainAxisAlignment.spaceAround,
+      children: [
+        _buildNavItem(0, Icons.home_rounded, Icons.home_outlined, 'Home', palette),
+        _buildNavItem(1, Icons.people_rounded, Icons.people_outline_rounded, 'Customers', palette),
+        _buildNavItem(2, Icons.shopping_bag_rounded, Icons.shopping_bag_outlined, 'Orders', palette),
+        _buildNavItem(3, Icons.assessment_rounded, Icons.assessment_outlined, 'Reports', palette),
+        _buildNavItem(4, Icons.grid_view_rounded, Icons.grid_view_outlined, 'More', palette),
+      ],
+    );
+    final content = DecoratedBox(
+      decoration: ShapeDecoration(
+        shape: RoundedSuperellipseBorder(
+          borderRadius: BorderRadius.circular(_navBarHeight / 2),
+          side: BorderSide(color: glass.border),
+        ),
+      ),
+      child: SizedBox(
+        height: _navBarHeight,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          child: items,
+        ),
+      ),
+    );
+
+    if (!glass.enabled) {
+      return DecoratedBox(
+        decoration: ShapeDecoration(
+          color: glass.solidSurface,
+          shape: RoundedSuperellipseBorder(borderRadius: BorderRadius.circular(_navBarHeight / 2)),
+          shadows: [BoxShadow(color: palette.cardShadow, blurRadius: 24, offset: const Offset(0, 10))],
+        ),
+        child: content,
+      );
+    }
+
+    return LiquidGlass.withOwnLayer(
+      settings: glass.pillSettings(height: _navBarHeight),
+      shape: const LiquidRoundedSuperellipse(borderRadius: _navBarHeight / 2),
+      child: content,
     );
   }
 

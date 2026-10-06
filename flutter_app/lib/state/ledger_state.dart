@@ -1,5 +1,6 @@
 import 'dart:convert';
-import 'package:flutter/foundation.dart';
+import 'package:dynamic_color/dynamic_color.dart';
+import 'package:flutter/material.dart';
 import '../data/storage_service.dart';
 import '../models/models.dart';
 import '../theme/app_theme.dart';
@@ -14,13 +15,56 @@ class LedgerState extends ChangeNotifier {
   bool _isDarkTheme = false;
   bool _useSystemColors = false;
   String _selectedThemeColor = 'BLUE';
+  ColorScheme? _systemLightScheme;
+  ColorScheme? _systemDarkScheme;
 
   AppThemeMode get themeMode => _themeMode;
   ThemePalette get activePalette => AppPalettes.getPalette(
         _themeMode,
         selectedPreset: _selectedThemeColor,
         isDarkOverride: _isDarkTheme,
+        dynamicScheme: _dynamicScheme,
       );
+
+  /// Whether the platform exposes Material You wallpaper colors
+  /// (Android 12+, or an accent color on desktop).
+  bool get systemColorsAvailable => _systemLightScheme != null;
+
+  ColorScheme? get _dynamicScheme {
+    if (!_useSystemColors) return null;
+    return _isDarkTheme ? _systemDarkScheme : _systemLightScheme;
+  }
+
+  /// The Material 3 color scheme for the app: wallpaper-based dynamic colors
+  /// when "Use System Colors" is on and available, otherwise seeded from the
+  /// selected preset.
+  ColorScheme get colorScheme {
+    final dynamicScheme = _dynamicScheme;
+    if (dynamicScheme != null) return dynamicScheme;
+    final preset = WallvaultPresets.getPreset(_selectedThemeColor);
+    return ColorScheme.fromSeed(
+      seedColor: preset.primary,
+      brightness: _isDarkTheme ? Brightness.dark : Brightness.light,
+    );
+  }
+
+  Future<void> _loadSystemColors() async {
+    try {
+      final corePalette = await DynamicColorPlugin.getCorePalette();
+      if (corePalette != null) {
+        _systemLightScheme = corePalette.toColorScheme();
+        _systemDarkScheme = corePalette.toColorScheme(brightness: Brightness.dark);
+      } else {
+        final accent = await DynamicColorPlugin.getAccentColor();
+        if (accent == null) return;
+        _systemLightScheme = ColorScheme.fromSeed(seedColor: accent);
+        _systemDarkScheme = ColorScheme.fromSeed(seedColor: accent, brightness: Brightness.dark);
+      }
+      notifyListeners();
+    } catch (_) {
+      // Platform without dynamic color support; presets remain in use.
+    }
+  }
   AppLanguage get language => _language;
   bool get glassEffectEnabled => _glassEffectEnabled;
   double get glassBlurSigma => _glassBlurSigma;
@@ -86,6 +130,7 @@ class LedgerState extends ChangeNotifier {
 
   LedgerState() {
     _loadFromDisk();
+    _loadSystemColors();
   }
 
   Future<void> _loadFromDisk() async {

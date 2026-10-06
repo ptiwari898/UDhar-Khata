@@ -19,8 +19,8 @@ class CustomerStatementScreen extends StatelessWidget {
     final summary = state.getCustomerSummary(customer);
     final p = state.activePalette;
 
-    final cardBg = p.isDark ? AppColors.popupSurface : Colors.white;
-    final cardBorder = p.isDark ? Colors.white12 : const Color(0xFFE5E7EB);
+    final cardBg = Theme.of(context).colorScheme.surfaceContainerLow;
+    final cardBorder = Theme.of(context).colorScheme.outlineVariant;
     final titleColor = p.textPrimary;
     final subtitleColor = p.textSecondary;
 
@@ -61,13 +61,9 @@ class CustomerStatementScreen extends StatelessWidget {
           child: Column(
             children: [
               // Customer Header Card
-              Container(
+              GlassCard(
+                radius: 20,
                 padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: cardBg,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: cardBorder),
-                ),
                 child: Row(
                   children: [
                     CircleAvatar(
@@ -106,20 +102,9 @@ class CustomerStatementScreen extends StatelessWidget {
               const SizedBox(height: 16),
 
               // Statement Calculation Breakdown Box
-              Container(
+              GlassCard(
+                radius: 20,
                 padding: const EdgeInsets.all(18),
-                decoration: BoxDecoration(
-                  color: cardBg,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: cardBorder),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: p.isDark ? 0.2 : 0.03),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
                 child: Column(
                   children: [
                     _buildStatementRow('Opening Balance', '₹4,000', titleColor, subtitleColor),

@@ -103,8 +103,8 @@ class _RecordEntryScreenState extends State<RecordEntryScreen> {
     final state = widget.state;
     final p = state.activePalette;
 
-    final cardBg = p.isDark ? AppColors.popupSurface : Colors.white;
-    final cardBorder = p.isDark ? Colors.white12 : const Color(0xFFE5E7EB);
+    final cardBg = Theme.of(context).colorScheme.surfaceContainerLow;
+    final cardBorder = Theme.of(context).colorScheme.outlineVariant;
     final titleColor = p.textPrimary;
     final subtitleColor = p.textSecondary;
 
@@ -126,18 +126,15 @@ class _RecordEntryScreenState extends State<RecordEntryScreen> {
           centerTitle: false,
         ),
         body: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+          // Bottom inset clears the floating glass nav bar when shown as a tab.
+          padding: EdgeInsets.fromLTRB(20, 12, 20, 12 + MediaQuery.paddingOf(context).bottom),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Customer Selector Chip / Dropdown
-              Container(
+              GlassCard(
+                radius: 18,
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                decoration: BoxDecoration(
-                  color: cardBg,
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: cardBorder),
-                ),
                 child: Row(
                   children: [
                     Icon(Icons.person, color: p.primaryAccent, size: 20),
@@ -194,13 +191,9 @@ class _RecordEntryScreenState extends State<RecordEntryScreen> {
                 style: TextStyle(color: titleColor, fontWeight: FontWeight.bold, fontSize: 13),
               ),
               const SizedBox(height: 6),
-              Container(
+              GlassCard(
+                radius: 16,
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
-                decoration: BoxDecoration(
-                  color: cardBg,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: cardBorder),
-                ),
                 child: Row(
                   children: [
                     Text('₹', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: subtitleColor)),
@@ -224,13 +217,9 @@ class _RecordEntryScreenState extends State<RecordEntryScreen> {
                 style: TextStyle(color: titleColor, fontWeight: FontWeight.bold, fontSize: 13),
               ),
               const SizedBox(height: 6),
-              Container(
+              GlassCard(
+                radius: 16,
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
-                decoration: BoxDecoration(
-                  color: cardBg,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: cardBorder),
-                ),
                 child: DropdownButtonHideUnderline(
                   child: DropdownButton<String>(
                     value: _paymentMode,
@@ -264,13 +253,9 @@ class _RecordEntryScreenState extends State<RecordEntryScreen> {
                   );
                   if (d != null) setState(() => _selectedDate = d);
                 },
-                child: Container(
+                child: GlassCard(
+                  radius: 16,
                   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-                  decoration: BoxDecoration(
-                    color: cardBg,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: cardBorder),
-                  ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -291,13 +276,9 @@ class _RecordEntryScreenState extends State<RecordEntryScreen> {
                 style: TextStyle(color: titleColor, fontWeight: FontWeight.bold, fontSize: 13),
               ),
               const SizedBox(height: 6),
-              Container(
+              GlassCard(
+                radius: 16,
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
-                decoration: BoxDecoration(
-                  color: cardBg,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: cardBorder),
-                ),
                 child: TextField(
                   controller: _noteCtrl,
                   style: TextStyle(color: titleColor, fontSize: 14),

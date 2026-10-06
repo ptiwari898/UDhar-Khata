@@ -29,8 +29,8 @@ class _RemindersCalendarScreenState extends State<RemindersCalendarScreen> {
     final allReminders = state.reminders;
     final today = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
 
-    final cardBg = p.isDark ? AppColors.popupSurface : Colors.white;
-    final cardBorder = p.isDark ? Colors.white12 : const Color(0xFFE5E7EB);
+    final cardBg = Theme.of(context).colorScheme.surfaceContainerLow;
+    final cardBorder = Theme.of(context).colorScheme.outlineVariant;
     final titleColor = p.textPrimary;
     final subtitleColor = p.textSecondary;
 
@@ -137,20 +137,9 @@ class _RemindersCalendarScreenState extends State<RemindersCalendarScreen> {
             Row(
               children: [
                 Expanded(
-                  child: Container(
+                  child: GlassCard(
+                    radius: 20,
                     padding: const EdgeInsets.all(14),
-                    decoration: BoxDecoration(
-                      color: cardBg,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: cardBorder),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: p.isDark ? 0.3 : 0.03),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -182,20 +171,9 @@ class _RemindersCalendarScreenState extends State<RemindersCalendarScreen> {
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: Container(
+                  child: GlassCard(
+                    radius: 20,
                     padding: const EdgeInsets.all(14),
-                    decoration: BoxDecoration(
-                      color: cardBg,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: cardBorder),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: p.isDark ? 0.3 : 0.03),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -230,20 +208,9 @@ class _RemindersCalendarScreenState extends State<RemindersCalendarScreen> {
             const SizedBox(height: 12),
 
             // 3 Alert Options Info Strip
-            Container(
+            GlassCard(
+              radius: 20,
               padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: cardBg,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: cardBorder),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: p.isDark ? 0.3 : 0.03),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -467,8 +434,8 @@ class _RemindersCalendarScreenState extends State<RemindersCalendarScreen> {
 
   Widget _buildFilterChip(String key, String label, ThemePalette p) {
     final isSelected = _activeFilter == key;
-    final cardBg = p.isDark ? AppColors.popupSurface : Colors.white;
-    final cardBorder = p.isDark ? Colors.white12 : const Color(0xFFE5E7EB);
+    final cardBg = Theme.of(context).colorScheme.surfaceContainerLow;
+    final cardBorder = Theme.of(context).colorScheme.outlineVariant;
 
     return Padding(
       padding: const EdgeInsets.only(right: 8),
@@ -507,8 +474,7 @@ class _RemindersCalendarScreenState extends State<RemindersCalendarScreen> {
     final rDate = DateTime(reminder.dueDate.year, reminder.dueDate.month, reminder.dueDate.day);
     final daysDiff = rDate.difference(today).inDays;
 
-    final cardBg = p.isDark ? AppColors.popupSurface : Colors.white;
-    final cardBorder = p.isDark ? Colors.white12 : const Color(0xFFE5E7EB);
+    final cardBorder = Theme.of(context).colorScheme.outlineVariant;
 
     String statusText;
     Color statusColor;
@@ -537,21 +503,10 @@ class _RemindersCalendarScreenState extends State<RemindersCalendarScreen> {
 
     final isUdhar = reminder.reminderType == 'RECOVER_UDHAR';
 
-    return Container(
+    return GlassCard(
+      radius: 20,
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: cardBg,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: cardBorder),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: p.isDark ? 0.3 : 0.03),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

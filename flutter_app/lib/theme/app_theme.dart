@@ -1,5 +1,8 @@
-import 'dart:ui';
+import 'dart:ui' show lerpDouble;
+
+import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/material.dart';
+import 'package:liquid_glass_renderer/liquid_glass_renderer.dart';
 
 enum AppThemeMode {
   udharGlass, // Udhar Khata Liquid Glass Theme (formerly Wallvault Glass)
@@ -182,6 +185,52 @@ class ThemePalette {
       isDark: dark,
     );
   }
+
+  /// Builds a palette from a Material You [ColorScheme] (e.g. the wallpaper
+  /// colors reported by Android 12+). Semantic ledger colors (red = udhaar,
+  /// green = payment) are kept but harmonized toward the scheme's primary so
+  /// they sit naturally next to the dynamic accent.
+  ThemePalette withColorScheme(ColorScheme scheme) {
+    final dark = scheme.brightness == Brightness.dark;
+    final red = redUdhar.harmonizeWith(scheme.primary);
+    final green = greenAdvance.harmonizeWith(scheme.primary);
+    final orange = orangeMedium.harmonizeWith(scheme.primary);
+    return ThemePalette(
+      mode: mode,
+      title: title,
+      subtitle: subtitle,
+      icon: icon,
+      gradientColors: [
+        scheme.surface,
+        scheme.surfaceContainerLow,
+        Color.alphaBlend(scheme.primary.withValues(alpha: dark ? 0.12 : 0.08), scheme.surfaceContainer),
+        scheme.surfaceContainerLow,
+        scheme.surfaceContainerHigh,
+      ],
+      stops: stops,
+      orb1Color: scheme.primary,
+      orb2Color: scheme.tertiary,
+      orb3Color: scheme.secondary,
+      glassSurface: scheme.surfaceContainerLow.withValues(alpha: dark ? 0.35 : 0.55),
+      glassBorder: scheme.outlineVariant.withValues(alpha: 0.7),
+      glassHighlight: glassHighlight,
+      cardShadow: scheme.shadow.withValues(alpha: dark ? 0.45 : 0.08),
+      textPrimary: scheme.onSurface,
+      textSecondary: scheme.onSurfaceVariant,
+      textMuted: scheme.outline,
+      buttonSolidWhite: scheme.primary,
+      textDarkOnWhite: scheme.onPrimary,
+      redUdhar: red,
+      redBg: red.withValues(alpha: dark ? 0.17 : 0.12),
+      greenAdvance: green,
+      greenBg: green.withValues(alpha: dark ? 0.17 : 0.12),
+      orangeMedium: orange,
+      orangeBg: orange.withValues(alpha: dark ? 0.17 : 0.12),
+      primaryAccent: scheme.primary,
+      navBarBg: scheme.surfaceContainer.withValues(alpha: 0.6),
+      isDark: dark,
+    );
+  }
 }
 
 class AppColors {
@@ -297,10 +346,185 @@ class AppPalettes {
     AppThemeMode mode, {
     String selectedPreset = 'BLUE',
     bool? isDarkOverride,
+    ColorScheme? dynamicScheme,
   }) {
     final base = (mode == AppThemeMode.lightMode) ? lightMode : udharGlass;
+    if (dynamicScheme != null) return base.withColorScheme(dynamicScheme);
     final presetObj = WallvaultPresets.getPreset(selectedPreset);
     return base.withPreset(presetObj, isDarkOverride: isDarkOverride);
+  }
+}
+
+/// Glass styling shared by [GlassCard] and other glass surfaces, resolved
+/// from the active [ThemePalette] and the user's glass settings.
+@immutable
+class GlassTheme extends ThemeExtension<GlassTheme> {
+  final bool enabled;
+  final double blur;
+  final Color tint;
+  final Color border;
+  final Color highlight;
+  final Color shadow;
+  final Color solidSurface;
+
+  const GlassTheme({
+    required this.enabled,
+    required this.blur,
+    required this.tint,
+    required this.border,
+    required this.highlight,
+    required this.shadow,
+    required this.solidSurface,
+  });
+
+  factory GlassTheme.fromPalette(
+    ThemePalette p,
+    ColorScheme scheme, {
+    bool enabled = true,
+    double blurSigma = 22,
+  }) {
+    return GlassTheme(
+      enabled: enabled,
+      // Settings slider is expressed as a Gaussian sigma (10–32); the
+      // liquid glass shader expects a much smaller frost radius.
+      blur: blurSigma / 3,
+      tint: Color.alphaBlend(
+        scheme.primary.withValues(alpha: p.isDark ? 0.06 : 0.04),
+        scheme.surfaceContainerLow.withValues(alpha: p.isDark ? 0.32 : 0.5),
+      ),
+      border: scheme.outlineVariant.withValues(alpha: p.isDark ? 0.45 : 0.6),
+      highlight: Colors.white.withValues(alpha: p.isDark ? 0.10 : 0.45),
+      shadow: p.cardShadow,
+      solidSurface: scheme.surfaceContainerLow,
+    );
+  }
+
+  static GlassTheme of(BuildContext context) {
+    final theme = Theme.of(context);
+    return theme.extension<GlassTheme>() ??
+        GlassTheme.fromPalette(
+          theme.brightness == Brightness.dark ? AppPalettes.udharGlass : AppPalettes.lightMode,
+          theme.colorScheme,
+        );
+  }
+
+  LiquidGlassSettings settings({Color? tintOverride, bool refract = false}) {
+    return LiquidGlassSettings(
+      glassColor: tintOverride ?? tint,
+      blur: blur,
+      thickness: refract ? 22 : 12,
+      refractiveIndex: refract ? 1.22 : 1.1,
+      lightIntensity: 0.6,
+      ambientStrength: 0.15,
+      chromaticAberration: refract ? 0.02 : 0,
+      saturation: 1.4,
+    );
+  }
+
+  /// Lens-like settings for a pill of the given [height] (e.g. a nav bar).
+  ///
+  /// The shader only bends light within `thickness` px of the edge and
+  /// treats the rest as a flat slab, so thickness is set to half the height
+  /// to curve the whole cross-section. Tint and frost are kept light so the
+  /// content behind stays readable through the middle.
+  LiquidGlassSettings pillSettings({required double height}) {
+    return LiquidGlassSettings(
+      glassColor: tint.withValues(alpha: tint.a * 0.35),
+      blur: blur * 0.25,
+      thickness: height / 2,
+      refractiveIndex: 1.3,
+      lightIntensity: 0.7,
+      ambientStrength: 0.2,
+      chromaticAberration: 0.03,
+      saturation: 1.5,
+    );
+  }
+
+  @override
+  GlassTheme copyWith({
+    bool? enabled,
+    double? blur,
+    Color? tint,
+    Color? border,
+    Color? highlight,
+    Color? shadow,
+    Color? solidSurface,
+  }) {
+    return GlassTheme(
+      enabled: enabled ?? this.enabled,
+      blur: blur ?? this.blur,
+      tint: tint ?? this.tint,
+      border: border ?? this.border,
+      highlight: highlight ?? this.highlight,
+      shadow: shadow ?? this.shadow,
+      solidSurface: solidSurface ?? this.solidSurface,
+    );
+  }
+
+  @override
+  GlassTheme lerp(GlassTheme? other, double t) {
+    if (other == null) return this;
+    return GlassTheme(
+      enabled: t < 0.5 ? enabled : other.enabled,
+      blur: lerpDouble(blur, other.blur, t)!,
+      tint: Color.lerp(tint, other.tint, t)!,
+      border: Color.lerp(border, other.border, t)!,
+      highlight: Color.lerp(highlight, other.highlight, t)!,
+      shadow: Color.lerp(shadow, other.shadow, t)!,
+      solidSurface: Color.lerp(solidSurface, other.solidSurface, t)!,
+    );
+  }
+}
+
+class AppTheme {
+  /// Material 3 [ThemeData] driven by [scheme] (Material You dynamic colors
+  /// or a seeded preset), with glass styling attached as a [GlassTheme].
+  static ThemeData build(
+    ColorScheme scheme,
+    ThemePalette palette, {
+    bool glassEnabled = true,
+    double glassBlurSigma = 22,
+  }) {
+    return ThemeData(
+      useMaterial3: true,
+      colorScheme: scheme,
+      fontFamily: 'Roboto',
+      scaffoldBackgroundColor: scheme.surface,
+      canvasColor: scheme.surface,
+      cardTheme: CardThemeData(
+        color: scheme.surfaceContainerLow,
+        elevation: 0,
+        shape: RoundedSuperellipseBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: BorderSide(color: scheme.outlineVariant),
+        ),
+      ),
+      popupMenuTheme: PopupMenuThemeData(
+        color: scheme.surfaceContainer,
+        surfaceTintColor: Colors.transparent,
+      ),
+      dialogTheme: DialogThemeData(
+        backgroundColor: scheme.surfaceContainerHigh,
+        surfaceTintColor: Colors.transparent,
+      ),
+      drawerTheme: DrawerThemeData(backgroundColor: scheme.surfaceContainerLow),
+      switchTheme: SwitchThemeData(
+        thumbColor: WidgetStateProperty.resolveWith(
+          (s) => s.contains(WidgetState.selected) ? scheme.onPrimary : null,
+        ),
+        trackColor: WidgetStateProperty.resolveWith(
+          (s) => s.contains(WidgetState.selected) ? scheme.primary : null,
+        ),
+      ),
+      extensions: [
+        GlassTheme.fromPalette(
+          palette,
+          scheme,
+          enabled: glassEnabled,
+          blurSigma: glassBlurSigma,
+        ),
+      ],
+    );
   }
 }
 
@@ -312,6 +536,7 @@ class AtmosphericBackdrop extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final p = palette ?? AppPalettes.udharGlass;
+    final orbAlpha = p.isDark ? 0.28 : 0.20;
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 400),
@@ -326,32 +551,44 @@ class AtmosphericBackdrop extends StatelessWidget {
       ),
       child: Stack(
         children: [
-          // Ambient sheen overlay
-          Positioned(
-            top: -100,
-            left: 0,
-            right: 0,
-            height: 350,
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: RadialGradient(
-                  center: Alignment.topCenter,
-                  radius: 1.2,
-                  colors: [
-                    p.primaryAccent.withValues(alpha: p.isDark ? 0.12 : 0.08),
-                    Colors.transparent,
-                  ],
-                ),
-              ),
-            ),
-          ),
+          // Soft color orbs give the glass surfaces something to refract.
+          _orb(top: -80, left: -60, size: 280, color: p.orb1Color.withValues(alpha: orbAlpha)),
+          _orb(top: 260, right: -90, size: 260, color: p.orb2Color.withValues(alpha: orbAlpha)),
+          _orb(bottom: 40, left: -40, size: 220, color: p.orb3Color.withValues(alpha: orbAlpha * 0.8)),
           child,
         ],
       ),
     );
   }
+
+  Widget _orb({double? top, double? left, double? right, double? bottom, required double size, required Color color}) {
+    return Positioned(
+      top: top,
+      left: left,
+      right: right,
+      bottom: bottom,
+      child: IgnorePointer(
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 400),
+          width: size,
+          height: size,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            gradient: RadialGradient(colors: [color, color.withValues(alpha: 0)]),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
+/// A Material You card rendered as liquid glass.
+///
+/// By default it uses [FakeGlass] (frosted blur + lighting, no refraction
+/// shader), which is cheap enough for lists. Set [refract] for hero surfaces
+/// to get true liquid-glass refraction via [LiquidGlass]; on renderers
+/// without Impeller the package falls back to [FakeGlass] automatically.
+/// When glass is disabled in settings it renders as a solid M3 card.
 class GlassCard extends StatelessWidget {
   final Widget child;
   final double radius;
@@ -360,8 +597,8 @@ class GlassCard extends StatelessWidget {
   final Color? containerColor;
   final Color? borderColor;
   final VoidCallback? onTap;
-  final bool isGlassEnabled;
-  final double blurSigma;
+  final bool refract;
+  final bool? isGlassEnabled;
 
   const GlassCard({
     super.key,
@@ -372,57 +609,63 @@ class GlassCard extends StatelessWidget {
     this.containerColor,
     this.borderColor,
     this.onTap,
-    this.isGlassEnabled = true,
-    this.blurSigma = 24.0,
+    this.refract = false,
+    this.isGlassEnabled,
   });
 
   @override
   Widget build(BuildContext context) {
-    final effectiveColor = containerColor ?? Colors.white;
-    final effectiveBorder = borderColor ?? const Color(0xFFE2E8F0);
+    final glass = GlassTheme.of(context);
+    final enabled = isGlassEnabled ?? glass.enabled;
+    final border = borderColor ?? glass.border;
 
-    Widget cardBody = Container(
+    Widget body = Padding(
       padding: padding ?? const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: effectiveColor,
-        borderRadius: BorderRadius.circular(radius),
-        border: Border.all(
-          color: effectiveBorder,
-          width: 1.2,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0x0C0F172A),
-            blurRadius: 16,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
       child: child,
     );
 
-    Widget cardContent = ClipRRect(
-      borderRadius: BorderRadius.circular(radius),
-      child: isGlassEnabled
-          ? BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: blurSigma, sigmaY: blurSigma),
-              child: cardBody,
-            )
-          : cardBody,
-    );
-
-    if (onTap != null) {
-      cardContent = BouncyWidget(
-        onTap: onTap,
-        child: cardContent,
+    final Widget card;
+    if (enabled) {
+      final shape = LiquidRoundedSuperellipse(borderRadius: radius);
+      final settings = glass.settings(tintOverride: containerColor, refract: refract);
+      body = DecoratedBox(
+        decoration: ShapeDecoration(
+          shape: RoundedSuperellipseBorder(
+            borderRadius: BorderRadius.circular(radius),
+            side: BorderSide(color: border, width: 1),
+          ),
+          // Specular sheen along the top-left edge.
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.center,
+            colors: [glass.highlight, glass.highlight.withValues(alpha: 0)],
+          ),
+        ),
+        child: body,
+      );
+      if (onTap != null) body = GlassGlow(child: body);
+      card = refract
+          ? LiquidGlass.withOwnLayer(settings: settings, shape: shape, child: body)
+          : FakeGlass(settings: settings, shape: shape, child: body);
+    } else {
+      card = DecoratedBox(
+        decoration: ShapeDecoration(
+          color: containerColor ?? glass.solidSurface,
+          shape: RoundedSuperellipseBorder(
+            borderRadius: BorderRadius.circular(radius),
+            side: BorderSide(color: border, width: 1),
+          ),
+          shadows: [
+            BoxShadow(color: glass.shadow, blurRadius: 16, offset: const Offset(0, 4)),
+          ],
+        ),
+        child: body,
       );
     }
 
-    if (margin != null) {
-      cardContent = Padding(padding: margin!, child: cardContent);
-    }
-
-    return cardContent;
+    Widget result = onTap != null ? BouncyWidget(onTap: onTap, child: card) : card;
+    if (margin != null) result = Padding(padding: margin!, child: result);
+    return result;
   }
 }
 

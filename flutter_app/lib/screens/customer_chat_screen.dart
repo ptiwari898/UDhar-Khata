@@ -26,8 +26,8 @@ class _CustomerChatScreenState extends State<CustomerChatScreen> {
     final p = state.activePalette;
     final messages = state.chatMessages.where((m) => m.customerId == widget.customer.id).toList();
 
-    final cardBg = p.isDark ? AppColors.popupSurface : Colors.white;
-    final cardBorder = p.isDark ? Colors.white12 : const Color(0xFFE5E7EB);
+    final cardBg = Theme.of(context).colorScheme.surfaceContainerLow;
+    final cardBorder = Theme.of(context).colorScheme.outlineVariant;
     final titleColor = p.textPrimary;
     final subtitleColor = p.textSecondary;
 

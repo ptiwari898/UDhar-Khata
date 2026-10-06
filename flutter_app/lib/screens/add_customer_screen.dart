@@ -60,8 +60,8 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
   @override
   Widget build(BuildContext context) {
     final p = widget.state.activePalette;
-    final cardBg = p.isDark ? AppColors.popupSurface : Colors.white;
-    final cardBorder = p.isDark ? Colors.white12 : const Color(0xFFE5E7EB);
+    final cardBg = Theme.of(context).colorScheme.surfaceContainerLow;
+    final cardBorder = Theme.of(context).colorScheme.outlineVariant;
     final titleColor = p.textPrimary;
     final subtitleColor = p.textSecondary;
 
@@ -218,12 +218,8 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
           style: TextStyle(color: titleColor, fontWeight: FontWeight.bold, fontSize: 13),
         ),
         const SizedBox(height: 6),
-        Container(
-          decoration: BoxDecoration(
-            color: cardBg,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: cardBorder),
-          ),
+        GlassCard(
+          radius: 16,
           child: TextField(
             controller: controller,
             keyboardType: keyboardType,

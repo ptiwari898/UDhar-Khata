@@ -21,8 +21,8 @@ class _CustomersScreenState extends State<CustomersScreen> {
     final state = widget.state;
     final p = state.activePalette;
 
-    final cardBg = p.isDark ? AppColors.popupSurface : Colors.white;
-    final cardBorder = p.isDark ? Colors.white12 : const Color(0xFFE5E7EB);
+    final cardBg = Theme.of(context).colorScheme.surfaceContainerLow;
+    final cardBorder = Theme.of(context).colorScheme.outlineVariant;
     final titleColor = p.textPrimary;
     final subtitleColor = p.textSecondary;
 
@@ -62,9 +62,12 @@ class _CustomersScreenState extends State<CustomersScreen> {
           );
         },
       ),
+      // bottom: false lets the list scroll behind the floating glass nav bar;
+      // the bottom inset is applied as list padding instead.
       body: SafeArea(
+        bottom: false,
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(18, 12, 18, 100),
+          padding: EdgeInsets.fromLTRB(18, 12, 18, 16 + MediaQuery.paddingOf(context).bottom),
           children: [
             // Header Bar
             Row(
@@ -89,20 +92,9 @@ class _CustomersScreenState extends State<CustomersScreen> {
             const SizedBox(height: 14),
 
             // Search Bar
-            Container(
+            GlassCard(
+              radius: 18,
               padding: const EdgeInsets.symmetric(horizontal: 14),
-              decoration: BoxDecoration(
-                color: cardBg,
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: cardBorder),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: p.isDark ? 0.2 : 0.03),
-                    blurRadius: 6,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
               child: Row(
                 children: [
                   Icon(Icons.search, color: subtitleColor, size: 20),
@@ -167,21 +159,10 @@ class _CustomersScreenState extends State<CustomersScreen> {
                     ),
                   );
                 },
-                child: Container(
+                child: GlassCard(
+                  radius: 20,
                   margin: const EdgeInsets.only(bottom: 10),
                   padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    color: cardBg,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: cardBorder),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: p.isDark ? 0.2 : 0.02),
-                        blurRadius: 6,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
                   child: Row(
                     children: [
                       // Avatar

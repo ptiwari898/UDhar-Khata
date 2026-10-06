@@ -46,8 +46,8 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen>
     final txns = state.transactions.where((t) => t.customerId == customer.id).toList();
     final p = state.activePalette;
 
-    final cardBg = p.isDark ? AppColors.popupSurface : Colors.white;
-    final cardBorder = p.isDark ? Colors.white12 : const Color(0xFFE5E7EB);
+    final cardBg = Theme.of(context).colorScheme.surfaceContainerLow;
+    final cardBorder = Theme.of(context).colorScheme.outlineVariant;
     final titleColor = p.textPrimary;
     final subtitleColor = p.textSecondary;
 
@@ -243,20 +243,9 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen>
             const SizedBox(height: 16),
 
             // Outstanding Summary Card
-            Container(
+            GlassCard(
+              radius: 22,
               padding: const EdgeInsets.all(18),
-              decoration: BoxDecoration(
-                color: cardBg,
-                borderRadius: BorderRadius.circular(18),
-                border: Border.all(color: cardBorder),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: p.isDark ? 0.2 : 0.03),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -350,14 +339,10 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen>
             // Transactions Timeline List
             ...txns.map((t) {
               final isUdhaar = t.type.toUpperCase() == 'UDHAAR';
-              return Container(
+              return GlassCard(
+                radius: 18,
                 margin: const EdgeInsets.only(bottom: 8),
                 padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: cardBg,
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: cardBorder),
-                ),
                 child: Row(
                   children: [
                     Container(

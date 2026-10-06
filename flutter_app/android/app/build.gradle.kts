@@ -1,12 +1,10 @@
-import com.android.build.api.dsl.ApplicationExtension
-
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("dev.flutter.flutter-gradle-plugin")
 }
 
-configure<ApplicationExtension> {
+android {
     namespace = "com.aistudio.udhar_khata_flutter"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion

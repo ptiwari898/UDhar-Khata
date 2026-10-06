@@ -18,8 +18,8 @@ class _ReportsScreenState extends State<ReportsScreen> {
     final state = widget.state;
     final p = state.activePalette;
 
-    final cardBg = p.isDark ? AppColors.popupSurface : Colors.white;
-    final cardBorder = p.isDark ? Colors.white12 : const Color(0xFFE5E7EB);
+    final cardBg = Theme.of(context).colorScheme.surfaceContainerLow;
+    final cardBorder = Theme.of(context).colorScheme.outlineVariant;
     final titleColor = p.textPrimary;
     final subtitleColor = p.textSecondary;
 
@@ -42,13 +42,9 @@ class _ReportsScreenState extends State<ReportsScreen> {
         padding: const EdgeInsets.fromLTRB(18, 4, 18, 100),
         children: [
           // Date Filter Selector
-          Container(
+          GlassCard(
+            radius: 16,
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-            decoration: BoxDecoration(
-              color: cardBg,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: cardBorder),
-            ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -100,20 +96,9 @@ class _ReportsScreenState extends State<ReportsScreen> {
           const SizedBox(height: 20),
 
           // Daily Collection vs Credit Bar Chart Card
-          Container(
+          GlassCard(
+            radius: 20,
             padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: cardBg,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: cardBorder),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: p.isDark ? 0.2 : 0.03),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -200,13 +185,9 @@ class _ReportsScreenState extends State<ReportsScreen> {
 
   Widget _buildMetricCard(String label, String value, Color valueColor, Color cardBg, Color cardBorder, Color subtitleColor) {
     return Expanded(
-      child: Container(
+      child: GlassCard(
+        radius: 18,
         padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: cardBg,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: cardBorder),
-        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -259,14 +240,10 @@ class _ReportsScreenState extends State<ReportsScreen> {
   }
 
   Widget _buildTopCustomerRow(int rank, String name, String amount, Color avatarBg, Color avatarColor, Color cardBg, Color cardBorder, Color titleColor) {
-    return Container(
+    return GlassCard(
+      radius: 18,
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: cardBg,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: cardBorder),
-      ),
       child: Row(
         children: [
           CircleAvatar(

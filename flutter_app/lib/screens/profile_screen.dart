@@ -38,9 +38,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final state = widget.state;
     final p = state.activePalette;
 
-    final cardBg = p.isDark ? AppColors.popupSurface : Colors.white;
-    final cardBorder = p.isDark ? Colors.white12 : const Color(0xFFE5E7EB);
+    final cardBorder = Theme.of(context).colorScheme.outlineVariant;
     final titleColor = p.textPrimary;
+    final usingSystemColors = state.useSystemColors && state.systemColorsAvailable;
     final subtitleColor = p.textSecondary;
 
     return Scaffold(
@@ -53,20 +53,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
           const SizedBox(height: 16),
 
           // Avatar & Shop Header
-          Container(
+          GlassCard(
+            radius: 20,
             padding: const EdgeInsets.all(18),
-            decoration: BoxDecoration(
-              color: cardBg,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: cardBorder),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: p.isDark ? 0.3 : 0.03),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
             child: Row(
               children: [
                 Container(
@@ -99,20 +88,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
           const SizedBox(height: 16),
 
           // Language Selection Card
-          Container(
+          GlassCard(
+            radius: 20,
             padding: const EdgeInsets.all(18),
-            decoration: BoxDecoration(
-              color: cardBg,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: cardBorder),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: p.isDark ? 0.3 : 0.03),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -173,20 +151,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
 
           // Wallvault Appearance Card (Matching Screenshot)
-          Container(
+          GlassCard(
+            radius: 24,
             padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: cardBg,
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: cardBorder),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: p.isDark ? 0.35 : 0.04),
-                  blurRadius: 10,
-                  offset: const Offset(0, 3),
-                ),
-              ],
-            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -280,7 +247,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             ),
                           ),
                           Text(
-                            'Material You dynamic colors (Android 12+)',
+                            state.systemColorsAvailable
+                                ? 'Material You colors from your wallpaper'
+                                : 'Not supported on this device (needs Android 12+)',
                             style: TextStyle(
                               fontSize: 12,
                               color: subtitleColor,
@@ -290,9 +259,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                     ),
                     Switch.adaptive(
-                      value: state.useSystemColors,
+                      value: state.useSystemColors && state.systemColorsAvailable,
                       activeColor: p.primaryAccent,
-                      onChanged: (val) => state.setUseSystemColors(val),
+                      onChanged: state.systemColorsAvailable ? (val) => state.setUseSystemColors(val) : null,
                     ),
                   ],
                 ),
@@ -318,12 +287,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 const SizedBox(height: 16),
 
                 // 8 Dual-Split Swatch Cards (2 rows x 4 columns)
-                _buildThemeColorGrid(state, p),
+                // Presets are inactive while wallpaper colors drive the theme.
+                IgnorePointer(
+                  ignoring: usingSystemColors,
+                  child: AnimatedOpacity(
+                    duration: const Duration(milliseconds: 200),
+                    opacity: usingSystemColors ? 0.35 : 1,
+                    child: _buildThemeColorGrid(state, p),
+                  ),
+                ),
                 const SizedBox(height: 12),
 
                 // Selected Color Text Indicator (Matching Screenshot)
                 Text(
-                  'Selected: ${state.selectedThemeColor}',
+                  usingSystemColors ? 'Selected: SYSTEM (Material You)' : 'Selected: ${state.selectedThemeColor}',
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.bold,
@@ -337,20 +314,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
           const SizedBox(height: 16),
 
           // Liquid Glass & Blur Settings (Wallvault Style Settings)
-          Container(
+          GlassCard(
+            radius: 20,
             padding: const EdgeInsets.all(18),
-            decoration: BoxDecoration(
-              color: cardBg,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: cardBorder),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: p.isDark ? 0.3 : 0.03),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -369,7 +335,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: titleColor),
                             ),
                             Text(
-                              'App-wide frosted backdrop blur',
+                              'Liquid glass cards & navigation bar',
                               style: TextStyle(fontSize: 12, color: subtitleColor),
                             ),
                           ],
@@ -417,20 +383,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
           const SizedBox(height: 16),
 
           // Edit Form
-          Container(
+          GlassCard(
+            radius: 20,
             padding: const EdgeInsets.all(18),
-            decoration: BoxDecoration(
-              color: cardBg,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: cardBorder),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: p.isDark ? 0.3 : 0.03),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -550,20 +505,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
           const SizedBox(height: 16),
 
           // Backup & Data Recovery
-          Container(
+          GlassCard(
+            radius: 20,
             padding: const EdgeInsets.all(18),
-            decoration: BoxDecoration(
-              color: cardBg,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: cardBorder),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: p.isDark ? 0.3 : 0.03),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
