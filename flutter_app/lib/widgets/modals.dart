@@ -105,7 +105,7 @@ class Modals {
     );
   }
 
-  static void showAddUdhar(BuildContext context, LedgerState state, {int? initialCustomerId}) {
+  static void showAddUdhar(BuildContext context, LedgerState state, {String? initialCustomerId}) {
     Customer? selectedCust = state.customers.where((c) => c.id == initialCustomerId).firstOrNull ?? state.customers.firstOrNull;
     final amountCtrl = TextEditingController();
     final noteCtrl = TextEditingController(text: 'Grocery Items');
@@ -196,7 +196,7 @@ class Modals {
     );
   }
 
-  static void showReceivePayment(BuildContext context, LedgerState state, {int? initialCustomerId}) {
+  static void showReceivePayment(BuildContext context, LedgerState state, {String? initialCustomerId}) {
     Customer? selectedCust = state.customers.where((c) => c.id == initialCustomerId).firstOrNull ?? state.customers.firstOrNull;
     final amountCtrl = TextEditingController();
     final refCtrl = TextEditingController();
@@ -704,10 +704,10 @@ class Modals {
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
                 icon: const Icon(Icons.check_circle_outline, size: 18),
-                onPressed: () {
-                  int? custId = parsed['customerId'];
+                onPressed: () async {
+                  String? custId = parsed['customerId'];
                   if (custId == null) {
-                    final newCust = state.addCustomer(name: parsed['customerName'], phone: '98765 00000', location: 'Bhopal, MP');
+                    final newCust = await state.addCustomer(name: parsed['customerName'], phone: '98765 00000', location: 'Bhopal, MP');
                     custId = newCust.id;
                   }
                   state.addTransaction(
@@ -716,6 +716,7 @@ class Modals {
                     amount: parsed['amount'],
                     note: parsed['note'],
                   );
+                  if (!ctx.mounted) return;
                   Navigator.pop(ctx);
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
@@ -778,10 +779,10 @@ class Modals {
           TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel', style: TextStyle(color: AppColors.textSecondary))),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: AppColors.primaryBlue, foregroundColor: const Color(0xFF062622)),
-            onPressed: () {
-              int? custId = parsed['customerId'];
+            onPressed: () async {
+              String? custId = parsed['customerId'];
               if (custId == null) {
-                final newCust = state.addCustomer(name: parsed['customerName'], phone: '98765 00000', location: 'Bhopal, MP');
+                final newCust = await state.addCustomer(name: parsed['customerName'], phone: '98765 00000', location: 'Bhopal, MP');
                 custId = newCust.id;
               }
               state.addTransaction(
@@ -790,6 +791,7 @@ class Modals {
                 amount: parsed['amount'],
                 note: parsed['note'],
               );
+              if (!ctx.mounted) return;
               Navigator.pop(ctx);
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('Transaction saved successfully!')),
@@ -802,7 +804,7 @@ class Modals {
     );
   }
 
-  static void showAddReminder(BuildContext context, LedgerState state, {int? initialCustomerId, String? initialType}) {
+  static void showAddReminder(BuildContext context, LedgerState state, {String? initialCustomerId, String? initialType}) {
     String reminderType = initialType ?? 'RECOVER_UDHAR';
     Customer? selectedCust = state.customers.where((c) => c.id == initialCustomerId).firstOrNull ?? state.customers.firstOrNull;
     final titleCtrl = TextEditingController(text: selectedCust?.name ?? '');
@@ -1083,7 +1085,7 @@ class Modals {
                 }
                 final finalTitle = titleCtrl.text.trim().isNotEmpty ? titleCtrl.text.trim() : (selectedCust?.name ?? 'Payment Reminder');
                 state.addReminder(
-                  customerId: reminderType == 'RECOVER_UDHAR' ? (selectedCust?.id ?? 0) : 0,
+                  customerId: reminderType == 'RECOVER_UDHAR' ? (selectedCust?.id ?? '') : '',
                   title: finalTitle,
                   amount: amt,
                   dueDate: selectedDate,

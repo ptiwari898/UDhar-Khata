@@ -1,5 +1,6 @@
 class ShopProfile {
-  final int id;
+  final String id;
+  final String ownerId;
   final String shopName;
   final String ownerName;
   final String phone;
@@ -8,9 +9,11 @@ class ShopProfile {
   final String upiId;
   final String gstin;
   final String email;
+  final DateTime updatedAt;
 
-  const ShopProfile({
-    this.id = 1,
+  ShopProfile({
+    this.id = '',
+    this.ownerId = '',
     required this.shopName,
     required this.ownerName,
     required this.phone,
@@ -19,7 +22,8 @@ class ShopProfile {
     this.upiId = 'shivamkirana@upi',
     this.gstin = '23AAAAA0000A1Z5',
     this.email = 'merchant@udharkhata.com',
-  });
+    DateTime? updatedAt,
+  }) : updatedAt = updatedAt ?? DateTime.now();
 
   ShopProfile copyWith({
     String? shopName,
@@ -30,9 +34,11 @@ class ShopProfile {
     String? upiId,
     String? gstin,
     String? email,
+    DateTime? updatedAt,
   }) {
     return ShopProfile(
       id: id,
+      ownerId: ownerId,
       shopName: shopName ?? this.shopName,
       ownerName: ownerName ?? this.ownerName,
       phone: phone ?? this.phone,
@@ -41,52 +47,63 @@ class ShopProfile {
       upiId: upiId ?? this.upiId,
       gstin: gstin ?? this.gstin,
       email: email ?? this.email,
+      updatedAt: updatedAt ?? this.updatedAt,
     );
   }
 
   Map<String, dynamic> toJson() => {
     'id': id,
-    'shopName': shopName,
-    'ownerName': ownerName,
+    'owner_id': ownerId,
+    'shop_name': shopName,
+    'owner_name': ownerName,
     'phone': phone,
     'location': location,
     'address': address,
-    'upiId': upiId,
+    'upi_id': upiId,
     'gstin': gstin,
     'email': email,
+    'updated_at': updatedAt.toIso8601String(),
   };
 
   factory ShopProfile.fromJson(Map<String, dynamic> json) => ShopProfile(
-    id: json['id'] as int? ?? 1,
-    shopName: json['shopName'] as String? ?? 'Shop',
-    ownerName: json['ownerName'] as String? ?? 'Merchant',
+    id: json['id'] as String? ?? '',
+    ownerId: json['owner_id'] as String? ?? '',
+    shopName: json['shop_name'] as String? ?? 'Shop',
+    ownerName: json['owner_name'] as String? ?? 'Merchant',
     phone: json['phone'] as String? ?? '',
     location: json['location'] as String? ?? 'Bhopal, MP',
     address: json['address'] as String? ?? '',
-    upiId: json['upiId'] as String? ?? 'merchant@upi',
+    upiId: json['upi_id'] as String? ?? 'merchant@upi',
     gstin: json['gstin'] as String? ?? '',
     email: json['email'] as String? ?? '',
+    updatedAt: json['updated_at'] != null
+        ? DateTime.parse(json['updated_at'] as String)
+        : DateTime.now(),
   );
 }
 
 class Customer {
-  final int id;
+  final String id;
+  final String shopId;
   final String name;
   final String phone;
   final String location;
   final String riskLevel; // 'High', 'Medium', 'Low'
   final double creditLimit;
   final String notes;
+  final DateTime updatedAt;
 
-  const Customer({
+  Customer({
     required this.id,
+    this.shopId = '',
     required this.name,
     required this.phone,
     required this.location,
     this.riskLevel = 'Low',
     this.creditLimit = 15000.0,
     this.notes = '',
-  });
+    DateTime? updatedAt,
+  }) : updatedAt = updatedAt ?? DateTime.now();
 
   Customer copyWith({
     String? name,
@@ -95,36 +112,45 @@ class Customer {
     String? riskLevel,
     double? creditLimit,
     String? notes,
+    DateTime? updatedAt,
   }) {
     return Customer(
       id: id,
+      shopId: shopId,
       name: name ?? this.name,
       phone: phone ?? this.phone,
       location: location ?? this.location,
       riskLevel: riskLevel ?? this.riskLevel,
       creditLimit: creditLimit ?? this.creditLimit,
       notes: notes ?? this.notes,
+      updatedAt: updatedAt ?? DateTime.now(),
     );
   }
 
   Map<String, dynamic> toJson() => {
     'id': id,
+    'shop_id': shopId,
     'name': name,
     'phone': phone,
     'location': location,
-    'riskLevel': riskLevel,
-    'creditLimit': creditLimit,
+    'risk_level': riskLevel,
+    'credit_limit': creditLimit,
     'notes': notes,
+    'updated_at': updatedAt.toIso8601String(),
   };
 
   factory Customer.fromJson(Map<String, dynamic> json) => Customer(
-    id: json['id'] as int,
+    id: json['id'] as String,
+    shopId: json['shop_id'] as String? ?? '',
     name: json['name'] as String? ?? '',
     phone: json['phone'] as String? ?? '',
     location: json['location'] as String? ?? '',
-    riskLevel: json['riskLevel'] as String? ?? 'Low',
-    creditLimit: (json['creditLimit'] as num?)?.toDouble() ?? 15000.0,
+    riskLevel: json['risk_level'] as String? ?? 'Low',
+    creditLimit: (json['credit_limit'] as num?)?.toDouble() ?? 15000.0,
     notes: json['notes'] as String? ?? '',
+    updatedAt: json['updated_at'] != null
+        ? DateTime.parse(json['updated_at'] as String)
+        : DateTime.now(),
   );
 
   @override
@@ -137,17 +163,20 @@ class Customer {
 }
 
 class LedgerTransaction {
-  final int id;
-  final int customerId;
+  final String id;
+  final String shopId;
+  final String customerId;
   final String type; // 'UDHAAR', 'PAYMENT', 'ADVANCE', 'REFUND', 'ADJUSTMENT'
   final double amount;
   final String note;
   final DateTime date;
   final String paymentMethod; // 'Cash', 'UPI', 'Bank Transfer', 'Other'
   final String reference;
+  final DateTime updatedAt;
 
-  const LedgerTransaction({
+  LedgerTransaction({
     required this.id,
+    this.shopId = '',
     required this.customerId,
     required this.type,
     required this.amount,
@@ -155,121 +184,180 @@ class LedgerTransaction {
     required this.date,
     this.paymentMethod = 'Cash',
     this.reference = '',
-  });
+    DateTime? updatedAt,
+  }) : updatedAt = updatedAt ?? DateTime.now();
+
+  LedgerTransaction copyWith({
+    String? type,
+    double? amount,
+    String? note,
+    DateTime? date,
+    String? paymentMethod,
+    String? reference,
+    DateTime? updatedAt,
+  }) {
+    return LedgerTransaction(
+      id: id,
+      shopId: shopId,
+      customerId: customerId,
+      type: type ?? this.type,
+      amount: amount ?? this.amount,
+      note: note ?? this.note,
+      date: date ?? this.date,
+      paymentMethod: paymentMethod ?? this.paymentMethod,
+      reference: reference ?? this.reference,
+      updatedAt: updatedAt ?? DateTime.now(),
+    );
+  }
 
   Map<String, dynamic> toJson() => {
     'id': id,
-    'customerId': customerId,
+    'shop_id': shopId,
+    'customer_id': customerId,
     'type': type,
     'amount': amount,
     'note': note,
-    'date': date.toIso8601String(),
-    'paymentMethod': paymentMethod,
+    'txn_date': date.toIso8601String(),
+    'payment_method': paymentMethod,
     'reference': reference,
+    'updated_at': updatedAt.toIso8601String(),
   };
 
   factory LedgerTransaction.fromJson(Map<String, dynamic> json) => LedgerTransaction(
-    id: json['id'] as int,
-    customerId: json['customerId'] as int,
+    id: json['id'] as String,
+    shopId: json['shop_id'] as String? ?? '',
+    customerId: json['customer_id'] as String,
     type: json['type'] as String? ?? 'UDHAAR',
     amount: (json['amount'] as num?)?.toDouble() ?? 0.0,
     note: json['note'] as String? ?? '',
-    date: json['date'] != null ? DateTime.parse(json['date'] as String) : DateTime.now(),
-    paymentMethod: json['paymentMethod'] as String? ?? 'Cash',
+    date: json['txn_date'] != null
+        ? DateTime.parse(json['txn_date'] as String)
+        : DateTime.now(),
+    paymentMethod: json['payment_method'] as String? ?? 'Cash',
     reference: json['reference'] as String? ?? '',
+    updatedAt: json['updated_at'] != null
+        ? DateTime.parse(json['updated_at'] as String)
+        : DateTime.now(),
   );
 
   DateTime get timestamp => date;
 }
 
 class CustomerOrder {
-  final int id;
-  final int customerId;
+  final String id;
+  final String shopId;
+  final String customerId;
   final String itemsSummary;
   final double totalAmount;
   final double advancePaid;
   final String status; // 'CONFIRMED', 'READY', 'DELIVERED', 'COMPLETED'
   final DateTime date;
+  final DateTime updatedAt;
 
-  const CustomerOrder({
+  CustomerOrder({
     required this.id,
+    this.shopId = '',
     required this.customerId,
     required this.itemsSummary,
     required this.totalAmount,
     this.advancePaid = 0.0,
     this.status = 'CONFIRMED',
     required this.date,
-  });
+    DateTime? updatedAt,
+  }) : updatedAt = updatedAt ?? DateTime.now();
 
   CustomerOrder copyWith({
     String? status,
     double? advancePaid,
+    DateTime? updatedAt,
   }) {
     return CustomerOrder(
       id: id,
+      shopId: shopId,
       customerId: customerId,
       itemsSummary: itemsSummary,
       totalAmount: totalAmount,
       advancePaid: advancePaid ?? this.advancePaid,
       status: status ?? this.status,
       date: date,
+      updatedAt: updatedAt ?? DateTime.now(),
     );
   }
 
   Map<String, dynamic> toJson() => {
     'id': id,
-    'customerId': customerId,
-    'itemsSummary': itemsSummary,
-    'totalAmount': totalAmount,
-    'advancePaid': advancePaid,
+    'shop_id': shopId,
+    'customer_id': customerId,
+    'items_summary': itemsSummary,
+    'total_amount': totalAmount,
+    'advance_paid': advancePaid,
     'status': status,
-    'date': date.toIso8601String(),
+    'order_date': date.toIso8601String(),
+    'updated_at': updatedAt.toIso8601String(),
   };
 
   factory CustomerOrder.fromJson(Map<String, dynamic> json) => CustomerOrder(
-    id: json['id'] as int,
-    customerId: json['customerId'] as int,
-    itemsSummary: json['itemsSummary'] as String? ?? '',
-    totalAmount: (json['totalAmount'] as num?)?.toDouble() ?? 0.0,
-    advancePaid: (json['advancePaid'] as num?)?.toDouble() ?? 0.0,
+    id: json['id'] as String,
+    shopId: json['shop_id'] as String? ?? '',
+    customerId: json['customer_id'] as String,
+    itemsSummary: json['items_summary'] as String? ?? '',
+    totalAmount: (json['total_amount'] as num?)?.toDouble() ?? 0.0,
+    advancePaid: (json['advance_paid'] as num?)?.toDouble() ?? 0.0,
     status: json['status'] as String? ?? 'CONFIRMED',
-    date: json['date'] != null ? DateTime.parse(json['date'] as String) : DateTime.now(),
+    date: json['order_date'] != null
+        ? DateTime.parse(json['order_date'] as String)
+        : DateTime.now(),
+    updatedAt: json['updated_at'] != null
+        ? DateTime.parse(json['updated_at'] as String)
+        : DateTime.now(),
   );
 }
 
 class ChatMessage {
-  final int id;
-  final int customerId;
+  final String id;
+  final String shopId;
+  final String customerId;
   final String sender; // 'SHOP', 'CUSTOMER'
   final String message;
   final String messageType; // 'TEXT', 'BILL', 'PAYMENT'
   final DateTime timestamp;
+  final DateTime updatedAt;
 
-  const ChatMessage({
+  ChatMessage({
     required this.id,
+    this.shopId = '',
     required this.customerId,
     required this.sender,
     required this.message,
     this.messageType = 'TEXT',
     required this.timestamp,
-  });
+    DateTime? updatedAt,
+  }) : updatedAt = updatedAt ?? DateTime.now();
 
   Map<String, dynamic> toJson() => {
     'id': id,
-    'customerId': customerId,
+    'shop_id': shopId,
+    'customer_id': customerId,
     'sender': sender,
     'message': message,
-    'messageType': messageType,
-    'timestamp': timestamp.toIso8601String(),
+    'message_type': messageType,
+    'sent_at': timestamp.toIso8601String(),
+    'updated_at': updatedAt.toIso8601String(),
   };
 
   factory ChatMessage.fromJson(Map<String, dynamic> json) => ChatMessage(
-    id: json['id'] as int,
-    customerId: json['customerId'] as int,
+    id: json['id'] as String,
+    shopId: json['shop_id'] as String? ?? '',
+    customerId: json['customer_id'] as String,
     sender: json['sender'] as String? ?? 'SHOP',
     message: json['message'] as String? ?? '',
-    messageType: json['messageType'] as String? ?? 'TEXT',
-    timestamp: json['timestamp'] != null ? DateTime.parse(json['timestamp'] as String) : DateTime.now(),
+    messageType: json['message_type'] as String? ?? 'TEXT',
+    timestamp: json['sent_at'] != null
+        ? DateTime.parse(json['sent_at'] as String)
+        : DateTime.now(),
+    updatedAt: json['updated_at'] != null
+        ? DateTime.parse(json['updated_at'] as String)
+        : DateTime.now(),
   );
 }
 
@@ -344,8 +432,10 @@ enum AlertOption {
 }
 
 class PaymentReminder {
-  final int id;
-  final int customerId;
+  final String id;
+  final String shopId;
+  /// Empty string means "not tied to a customer" (e.g. a PAY_SUPPLIER bill).
+  final String customerId;
   final String title;
   final double amount;
   final DateTime dueDate;
@@ -354,10 +444,12 @@ class PaymentReminder {
   final bool isSettled;
   final String note;
   final DateTime createdAt;
+  final DateTime updatedAt;
 
-  const PaymentReminder({
+  PaymentReminder({
     required this.id,
-    required this.customerId,
+    this.shopId = '',
+    this.customerId = '',
     required this.title,
     required this.amount,
     required this.dueDate,
@@ -366,11 +458,11 @@ class PaymentReminder {
     this.isSettled = false,
     this.note = '',
     required this.createdAt,
-  });
+    DateTime? updatedAt,
+  }) : updatedAt = updatedAt ?? DateTime.now();
 
   PaymentReminder copyWith({
-    int? id,
-    int? customerId,
+    String? customerId,
     String? title,
     double? amount,
     DateTime? dueDate,
@@ -379,9 +471,11 @@ class PaymentReminder {
     bool? isSettled,
     String? note,
     DateTime? createdAt,
+    DateTime? updatedAt,
   }) {
     return PaymentReminder(
-      id: id ?? this.id,
+      id: id,
+      shopId: shopId,
       customerId: customerId ?? this.customerId,
       title: title ?? this.title,
       amount: amount ?? this.amount,
@@ -391,35 +485,52 @@ class PaymentReminder {
       isSettled: isSettled ?? this.isSettled,
       note: note ?? this.note,
       createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? DateTime.now(),
     );
   }
 
   Map<String, dynamic> toJson() => {
     'id': id,
-    'customerId': customerId,
+    'shop_id': shopId,
+    'customer_id': customerId.isEmpty ? null : customerId,
     'title': title,
     'amount': amount,
-    'dueDate': dueDate.toIso8601String(),
-    'reminderType': reminderType,
-    'alertOption': alertOption.name,
-    'isSettled': isSettled,
+    'due_date': dueDate.toIso8601String(),
+    'reminder_type': reminderType,
+    'alert_option': alertOption.name,
+    'is_settled': isSettled,
     'note': note,
-    'createdAt': createdAt.toIso8601String(),
+    'created_at': createdAt.toIso8601String(),
+    'updated_at': updatedAt.toIso8601String(),
   };
 
   factory PaymentReminder.fromJson(Map<String, dynamic> json) => PaymentReminder(
-    id: json['id'] as int,
-    customerId: json['customerId'] as int? ?? 0,
+    id: json['id'] as String,
+    shopId: json['shop_id'] as String? ?? '',
+    customerId: json['customer_id'] as String? ?? '',
     title: json['title'] as String? ?? 'Payment Reminder',
     amount: (json['amount'] as num?)?.toDouble() ?? 0.0,
-    dueDate: json['dueDate'] != null ? DateTime.parse(json['dueDate'] as String) : DateTime.now(),
-    reminderType: json['reminderType'] as String? ?? 'RECOVER_UDHAR',
+    dueDate: json['due_date'] != null
+        ? DateTime.parse(json['due_date'] as String)
+        : DateTime.now(),
+    reminderType: json['reminder_type'] as String? ?? 'RECOVER_UDHAR',
     alertOption: AlertOption.values.firstWhere(
-      (a) => a.name == json['alertOption'],
+      (a) => a.name == json['alert_option'],
       orElse: () => AlertOption.sameDay,
     ),
-    isSettled: json['isSettled'] as bool? ?? false,
+    // Supabase returns a real bool; the local sqlite cache stores 0/1
+    // (sqflite has no boolean column type), so accept either.
+    isSettled: switch (json['is_settled']) {
+      bool b => b,
+      int i => i != 0,
+      _ => false,
+    },
     note: json['note'] as String? ?? '',
-    createdAt: json['createdAt'] != null ? DateTime.parse(json['createdAt'] as String) : DateTime.now(),
+    createdAt: json['created_at'] != null
+        ? DateTime.parse(json['created_at'] as String)
+        : DateTime.now(),
+    updatedAt: json['updated_at'] != null
+        ? DateTime.parse(json['updated_at'] as String)
+        : DateTime.now(),
   );
 }

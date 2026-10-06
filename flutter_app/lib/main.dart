@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:liquid_glass_renderer/liquid_glass_renderer.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'env.dart';
 import 'screens/auth_screen.dart';
 import 'screens/customers_screen.dart';
 import 'screens/dashboard_screen.dart';
@@ -11,7 +13,9 @@ import 'screens/reports_screen.dart';
 import 'state/ledger_state.dart';
 import 'theme/app_theme.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Supabase.initialize(url: supabaseUrl, publishableKey: supabaseAnonKey);
   runApp(const UdharKhataApp());
 }
 

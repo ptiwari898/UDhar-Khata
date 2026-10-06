@@ -1,35 +1,54 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:udhar_khata_flutter/data/local/app_database.dart';
+import 'package:udhar_khata_flutter/data/repository/ledger_repository.dart';
 import 'package:udhar_khata_flutter/models/models.dart';
 import 'package:udhar_khata_flutter/state/ledger_state.dart';
 
+import 'fakes.dart';
+
 void main() {
+  setUpAll(() async {
+    sqfliteFfiInit();
+    databaseFactory = databaseFactoryFfi;
+    // Drop any cache file left by a previous run of this suite, so schema
+    // changes don't fail against a stale on-disk file.
+    await AppDatabase.instance.deleteForTests();
+  });
+
   group('Udhar Khata - LedgerState Comprehensive Unit Tests', () {
+    late FakeAuthService fakeAuth;
+    late LedgerRepository repository;
     late LedgerState state;
 
     setUp(() {
-      state = LedgerState();
+      fakeAuth = FakeAuthService()..testUserId = 'test-user';
+      repository = LedgerRepository(authService: fakeAuth);
+      repository.seedShopIdForTests('test-shop');
+      state = LedgerState(authService: fakeAuth, repository: repository);
     });
 
-    test('1. Initial State carries sample customers, transactions and shop profile', () {
-      expect(state.customers.length, greaterThanOrEqualTo(5));
-      expect(state.transactions.length, greaterThanOrEqualTo(5));
-      expect(state.orders.length, greaterThanOrEqualTo(3));
-      expect(state.shopProfile.shopName, 'Shivam Kirana Store');
-      expect(state.currentUser, isNotNull);
-      expect(state.currentUser?.name, 'Shivam Kirana Store');
+    tearDown(() async {
+      await AppDatabase.instance.clearAll();
     });
 
-    test('2. Financial Summary aggregates correctly', () {
+    test('1. A freshly signed-in shop starts with an empty ledger', () {
+      expect(state.customers, isEmpty);
+      expect(state.transactions, isEmpty);
+      expect(state.orders, isEmpty);
+      expect(state.currentUser, isNull); // FakeAuthService reports signed out
+    });
+
+    test('2. Financial Summary on an empty ledger is all zeroes', () {
       final summary = state.getSummary();
-      expect(summary.currentOutstandingUdhar, greaterThan(0));
-      expect(summary.totalLoanedTillDate, greaterThan(0));
-      expect(summary.totalRepaid, greaterThan(0));
-      expect(summary.customerBreakdown.isNotEmpty, true);
+      expect(summary.currentOutstandingUdhar, 0);
+      expect(summary.totalLoanedTillDate, 0);
+      expect(summary.totalRepaid, 0);
+      expect(summary.customerBreakdown, isEmpty);
     });
 
-    test('3. Add Customer increases customer count', () {
-      final initialCount = state.customers.length;
-      final newCustomer = state.addCustomer(
+    test('3. Add Customer increases customer count', () async {
+      final newCustomer = await state.addCustomer(
         name: 'Amit Sharma',
         phone: '98765 43210',
         location: 'Sector 62, Noida',
@@ -37,16 +56,17 @@ void main() {
         notes: 'Regular retail customer',
       );
 
-      expect(state.customers.length, initialCount + 1);
+      expect(state.customers.length, 1);
       expect(newCustomer.name, 'Amit Sharma');
+      expect(newCustomer.id, isNotEmpty);
       expect(state.customers.any((c) => c.name == 'Amit Sharma'), true);
     });
 
-    test('4. Add UDHAAR Transaction increases customer outstanding balance', () {
-      final customer = state.customers.first;
+    test('4. Add UDHAAR Transaction increases customer outstanding balance', () async {
+      final customer = await state.addCustomer(name: 'Ramesh General Store', phone: '98765 00001', location: 'Bhopal');
       final initialSummary = state.getCustomerSummary(customer);
 
-      state.addTransaction(
+      await state.addTransaction(
         customerId: customer.id,
         type: 'UDHAAR',
         amount: 1500.0,
@@ -59,11 +79,12 @@ void main() {
       expect(updatedSummary.currentOutstanding, initialSummary.currentOutstanding + 1500.0);
     });
 
-    test('5. Add PAYMENT Transaction decreases customer outstanding balance', () {
-      final customer = state.customers.first;
+    test('5. Add PAYMENT Transaction decreases customer outstanding balance', () async {
+      final customer = await state.addCustomer(name: 'Sanjay Dairy', phone: '98765 00002', location: 'Bhopal');
+      await state.addTransaction(customerId: customer.id, type: 'UDHAAR', amount: 2000.0);
       final initialSummary = state.getCustomerSummary(customer);
 
-      state.addTransaction(
+      await state.addTransaction(
         customerId: customer.id,
         type: 'PAYMENT',
         amount: 1000.0,
@@ -76,41 +97,50 @@ void main() {
       expect(updatedSummary.currentOutstanding, initialSummary.currentOutstanding - 1000.0);
     });
 
-    test('6. Add Order and Advance Transaction', () {
-      final initialOrdersCount = state.orders.length;
-      final initialTxnCount = state.transactions.length;
+    test('6. Add Order and Advance Transaction', () async {
+      final customer = await state.addCustomer(name: 'Maa Traders', phone: '98765 00003', location: 'Bhopal');
 
-      state.addOrder(
-        customerId: 1,
+      await state.addOrder(
+        customerId: customer.id,
         itemsSummary: '50kg Wheat Flour & 10kg Basmati Rice',
         totalAmount: 3500.0,
         advancePaid: 1000.0,
       );
 
-      expect(state.orders.length, initialOrdersCount + 1);
-      // Advance payment should have created an ADVANCE transaction
-      expect(state.transactions.length, initialTxnCount + 1);
+      expect(state.orders.length, 1);
+      // Advance payment should have created an ADVANCE transaction.
+      expect(state.transactions.length, 1);
       expect(state.transactions.first.type, 'ADVANCE');
       expect(state.transactions.first.amount, 1000.0);
     });
 
-    test('7. Update Order Status', () {
-      final firstOrder = state.orders.first;
-      state.updateOrderStatus(firstOrder.id, 'DELIVERED');
+    test('7. Update Order Status', () async {
+      final customer = await state.addCustomer(name: 'Verma Medical', phone: '98765 00004', location: 'Bhopal');
+      final order = await state.addOrder(
+        customerId: customer.id,
+        itemsSummary: 'Mineral water cartons',
+        totalAmount: 1260.0,
+        advancePaid: 0.0,
+      );
 
-      final updatedOrder = state.orders.firstWhere((o) => o.id == firstOrder.id);
+      await state.updateOrderStatus(order.id, 'DELIVERED');
+
+      final updatedOrder = state.orders.firstWhere((o) => o.id == order.id);
       expect(updatedOrder.status, 'DELIVERED');
     });
 
-    test('8. Chat Message Logging', () {
-      final initialChatCount = state.chatMessages.length;
-      state.sendChatMessage(1, 'Payment reminder sent for ₹ 4200');
+    test('8. Chat Message Logging', () async {
+      final customer = await state.addCustomer(name: 'Krishna Mart', phone: '98765 00005', location: 'Bhopal');
+      await state.sendChatMessage(customer.id, 'Payment reminder sent for ₹ 4200');
 
-      expect(state.chatMessages.length, initialChatCount + 1);
+      expect(state.chatMessages.length, 1);
       expect(state.chatMessages.last.message, 'Payment reminder sent for ₹ 4200');
     });
 
-    test('9. AI Voice Parser parses spoken text accurately', () {
+    test('9. AI Voice Parser parses spoken text accurately', () async {
+      await state.addCustomer(name: 'Ramesh General Store', phone: '98765 00001', location: 'Bhopal');
+      await state.addCustomer(name: 'Sanjay Dairy', phone: '98765 00002', location: 'Bhopal');
+
       final result1 = state.parseVoiceText('Ramesh ko 500 ka tel udhar diya');
       expect(result1['customerName'], contains('Ramesh'));
       expect(result1['amount'], 500.0);
@@ -122,33 +152,25 @@ void main() {
       expect(result2['type'], 'PAYMENT');
     });
 
-    test('10. Authentication and Profile Management', () {
-      state.logout();
-      expect(state.currentUser, isNull);
-
-      state.loginDemoUser('Pawan Tiwari', 'ptiwari898@gmail.com', true);
-      expect(state.currentUser?.name, 'Pawan Tiwari');
-      expect(state.currentUser?.email, 'ptiwari898@gmail.com');
-
+    test('10. Profile updates persist on the shop profile', () async {
       final updatedProfile = state.shopProfile.copyWith(
         shopName: 'Tiwari Super Mart',
         ownerName: 'Pawan Tiwari',
         upiId: 'pawantiwari@okhdfcbank',
       );
-      state.updateProfile(updatedProfile);
+      await state.updateProfile(updatedProfile);
 
       expect(state.shopProfile.shopName, 'Tiwari Super Mart');
       expect(state.shopProfile.ownerName, 'Pawan Tiwari');
       expect(state.shopProfile.upiId, 'pawantiwari@okhdfcbank');
     });
 
-    test('11. Payment Reminders and 3 Alert Options', () {
-      final initialCount = state.reminders.length;
-      expect(initialCount, greaterThanOrEqualTo(4));
+    test('11. Payment Reminders and 3 Alert Options', () async {
+      final customer = await state.addCustomer(name: 'Ramesh General Store', phone: '98765 00001', location: 'Bhopal');
 
-      // Test adding a customer Udhar recovery reminder with Alert Option 2 (1 Day Before)
-      state.addReminder(
-        customerId: 1,
+      // A customer udhar-recovery reminder with Alert Option 2 (1 Day Before).
+      final added = await state.addReminder(
+        customerId: customer.id,
         title: 'Ramesh General Store',
         amount: 2500.0,
         dueDate: DateTime.now().add(const Duration(days: 2)),
@@ -157,17 +179,16 @@ void main() {
         note: 'Weekly balance settlement',
       );
 
-      expect(state.reminders.length, initialCount + 1);
-      final added = state.reminders.last;
+      expect(state.reminders.length, 1);
       expect(added.title, 'Ramesh General Store');
       expect(added.amount, 2500.0);
       expect(added.reminderType, 'RECOVER_UDHAR');
       expect(added.alertOption, AlertOption.oneDayBefore);
       expect(state.getAlertOptionLabel(added.alertOption), contains('1 Day Before'));
 
-      // Test adding a Supplier Bill payment reminder with Alert Option 3 (3 Days Before)
-      state.addReminder(
-        customerId: 0,
+      // A supplier-bill reminder (no linked customer) with Alert Option 3 (3 Days Before).
+      final addedBill = await state.addReminder(
+        customerId: '',
         title: 'Fortune Oil Distributor',
         amount: 12000.0,
         dueDate: DateTime.now().add(const Duration(days: 5)),
@@ -176,28 +197,26 @@ void main() {
         note: 'Oil tins bulk invoice',
       );
 
-      final addedBill = state.reminders.last;
       expect(addedBill.title, 'Fortune Oil Distributor');
       expect(addedBill.reminderType, 'PAY_SUPPLIER');
       expect(addedBill.alertOption, AlertOption.threeDaysBefore);
       expect(state.getAlertOptionLabel(addedBill.alertOption), contains('3 Days Before'));
 
-      // Test toggle settled
+      // Toggle settled.
       expect(added.isSettled, false);
-      state.toggleReminderSettled(added.id);
+      await state.toggleReminderSettled(added.id);
       expect(state.reminders.firstWhere((r) => r.id == added.id).isSettled, true);
 
-      // Test delete reminder
-      state.deleteReminder(added.id);
+      // Delete reminder.
+      await state.deleteReminder(added.id);
       expect(state.reminders.any((r) => r.id == added.id), false);
     });
 
-    test('12. Mathematical Ledger Engine: Refund & Adjustment Handling', () {
-      final cust = state.customers.first;
+    test('12. Mathematical Ledger Engine: Refund & Adjustment Handling', () async {
+      final cust = await state.addCustomer(name: 'Krishna Mart', phone: '98765 00005', location: 'Bhopal');
       final baseSummary = state.getCustomerSummary(cust);
 
-      // Add Refund
-      state.addTransaction(
+      await state.addTransaction(
         customerId: cust.id,
         type: 'REFUND',
         amount: 300.0,
@@ -208,8 +227,7 @@ void main() {
       expect(summaryAfterRefund.totalRefund, 300.0);
       expect(summaryAfterRefund.currentOutstanding, baseSummary.currentOutstanding + 300.0);
 
-      // Add Adjustment
-      state.addTransaction(
+      await state.addTransaction(
         customerId: cust.id,
         type: 'ADJUSTMENT',
         amount: -100.0,
@@ -221,7 +239,10 @@ void main() {
       expect(summaryAfterAdj.currentOutstanding, summaryAfterRefund.currentOutstanding - 100.0);
     });
 
-    test('13. Backup Export, Import & Model Serialization', () {
+    test('13. Backup Export, Import & Model Serialization', () async {
+      await state.addCustomer(name: 'Pawan Tiwari', phone: '98765 00009', location: 'Bhopal');
+      await state.updateProfile(state.shopProfile.copyWith(ownerName: 'Pawan Tiwari'));
+
       final backupJson = state.exportBackupData();
       expect(backupJson, contains('Udhar Khata'));
       expect(backupJson, contains('Pawan Tiwari'));
@@ -233,5 +254,3 @@ void main() {
     });
   });
 }
-
-

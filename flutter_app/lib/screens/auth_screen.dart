@@ -14,15 +14,13 @@ class AuthScreen extends StatefulWidget {
 class _AuthScreenState extends State<AuthScreen> {
   // Step 0: Splash, Step 1: Mobile Login, Step 2: OTP Verification
   int _currentStep = 1;
-  final _phoneCtrl = TextEditingController(text: '98765 43210');
-  final List<TextEditingController> _otpControllers = List.generate(6, (i) => TextEditingController(text: '${i + 1}'));
+  final _phoneCtrl = TextEditingController();
+  final List<TextEditingController> _otpControllers = List.generate(6, (_) => TextEditingController());
   int _resendTimer = 30;
   Timer? _timer;
-
-  @override
-  void initState() {
-    super.initState();
-  }
+  bool _loading = false;
+  String? _errorText;
+  String _lastE164Phone = '';
 
   void _startTimer() {
     _resendTimer = 30;
@@ -46,20 +44,72 @@ class _AuthScreenState extends State<AuthScreen> {
     super.dispose();
   }
 
-  void _handleContinue() {
-    final phone = _phoneCtrl.text.trim();
+  Future<void> _handleContinue() async {
+    final phone = _phoneCtrl.text.replaceAll(RegExp(r'\s+'), '');
     if (phone.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter valid mobile number')),
-      );
+      setState(() => _errorText = 'Please enter a valid mobile number');
       return;
     }
-    _startTimer();
-    setState(() => _currentStep = 2);
+    final e164Phone = '+91$phone';
+    setState(() {
+      _loading = true;
+      _errorText = null;
+    });
+    try {
+      await widget.state.sendPhoneOtp(e164Phone);
+      _lastE164Phone = e164Phone;
+      if (!mounted) return;
+      _startTimer();
+      setState(() {
+        _loading = false;
+        _currentStep = 2;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _loading = false;
+        _errorText = 'Could not send OTP: $e';
+      });
+    }
   }
 
-  void _handleVerify() {
-    widget.state.loginDemoUser('Shivam Kirana Store', 'merchant@udharkhata.com', false);
+  Future<void> _handleVerify() async {
+    final code = _otpControllers.map((c) => c.text).join();
+    if (code.length != 6) {
+      setState(() => _errorText = 'Enter the 6-digit code');
+      return;
+    }
+    setState(() {
+      _loading = true;
+      _errorText = null;
+    });
+    try {
+      await widget.state.verifyPhoneOtp(_lastE164Phone, code);
+      // AuthScreen is swapped out by main.dart once currentUser becomes
+      // non-null, via the state's own listener-driven rebuild.
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _loading = false;
+        _errorText = 'Invalid or expired code: $e';
+      });
+    }
+  }
+
+  Future<void> _handleGoogleSignIn() async {
+    setState(() {
+      _loading = true;
+      _errorText = null;
+    });
+    try {
+      await widget.state.signInWithGoogle();
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _loading = false;
+        _errorText = 'Google sign-in failed: $e';
+      });
+    }
   }
 
   @override
@@ -215,6 +265,10 @@ class _AuthScreenState extends State<AuthScreen> {
                     ],
                   ),
                 ),
+                if (_errorText != null) ...[
+                  const SizedBox(height: 10),
+                  Text(_errorText!, style: const TextStyle(color: Colors.red, fontSize: 13)),
+                ],
                 const SizedBox(height: 24),
 
                 // Continue Button
@@ -228,8 +282,14 @@ class _AuthScreenState extends State<AuthScreen> {
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                       elevation: 2,
                     ),
-                    onPressed: _handleContinue,
-                    child: const Text('Continue', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                    onPressed: _loading ? null : _handleContinue,
+                    child: _loading
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                          )
+                        : const Text('Continue', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                   ),
                 ),
                 const SizedBox(height: 24),
@@ -258,9 +318,7 @@ class _AuthScreenState extends State<AuthScreen> {
                       side: BorderSide(color: p.glassBorder),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                     ),
-                    onPressed: () {
-                      widget.state.loginDemoUser('Google Merchant User', 'google.merchant@gmail.com', true);
-                    },
+                    onPressed: _loading ? null : _handleGoogleSignIn,
                     icon: Container(
                       padding: const EdgeInsets.all(2),
                       child: const Text('G', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Color(0xFF4285F4))),
@@ -322,7 +380,7 @@ class _AuthScreenState extends State<AuthScreen> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'We have sent a 6-digit code to\n+91 ${_phoneCtrl.text}',
+                  'We have sent a 6-digit code to\n$_lastE164Phone',
                   style: TextStyle(fontSize: 14, color: p.textSecondary, height: 1.4),
                 ),
                 const SizedBox(height: 36),
@@ -354,23 +412,35 @@ class _AuthScreenState extends State<AuthScreen> {
                           maxLength: 1,
                           style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: p.textPrimary),
                           decoration: const InputDecoration(counterText: '', border: InputBorder.none),
+                          onChanged: (value) {
+                            if (value.isNotEmpty && i < 5) {
+                              FocusScope.of(context).nextFocus();
+                            }
+                          },
                         ),
                       ),
                     );
                   }),
                 ),
+                if (_errorText != null) ...[
+                  const SizedBox(height: 10),
+                  Text(_errorText!, style: const TextStyle(color: Colors.red, fontSize: 13)),
+                ],
                 const SizedBox(height: 24),
 
                 // Resend OTP Timer
                 Center(
-                  child: Text(
-                    _resendTimer > 0
-                        ? 'Resend OTP in 00:${_resendTimer.toString().padLeft(2, '0')}'
-                        : 'Didn\'t receive OTP? Resend Now',
-                    style: TextStyle(
-                      color: _resendTimer > 0 ? p.textMuted : p.primaryAccent,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
+                  child: GestureDetector(
+                    onTap: _resendTimer > 0 || _loading ? null : _handleContinue,
+                    child: Text(
+                      _resendTimer > 0
+                          ? 'Resend OTP in 00:${_resendTimer.toString().padLeft(2, '0')}'
+                          : 'Didn\'t receive OTP? Resend Now',
+                      style: TextStyle(
+                        color: _resendTimer > 0 ? p.textMuted : p.primaryAccent,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                 ),
@@ -387,8 +457,14 @@ class _AuthScreenState extends State<AuthScreen> {
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                       elevation: 2,
                     ),
-                    onPressed: _handleVerify,
-                    child: const Text('Verify', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                    onPressed: _loading ? null : _handleVerify,
+                    child: _loading
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                          )
+                        : const Text('Verify', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                   ),
                 ),
               ],
@@ -399,4 +475,3 @@ class _AuthScreenState extends State<AuthScreen> {
     );
   }
 }
-
