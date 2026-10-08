@@ -3,9 +3,10 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../env.dart';
 
-/// Wraps Supabase Auth for the two real sign-in methods this app supports:
-/// phone OTP (SMS, via a provider configured in the Supabase dashboard) and
-/// native Google sign-in exchanged for a Supabase session.
+/// Wraps Supabase Auth for the sign-in methods this app supports: email +
+/// password, native Google sign-in, and phone OTP (SMS). Phone OTP is kept
+/// implemented but not currently surfaced in the login UI — see
+/// `_phoneOtpEnabled` in auth_screen.dart.
 class AuthService {
   GoTrueClient get _auth => Supabase.instance.client.auth;
 
@@ -14,6 +15,14 @@ class AuthService {
   Session? get currentSession => _auth.currentSession;
 
   String? get currentUserId => _auth.currentUser?.id;
+
+  Future<AuthResponse> signUpWithEmail(String email, String password) {
+    return _auth.signUp(email: email, password: password);
+  }
+
+  Future<AuthResponse> signInWithEmail(String email, String password) {
+    return _auth.signInWithPassword(email: email, password: password);
+  }
 
   /// Sends an OTP SMS to [e164Phone] (must already be in E.164 form, e.g. `+91XXXXXXXXXX`).
   Future<void> sendPhoneOtp(String e164Phone) {

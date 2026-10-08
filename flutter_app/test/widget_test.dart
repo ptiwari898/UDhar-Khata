@@ -18,6 +18,7 @@ void main() {
     await tester.pump();
 
     expect(find.textContaining('Welcome to'), findsOneWidget);
-    expect(find.text('Continue'), findsOneWidget);
+    expect(find.text('Sign In'), findsOneWidget);
+    expect(find.text('Continue with Google'), findsOneWidget);
   });
 }

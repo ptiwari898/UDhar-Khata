@@ -12,15 +12,28 @@ class AuthScreen extends StatefulWidget {
 }
 
 class _AuthScreenState extends State<AuthScreen> {
-  // Step 0: Splash, Step 1: Mobile Login, Step 2: OTP Verification
+  // Phone OTP is fully implemented (see _handleContinue/_handleVerify/
+  // _buildOtpScreen below) but not currently offered in the login menu —
+  // flip this back to true to re-enable it once an SMS provider is set up.
+  static const bool _phoneOtpEnabled = false;
+
+  // Step 0: Splash, Step 1: Email/Google Login, Step 2: Phone OTP Verification
   int _currentStep = 1;
+
+  final _emailCtrl = TextEditingController();
+  final _passwordCtrl = TextEditingController();
+  bool _isSignUpMode = false;
+
+  bool _showPhoneLogin = false;
   final _phoneCtrl = TextEditingController();
   final List<TextEditingController> _otpControllers = List.generate(6, (_) => TextEditingController());
   int _resendTimer = 30;
   Timer? _timer;
+  String _lastE164Phone = '';
+
   bool _loading = false;
   String? _errorText;
-  String _lastE164Phone = '';
+  String? _infoText;
 
   void _startTimer() {
     _resendTimer = 30;
@@ -37,11 +50,55 @@ class _AuthScreenState extends State<AuthScreen> {
   @override
   void dispose() {
     _timer?.cancel();
+    _emailCtrl.dispose();
+    _passwordCtrl.dispose();
     _phoneCtrl.dispose();
     for (final c in _otpControllers) {
       c.dispose();
     }
     super.dispose();
+  }
+
+  Future<void> _handleEmailAuth() async {
+    final email = _emailCtrl.text.trim();
+    final password = _passwordCtrl.text;
+    if (email.isEmpty || !email.contains('@')) {
+      setState(() => _errorText = 'Enter a valid email address');
+      return;
+    }
+    if (password.length < 6) {
+      setState(() => _errorText = 'Password must be at least 6 characters');
+      return;
+    }
+    setState(() {
+      _loading = true;
+      _errorText = null;
+      _infoText = null;
+    });
+    try {
+      if (_isSignUpMode) {
+        final signedIn = await widget.state.signUpWithEmail(email, password);
+        if (!mounted) return;
+        if (!signedIn) {
+          setState(() {
+            _loading = false;
+            _infoText = 'Account created — check your email to confirm, then sign in.';
+            _isSignUpMode = false;
+          });
+          return;
+        }
+      } else {
+        await widget.state.signInWithEmail(email, password);
+      }
+      // AuthScreen is swapped out by main.dart once currentUser becomes
+      // non-null, via the state's own listener-driven rebuild.
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _loading = false;
+        _errorText = _isSignUpMode ? 'Could not create account: $e' : 'Sign-in failed: $e';
+      });
+    }
   }
 
   Future<void> _handleContinue() async {
@@ -195,7 +252,7 @@ class _AuthScreenState extends State<AuthScreen> {
     );
   }
 
-  // Screen 2: Login / OTP
+  // Screen 2: Email/Password + Google Login
   Widget _buildLoginScreen(ThemePalette p) {
     return AtmosphericBackdrop(
       palette: p,
@@ -210,7 +267,7 @@ class _AuthScreenState extends State<AuthScreen> {
           ),
         ),
         body: SafeArea(
-          child: Padding(
+          child: SingleChildScrollView(
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -221,55 +278,103 @@ class _AuthScreenState extends State<AuthScreen> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Enter your mobile number to\ncontinue',
+                  _showPhoneLogin
+                      ? 'Enter your mobile number to\ncontinue'
+                      : (_isSignUpMode ? 'Create an account to continue' : 'Sign in with email to continue'),
                   style: TextStyle(fontSize: 14, color: p.textSecondary, height: 1.4),
                 ),
                 const SizedBox(height: 32),
 
-                // Mobile Input Box
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: p.glassSurface,
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: p.glassBorder),
-                    boxShadow: [
-                      BoxShadow(
-                        color: p.cardShadow,
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
+                if (!_showPhoneLogin) ...[
+                  // Email Input
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: p.glassSurface,
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: p.glassBorder),
+                      boxShadow: [
+                        BoxShadow(color: p.cardShadow, blurRadius: 8, offset: const Offset(0, 2)),
+                      ],
+                    ),
+                    child: TextField(
+                      controller: _emailCtrl,
+                      keyboardType: TextInputType.emailAddress,
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: p.textPrimary),
+                      decoration: InputDecoration(
+                        hintText: 'you@example.com',
+                        hintStyle: TextStyle(color: p.textMuted),
+                        border: InputBorder.none,
                       ),
-                    ],
+                    ),
                   ),
-                  child: Row(
-                    children: [
-                      const Text('🇮🇳', style: TextStyle(fontSize: 20)),
-                      const SizedBox(width: 8),
-                      Text(
-                        '+91',
-                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: p.textPrimary),
+                  const SizedBox(height: 14),
+
+                  // Password Input
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: p.glassSurface,
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: p.glassBorder),
+                      boxShadow: [
+                        BoxShadow(color: p.cardShadow, blurRadius: 8, offset: const Offset(0, 2)),
+                      ],
+                    ),
+                    child: TextField(
+                      controller: _passwordCtrl,
+                      obscureText: true,
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: p.textPrimary),
+                      decoration: InputDecoration(
+                        hintText: 'Password',
+                        hintStyle: TextStyle(color: p.textMuted),
+                        border: InputBorder.none,
                       ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: TextField(
-                          controller: _phoneCtrl,
-                          keyboardType: TextInputType.phone,
-                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: p.textPrimary),
-                          decoration: InputDecoration(
-                            hintText: '98765 43210',
-                            hintStyle: TextStyle(color: p.textMuted),
-                            border: InputBorder.none,
+                    ),
+                  ),
+                ] else ...[
+                  // Mobile Input Box
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: p.glassSurface,
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: p.glassBorder),
+                      boxShadow: [
+                        BoxShadow(color: p.cardShadow, blurRadius: 8, offset: const Offset(0, 2)),
+                      ],
+                    ),
+                    child: Row(
+                      children: [
+                        const Text('🇮🇳', style: TextStyle(fontSize: 20)),
+                        const SizedBox(width: 8),
+                        Text('+91', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: p.textPrimary)),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: TextField(
+                            controller: _phoneCtrl,
+                            keyboardType: TextInputType.phone,
+                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: p.textPrimary),
+                            decoration: InputDecoration(
+                              hintText: '98765 43210',
+                              hintStyle: TextStyle(color: p.textMuted),
+                              border: InputBorder.none,
+                            ),
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
+                ],
                 if (_errorText != null) ...[
                   const SizedBox(height: 10),
                   Text(_errorText!, style: const TextStyle(color: Colors.red, fontSize: 13)),
                 ],
-                const SizedBox(height: 24),
+                if (_infoText != null) ...[
+                  const SizedBox(height: 10),
+                  Text(_infoText!, style: TextStyle(color: p.primaryAccent, fontSize: 13)),
+                ],
+                const SizedBox(height: 20),
 
                 // Continue Button
                 SizedBox(
@@ -282,17 +387,38 @@ class _AuthScreenState extends State<AuthScreen> {
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                       elevation: 2,
                     ),
-                    onPressed: _loading ? null : _handleContinue,
+                    onPressed: _loading ? null : (_showPhoneLogin ? _handleContinue : _handleEmailAuth),
                     child: _loading
                         ? const SizedBox(
                             width: 20,
                             height: 20,
                             child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                           )
-                        : const Text('Continue', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                        : Text(
+                            _showPhoneLogin ? 'Continue' : (_isSignUpMode ? 'Create Account' : 'Sign In'),
+                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                          ),
                   ),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 12),
+
+                if (!_showPhoneLogin)
+                  Center(
+                    child: TextButton(
+                      onPressed: _loading
+                          ? null
+                          : () => setState(() {
+                                _isSignUpMode = !_isSignUpMode;
+                                _errorText = null;
+                                _infoText = null;
+                              }),
+                      child: Text(
+                        _isSignUpMode ? 'Already have an account? Sign in' : "Don't have an account? Sign up",
+                        style: TextStyle(color: p.primaryAccent, fontWeight: FontWeight.w600, fontSize: 13),
+                      ),
+                    ),
+                  ),
+                const SizedBox(height: 12),
 
                 // Divider "or continue with"
                 Row(
@@ -326,7 +452,28 @@ class _AuthScreenState extends State<AuthScreen> {
                     label: Text('Continue with Google', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15, color: p.textPrimary)),
                   ),
                 ),
-                const Spacer(),
+
+                // Phone OTP entry point — hidden for now, see _phoneOtpEnabled.
+                if (_phoneOtpEnabled) ...[
+                  const SizedBox(height: 16),
+                  Center(
+                    child: TextButton(
+                      onPressed: _loading
+                          ? null
+                          : () => setState(() {
+                                _showPhoneLogin = !_showPhoneLogin;
+                                _errorText = null;
+                                _infoText = null;
+                              }),
+                      child: Text(
+                        _showPhoneLogin ? 'Use email instead' : 'Use phone number instead',
+                        style: TextStyle(color: p.textSecondary, fontSize: 13),
+                      ),
+                    ),
+                  ),
+                ],
+
+                const SizedBox(height: 24),
 
                 // Terms & Privacy Policy Footer
                 Center(
@@ -354,7 +501,7 @@ class _AuthScreenState extends State<AuthScreen> {
     );
   }
 
-  // Screen 3: OTP Verification
+  // Screen 3: Phone OTP Verification — reachable only when _phoneOtpEnabled.
   Widget _buildOtpScreen(ThemePalette p) {
     return AtmosphericBackdrop(
       palette: p,

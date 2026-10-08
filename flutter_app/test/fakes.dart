@@ -18,6 +18,16 @@ class FakeAuthService extends AuthService {
   Stream<AuthState> get onAuthStateChange => const Stream.empty();
 
   @override
+  Future<AuthResponse> signUpWithEmail(String email, String password) {
+    throw UnimplementedError('Not exercised by unit tests.');
+  }
+
+  @override
+  Future<AuthResponse> signInWithEmail(String email, String password) {
+    throw UnimplementedError('Not exercised by unit tests.');
+  }
+
+  @override
   Future<void> sendPhoneOtp(String e164Phone) async {}
 
   @override

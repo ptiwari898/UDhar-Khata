@@ -23,10 +23,22 @@ Settings → API in the Supabase dashboard. Pass them into the app via
 `--dart-define` (see `lib/env.dart` for the exact flags) — never hardcode
 real values into a committed file.
 
-## 3. Enable Phone OTP (SMS)
+## 3. Email + password
 
-The app's login screen sends a real SMS OTP, which needs an SMS provider
-configured in Supabase (it does not send SMS itself):
+This is the primary sign-in method and needs no extra setup — Supabase's
+email provider is on by default. If your project requires email
+confirmation (Authentication → Providers → Email → "Confirm email"), a new
+sign-up won't get a session until the user clicks the confirmation link;
+the app handles this by showing a "check your email" message instead of
+logging them in immediately.
+
+## 4. Phone OTP (SMS) — implemented, currently hidden from the login menu
+
+The login screen only offers email/password and Google for now (see
+`_phoneOtpEnabled` in `lib/screens/auth_screen.dart`). The phone OTP code
+path (`AuthService.sendPhoneOtp`/`verifyPhoneOtp`, the OTP entry screen) is
+still there and fully wired — flip that flag to `true` once you want to
+offer it, after setting up an SMS provider:
 
 1. Create a Twilio (or MessageBird) account and provision an SMS-capable
    number, or a Messaging Service for better deliverability.
@@ -36,7 +48,7 @@ configured in Supabase (it does not send SMS itself):
 3. SMS is billed per-message by Twilio — this is separate from Supabase's own
    pricing.
 
-## 4. Enable Google OAuth
+## 5. Enable Google OAuth
 
 1. In Google Cloud Console, create an OAuth consent screen (External, scopes
    `email`, `profile`).
@@ -55,9 +67,9 @@ configured in Supabase (it does not send SMS itself):
    (`com.aistudio.udharKhataFlutter`). Add its reversed-client-id URL scheme
    to `ios/Runner/Info.plist`'s `CFBundleURLTypes`.
 
-## 5. Verify end-to-end
+## 6. Verify end-to-end
 
-1. Sign up via phone OTP with a real test number → confirm a `shops` row
+1. Sign up via email/password with a real address → confirm a `shops` row
    appears in the Table Editor and the app shows an empty (not demo-seeded)
    dashboard.
 2. Sign up via Google on a second account → confirm a second, isolated

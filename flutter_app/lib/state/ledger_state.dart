@@ -216,6 +216,26 @@ class LedgerState extends ChangeNotifier {
     );
   }
 
+  /// Returns true if sign-up created a live session immediately, or false
+  /// if the Supabase project requires email confirmation first (caller
+  /// should prompt the user to check their inbox).
+  Future<bool> signUpWithEmail(String email, String password) async {
+    final response = await authService.signUpWithEmail(email, password);
+    if (response.session == null) return false;
+    await repository.bootstrap();
+    notifyListeners();
+    return true;
+  }
+
+  Future<void> signInWithEmail(String email, String password) async {
+    await authService.signInWithEmail(email, password);
+    await repository.bootstrap();
+    notifyListeners();
+  }
+
+  // Phone OTP is implemented but not currently exposed in the login UI
+  // (see `_phoneOtpEnabled` in auth_screen.dart) — kept for a future
+  // re-enable rather than deleted.
   Future<void> sendPhoneOtp(String e164Phone) => authService.sendPhoneOtp(e164Phone);
 
   Future<void> verifyPhoneOtp(String e164Phone, String token) async {

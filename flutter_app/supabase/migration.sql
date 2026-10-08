@@ -2,8 +2,8 @@
 -- server-stamped updated_at for offline-first sync.
 --
 -- Run this once in the Supabase SQL Editor on a fresh project, then
--- configure Auth providers (Phone/Twilio and Google) in the dashboard
--- as described in README-supabase.md.
+-- configure Auth providers (Google OAuth; email/password needs no setup)
+-- in the dashboard as described in README.md.
 
 create extension if not exists pgcrypto;
 
